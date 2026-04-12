@@ -186,19 +186,25 @@ const Hours = (() => {
 
         let html = '';
 
-        Object.keys(grouped).sort().forEach(empName => {
+        Object.keys(grouped).sort().forEach((empName, idx) => {
             const months = grouped[empName];
             const totalFiles = Object.values(months).reduce((s, a) => s + a.length, 0);
+            const empId = 'hours-emp-' + idx;
 
-            html += `<div class="hours-employee-card glass-card">`;
+            html += `<div class="hours-accordion glass-card">`;
             html += `
-                <div class="hours-emp-header">
-                    <div class="hours-emp-avatar">${_getInitials(empName)}</div>
-                    <div class="hours-emp-info">
-                        <div class="hours-emp-name">${empName}</div>
-                        <div class="hours-emp-stats">${totalFiles} file · ${Object.keys(months).length} mesi</div>
+                <div class="hours-accordion-header" onclick="Hours.toggleEmployee('${empId}')">
+                    <div class="hours-accordion-left">
+                        <div class="hours-emp-avatar">${_getInitials(empName)}</div>
+                        <div class="hours-emp-info">
+                            <div class="hours-emp-name">${empName}</div>
+                            <div class="hours-emp-stats">${totalFiles} file · ${Object.keys(months).length} mesi</div>
+                        </div>
                     </div>
+                    <svg class="hours-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>`;
+
+            html += `<div class="hours-accordion-body" id="${empId}">`;
 
             const sortedMonths = Object.keys(months).sort((a, b) => {
                 const mA = _parseMonthLabel(a), mB = _parseMonthLabel(b);
@@ -208,7 +214,6 @@ const Hours = (() => {
                 return mB.year !== mA.year ? mB.year - mA.year : mB.month - mA.month;
             });
 
-            html += `<div class="hours-months-grid">`;
             sortedMonths.forEach(monthLabel => {
                 const files = months[monthLabel];
                 const isOther = monthLabel === 'Altro';
@@ -221,27 +226,23 @@ const Hours = (() => {
                     const source = f.source === 'ore-pws-auto' ? 'Ore PWS' : 'Manuale';
 
                     html += `
-                        <div class="hours-month-card" style="--month-accent: ${monthColor}">
-                            <div class="hours-month-badge" style="background: ${monthColor}15; color: ${monthColor}">
-                                <span class="hours-month-icon">${isOther ? '📄' : _getMonthIcon(monthData.month)}</span>
+                        <div class="hours-file-row">
+                            <div class="hours-file-month-badge" style="background: ${monthColor}15; color: ${monthColor}">
+                                <span>${isOther ? '📄' : _getMonthIcon(monthData.month)}</span>
                                 <span>${monthLabel}</span>
                             </div>
-                            <div class="hours-month-file">
-                                <div class="hours-month-filename" title="${f.fileName}">${f.fileName}</div>
-                                <div class="hours-month-details">
-                                    <span>${uploadDate}</span>
-                                    <span class="hours-dot">·</span>
-                                    <span>${size}</span>
-                                    <span class="hours-dot">·</span>
-                                    <span class="hours-source-tag hours-source-${f.source === 'ore-pws-auto' ? 'auto' : 'manual'}">${source}</span>
+                            <div class="hours-file-info">
+                                <div class="hours-file-name" title="${f.fileName}">${f.fileName}</div>
+                                <div class="hours-file-meta">
+                                    ${uploadDate}<span class="hours-dot"> · </span>${size}<span class="hours-dot"> · </span><span class="hours-source-tag hours-source-${f.source === 'ore-pws-auto' ? 'auto' : 'manual'}">${source}</span>
                                 </div>
                             </div>
-                            <div class="hours-month-actions">
+                            <div class="hours-file-actions">
                                 <a href="${f.downloadURL}" target="_blank" class="hours-btn hours-btn-download" title="Scarica">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 </a>
                                 ${isAdmin ? `
-                                <button class="hours-btn hours-btn-delete" onclick="Hours.confirmDelete('${f.id}')" title="Elimina">
+                                <button class="hours-btn hours-btn-delete" onclick="event.stopPropagation(); Hours.confirmDelete('${f.id}')" title="Elimina">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 </button>` : ''}
                             </div>
@@ -253,6 +254,15 @@ const Hours = (() => {
         });
 
         container.innerHTML = html;
+    }
+
+    // ==================== TOGGLE ACCORDION ====================
+    function toggleEmployee(empId) {
+        const body = document.getElementById(empId);
+        if (!body) return;
+        const card = body.closest('.hours-accordion');
+        if (!card) return;
+        card.classList.toggle('open');
     }
 
     // ==================== CONFIRM DELETE ====================
@@ -304,5 +314,5 @@ const Hours = (() => {
         return ['❄️','💜','🌱','🌸','☀️','🌹','🔥','⛱️','🍂','🎃','🍁','🎄'][m] || '📅';
     }
 
-    return { render, uploadFile, deleteFile, confirmDelete };
+    return { render, uploadFile, deleteFile, confirmDelete, toggleEmployee };
 })();
