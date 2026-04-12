@@ -207,13 +207,30 @@ const Absences = (() => {
                 'request_rejected': '❌',
                 'absence_added': '📅'
             };
+            // Determine destination tab based on notification type
+            let clickAction = `Absences.markNotificationRead('${n.id}'); Absences.updateNotificationBadge(); this.classList.remove('unread'); this.classList.add('read');`;
+            if (n.type === 'request_new') {
+                // Admin: go to "Richieste Ferie" tab
+                clickAction += ` Absences.goToTab('requests');`;
+            } else if (n.type === 'request_approved' || n.type === 'request_rejected') {
+                // Employee: go to "Le Mie Richieste" tab
+                clickAction += ` Absences.goToTab('myrequests');`;
+            } else if (n.type === 'absence_added') {
+                // Navigate to calendar view
+                if (Auth.isAdmin()) {
+                    clickAction += ` Absences.goToTab('manage');`;
+                } else {
+                    clickAction += ` Absences.goToTab('mycalendar');`;
+                }
+            }
             return `
-                <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="Absences.markNotificationRead('${n.id}'); Absences.updateNotificationBadge(); this.classList.remove('unread'); this.classList.add('read');">
+                <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="${clickAction}" style="cursor:pointer;">
                     <span class="notif-icon">${typeIcons[n.type] || '🔔'}</span>
                     <div class="notif-content">
                         <p class="notif-message">${n.message}</p>
                         <span class="notif-time">${time}</span>
                     </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:0.3;"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             `;
         }).join('');
@@ -293,9 +310,20 @@ const Absences = (() => {
         updatePendingBadge();
     }
 
-    function switchTab(tabName) {
-        document.querySelectorAll('.abs-tab').forEach((btn, i) => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+    function switchTab(tabName, skipActiveClass) {
+        const tabs = document.querySelectorAll('.abs-tab');
+        tabs.forEach(btn => btn.classList.remove('active'));
+        
+        if (!skipActiveClass) {
+            // Find and activate the correct tab button
+            const tabMap = Auth.isAdmin()
+                ? ['manage', 'requests', 'overview']
+                : ['mycalendar', 'request', 'myrequests'];
+            const idx = tabMap.indexOf(tabName);
+            if (idx >= 0 && tabs[idx]) {
+                tabs[idx].classList.add('active');
+            }
+        }
 
         switch (tabName) {
             case 'manage': renderManageTab(); break;
@@ -305,6 +333,21 @@ const Absences = (() => {
             case 'request': renderRequestFormTab(); break;
             case 'myrequests': renderMyRequestsTab(); break;
         }
+    }
+
+    // Navigate from notification click → absences page + specific tab
+    function goToTab(tabName) {
+        // Close notification panel
+        const panel = document.getElementById('notifications-panel');
+        if (panel) panel.classList.remove('active');
+
+        // Navigate to absences page
+        App.navigateTo('absences');
+
+        // Small delay to let the page render, then switch tab
+        setTimeout(() => {
+            switchTab(tabName);
+        }, 100);
     }
 
     function updatePendingBadge() {
@@ -981,6 +1024,7 @@ const Absences = (() => {
         init,
         render,
         switchTab,
+        goToTab,
         calNavMonth,
         toggleCalendarDate,
         removeSelectedDate,
