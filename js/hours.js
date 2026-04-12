@@ -14,18 +14,31 @@ const Hours = (() => {
         if (_listenerStarted) return;
         _listenerStarted = true;
 
-        db.collection(COLLECTION).orderBy('uploadedAt', 'desc').onSnapshot((snapshot) => {
+        console.log('[Hours] Starting Firestore listener on collection:', COLLECTION);
+
+        // No orderBy to avoid composite index requirement and null-field issues
+        db.collection(COLLECTION).onSnapshot((snapshot) => {
             _files = [];
             snapshot.forEach((doc) => {
                 _files.push({ ...doc.data(), id: doc.id });
             });
+
+            // Sort client-side: newest first, handle missing uploadedAt
+            _files.sort((a, b) => {
+                const tA = a.uploadedAt ? a.uploadedAt.seconds : (a.uploadedAtLocal ? new Date(a.uploadedAtLocal).getTime() / 1000 : 0);
+                const tB = b.uploadedAt ? b.uploadedAt.seconds : (b.uploadedAtLocal ? new Date(b.uploadedAtLocal).getTime() / 1000 : 0);
+                return tB - tA;
+            });
+
+            console.log('[Hours] Received', _files.length, 'files from Firestore');
+
             // Re-render if the page is visible
             const page = document.getElementById('page-hours');
             if (page && page.classList.contains('active')) {
                 render();
             }
         }, (error) => {
-            console.error('Hours listener error:', error);
+            console.error('[Hours] Listener error:', error);
         });
     }
 
