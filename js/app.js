@@ -199,6 +199,7 @@ const App = (() => {
             case 'employees': Employees.render(); break;
             case 'schedule': Schedule.render(); break;
             case 'absences': Absences.render(); break;
+            case 'hours': Hours.render(); break;
             case 'profile': Profile.render(); break;
             case 'settings': renderSettings(); break;
         }
