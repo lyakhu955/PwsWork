@@ -166,7 +166,7 @@ const Employees = (() => {
         editingId = null;
     }
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
 
         const data = {
@@ -191,13 +191,15 @@ const Employees = (() => {
         if (editingId) {
             // Update
             if (password) {
-                data.password = password;
+                data.passwordHash = await CryptoUtil.hashSecret(password);
+                data.password = '';
             }
             Storage.updateEmployee(editingId, data);
             App.showToast('Successo', 'Dipendente aggiornato con successo', 'success');
         } else {
             // Create
-            data.password = password;
+            data.passwordHash = await CryptoUtil.hashSecret(password);
+            data.password = '';
             Storage.addEmployee(data);
             App.showToast('Successo', 'Dipendente aggiunto con successo', 'success');
         }

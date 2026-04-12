@@ -6,14 +6,32 @@
 const Auth = (() => {
     let currentUser = null;
 
-    // Boss admin credentials (cannot be deleted or changed)
+    // Boss admin credentials (hashed, cannot be deleted or changed)
     const BOSS = {
-        username: 'Mauro.boss',
-        password: 'presidente2103'
+        usernameHash: 'sha256$e23bc031bf806224544dc1832e3abde3dfb46e571d4181f4fceeb941e6975e9e',
+        passwordHash: 'sha256$1cd8a3e172fc28d707e9cb01ffcaf122ffce6d8ac539be0cd8085c5de430ebb1'
     };
+
+    async function migrateLegacyEmployeePasswords() {
+        const employees = Storage.getEmployees();
+        for (const employee of employees) {
+            if (employee.password && !employee.passwordHash) {
+                try {
+                    const passwordHash = await CryptoUtil.hashSecret(employee.password);
+                    Storage.updateEmployee(employee.id, {
+                        passwordHash,
+                        password: ''
+                    });
+                } catch (error) {
+                    console.error('Password migration error for employee:', employee.id, error);
+                }
+            }
+        }
+    }
 
     function init() {
         const savedUser = Storage.getCurrentUser();
+        migrateLegacyEmployeePasswords();
         if (savedUser) {
             currentUser = savedUser;
             return true;
@@ -21,13 +39,17 @@ const Auth = (() => {
         return false;
     }
 
-    function login(username, password) {
+    async function login(username, password) {
+        const normalizedUsername = String(username || '').trim();
+
         // 1. Check if boss admin
-        if (username === BOSS.username && password === BOSS.password) {
+        const isBossUsername = await CryptoUtil.verifySecret(normalizedUsername, BOSS.usernameHash);
+        const isBossPassword = await CryptoUtil.verifySecret(password, BOSS.passwordHash);
+        if (isBossUsername && isBossPassword) {
             currentUser = {
                 id: 'boss_admin',
                 employeeId: null,
-                username: BOSS.username,
+                username: normalizedUsername,
                 firstName: 'Mauro',
                 lastName: 'Boss',
                 position: 'Amministratore Capo',
@@ -41,13 +63,29 @@ const Auth = (() => {
         }
 
         // 2. Check employees (admin or regular)
-        const employee = Storage.getEmployeeByUsername(username);
+        const employee = Storage.getEmployeeByUsername(normalizedUsername);
         
         if (!employee) {
             return { success: false, error: 'Nome utente non trovato' };
         }
-        
-        if (employee.password !== password) {
+
+        let passwordOk = false;
+
+        if (employee.passwordHash) {
+            passwordOk = await CryptoUtil.verifySecret(password, employee.passwordHash);
+        } else if (employee.password) {
+            // Legacy plaintext fallback (automatic migration)
+            passwordOk = employee.password === password;
+            if (passwordOk) {
+                const passwordHash = await CryptoUtil.hashSecret(password);
+                Storage.updateEmployee(employee.id, {
+                    passwordHash,
+                    password: ''
+                });
+            }
+        }
+
+        if (!passwordOk) {
             return { success: false, error: 'Password non corretta' };
         }
 

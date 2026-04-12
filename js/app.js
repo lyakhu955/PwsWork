@@ -100,8 +100,8 @@ const App = (() => {
         }
 
         // Wait for Firestore data to be ready before authenticating
-        Storage.onReady(() => {
-            const result = Auth.login(username, password);
+        Storage.onReady(async () => {
+            const result = await Auth.login(username, password);
 
             if (loginBtn) {
                 loginBtn.disabled = false;

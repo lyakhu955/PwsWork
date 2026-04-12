@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pwswork-v2';
+const CACHE_NAME = 'pwswork-v3';
 
 const APP_SHELL = [
   './',
@@ -10,6 +10,7 @@ const APP_SHELL = [
   './js/firebase-config.js',
   './js/storage.js',
   './js/theme.js',
+  './js/crypto.js',
   './js/auth.js',
   './js/dashboard.js',
   './js/employees.js',
