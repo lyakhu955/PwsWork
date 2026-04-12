@@ -179,7 +179,7 @@ const Schedule = (() => {
                         const emp = Storage.getEmployee(eid);
                         return emp ? `${emp.firstName} ${emp.lastName[0]}.` : '?';
                     });
-                    const teamLabel = asgn.teamName || ('Squadra ' + (asgnIdx + 1));
+                    const teamLabel = asgn.teamName || ('Gregge ' + (asgnIdx + 1));
                     const isMySquad = myEmployeeId && asgn.employeeIds.includes(myEmployeeId);
 
                     const cardClick = isAdmin ? `Schedule.openModal('${asgn.id}')` : `Schedule.openDetailModal('${asgn.id}')`;
@@ -289,7 +289,7 @@ const Schedule = (() => {
                 ${holidayInfo ? `<div class="month-holiday-label">${holidayInfo.name}</div>` : ''}`;
 
             dayAssignments.forEach((asgn, asgnIdx) => {
-                const teamLabel = asgn.teamName || ('Squadra ' + (asgnIdx + 1));
+                const teamLabel = asgn.teamName || ('Gregge ' + (asgnIdx + 1));
                 const teamCount = asgn.employeeIds.length;
                 const wpCount = asgn.workplaces.length;
                 const isMySquad = myEmpId && asgn.employeeIds.includes(myEmpId);
@@ -356,7 +356,7 @@ const Schedule = (() => {
             if (dayAssignments.length > 0) {
                 html += `<div class="month-list-squads">`;
                 dayAssignments.forEach((asgn, asgnIdx) => {
-                    const teamLabel = asgn.teamName || ('Squadra ' + (asgnIdx + 1));
+                    const teamLabel = asgn.teamName || ('Gregge ' + (asgnIdx + 1));
                     const empNames = asgn.employeeIds.map(eid => {
                         const emp = Storage.getEmployee(eid);
                         return emp ? `${emp.firstName} ${emp.lastName[0]}.` : '?';
@@ -441,7 +441,7 @@ const Schedule = (() => {
             // Auto-generate team name based on existing assignments for this date
             const existingDate = date || Storage.toLocalDateStr();
             const existing = Storage.getAssignmentsByDate(existingDate);
-            document.getElementById('assignment-team-name').value = 'Squadra ' + (existing.length + 1);
+            document.getElementById('assignment-team-name').value = 'Gregge ' + (existing.length + 1);
             addWorkplaceField(); // At least one empty workplace
             deleteBtn.style.display = 'none';
         }

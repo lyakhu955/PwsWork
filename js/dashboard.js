@@ -106,7 +106,7 @@ const Dashboard = (() => {
 
             const isCurrentUser = (currentUser?.employeeId || currentUser?.id) && asgn.employeeIds.includes(currentUser?.employeeId || currentUser?.id);
 
-            const teamLabel = asgn.teamName || ('Squadra ' + (index + 1));
+            const teamLabel = asgn.teamName || ('Gregge ' + (index + 1));
 
             html += `
                 <div class="today-assignment-card stagger-item ${isCurrentUser ? 'highlight-own' : ''}" style="animation-delay: ${index * 0.05}s;">
