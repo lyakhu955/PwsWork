@@ -629,23 +629,24 @@
     gap: 6px;
 }
 
-.hours-group {
-    margin-bottom: var(--space-md, 16px);
+/* Employee Card */
+.hours-employee-card {
+    margin-bottom: var(--space-lg, 24px);
     padding: var(--space-lg, 24px);
 }
 
-.hours-group-header {
+.hours-emp-header {
     display: flex;
     align-items: center;
     gap: var(--space-md, 16px);
-    margin-bottom: var(--space-md, 16px);
+    margin-bottom: var(--space-lg, 24px);
     padding-bottom: var(--space-md, 16px);
     border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.1));
 }
 
-.hours-group-avatar {
-    width: 40px;
-    height: 40px;
+.hours-emp-avatar {
+    width: 44px;
+    height: 44px;
     border-radius: var(--radius-full, 9999px);
     background: var(--accent-gradient, linear-gradient(135deg, #6366f1, #8b5cf6));
     display: flex;
@@ -653,103 +654,159 @@
     justify-content: center;
     color: white;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     flex-shrink: 0;
 }
 
-.hours-group-name {
-    font-weight: 600;
-    font-size: 1rem;
+.hours-emp-name {
+    font-weight: 700;
+    font-size: 1.05rem;
 }
 
-.hours-group-count {
+.hours-emp-stats {
     font-size: 0.8rem;
     color: var(--text-secondary, #aaa);
+    margin-top: 2px;
 }
 
-.hours-file-list {
+/* Month Grid */
+.hours-months-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-md, 16px);
+}
+
+/* Month Card */
+.hours-month-card {
     display: flex;
     flex-direction: column;
     gap: var(--space-sm, 8px);
-}
-
-.hours-file-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md, 16px);
     padding: var(--space-md, 16px);
     border-radius: var(--radius-md, 12px);
     background: var(--bg-glass, rgba(255,255,255,0.03));
     border: 1px solid var(--border-color, rgba(255,255,255,0.08));
     transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.hours-file-item:hover {
+.hours-month-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--month-accent, #6366f1);
+    border-radius: 3px 3px 0 0;
+}
+
+.hours-month-card:hover {
     background: var(--bg-glass-hover, rgba(255,255,255,0.06));
-    border-color: var(--accent-primary, #6366f1);
+    border-color: var(--month-accent, #6366f1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
-.hours-file-icon {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    display: flex;
+.hours-month-badge {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-md, 12px);
-    background: rgba(39, 174, 96, 0.1);
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.82rem;
+    font-weight: 600;
+    width: fit-content;
 }
 
-.hours-file-info {
+.hours-month-icon {
+    font-size: 0.9rem;
+}
+
+.hours-month-file {
     flex: 1;
     min-width: 0;
 }
 
-.hours-file-name {
+.hours-month-filename {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: 4px;
 }
 
-.hours-file-meta {
-    font-size: 0.78rem;
-    color: var(--text-secondary, #aaa);
-    margin-top: 2px;
-}
-
-.hours-file-actions {
+.hours-month-details {
     display: flex;
-    gap: var(--space-xs, 4px);
-    flex-shrink: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #aaa);
 }
 
-.hours-action-btn {
-    width: 36px;
-    height: 36px;
+.hours-dot {
+    opacity: 0.4;
+}
+
+.hours-source-tag {
+    padding: 1px 8px;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.hours-source-auto {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.hours-source-manual {
+    background: rgba(99, 102, 241, 0.12);
+    color: #818cf8;
+}
+
+.hours-month-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.hours-btn {
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    background: transparent;
+    cursor: pointer;
+    color: inherit;
     transition: all 0.2s ease;
+    text-decoration: none;
 }
 
-.hours-action-btn:hover {
-    background: var(--bg-glass-hover, rgba(255,255,255,0.1));
+.hours-btn-download:hover {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: #10b981;
+    color: #10b981;
 }
 
-.hours-delete-btn:hover {
-    color: var(--accent-danger, #ef4444);
-    background: rgba(239, 68, 68, 0.1);
+.hours-btn-delete:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
 @media (max-width: 768px) {
-    .hours-file-item {
-        flex-wrap: wrap;
+    .hours-months-grid {
+        grid-template-columns: 1fr;
     }
 
-    .hours-file-info {
-        flex: 1 1 calc(100% - 80px);
+    .hours-employee-card {
+        padding: var(--space-md, 16px);
     }
 }

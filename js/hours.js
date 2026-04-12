@@ -2,12 +2,39 @@
    PWSWORK - HOURS MODULE
    Ore Dipendenti — Upload/Download/Delete Excel files
    Files stored in Firebase Storage, metadata in Firestore
+   Duplicate detection: same user + same month/year = overwrite
    ======================================== */
 
 const Hours = (() => {
     const COLLECTION = 'hoursFiles';
     let _files = [];
     let _listenerStarted = false;
+
+    const MONTH_NAMES = [
+        'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+        'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+    ];
+
+    // ==================== EXTRACT MONTH/YEAR FROM FILENAME ====================
+    function _extractMonthYear(fileName) {
+        if (!fileName) return null;
+        const name = fileName.toLowerCase().replace(/[_\-\.]/g, ' ');
+        let month = null, year = null;
+
+        for (let i = 0; i < MONTH_NAMES.length; i++) {
+            if (name.includes(MONTH_NAMES[i].toLowerCase())) {
+                month = i;
+                break;
+            }
+        }
+        const yearMatch = fileName.match(/(\d{4})/);
+        if (yearMatch) year = parseInt(yearMatch[1]);
+
+        if (month !== null && year !== null) {
+            return { month, year, label: `${MONTH_NAMES[month]} ${year}` };
+        }
+        return null;
+    }
 
     // ==================== INIT LISTENER ====================
     function _startListener() {
@@ -16,14 +43,13 @@ const Hours = (() => {
 
         console.log('[Hours] Starting Firestore listener on collection:', COLLECTION);
 
-        // No orderBy to avoid composite index requirement and null-field issues
         db.collection(COLLECTION).onSnapshot((snapshot) => {
             _files = [];
             snapshot.forEach((doc) => {
-                _files.push({ ...doc.data(), id: doc.id });
+                const data = doc.data();
+                _files.push({ ...data, id: doc.id, _monthYear: _extractMonthYear(data.fileName) });
             });
 
-            // Sort client-side: newest first, handle missing uploadedAt
             _files.sort((a, b) => {
                 const tA = a.uploadedAt ? a.uploadedAt.seconds : (a.uploadedAtLocal ? new Date(a.uploadedAtLocal).getTime() / 1000 : 0);
                 const tB = b.uploadedAt ? b.uploadedAt.seconds : (b.uploadedAtLocal ? new Date(b.uploadedAtLocal).getTime() / 1000 : 0);
@@ -32,7 +58,6 @@ const Hours = (() => {
 
             console.log('[Hours] Received', _files.length, 'files from Firestore');
 
-            // Re-render if the page is visible
             const page = document.getElementById('page-hours');
             if (page && page.classList.contains('active')) {
                 render();
@@ -42,26 +67,37 @@ const Hours = (() => {
         });
     }
 
-    // ==================== UPLOAD ====================
+    // ==================== FIND DUPLICATE ====================
+    function _findDuplicate(uploaderKey, monthYear) {
+        if (!monthYear) return null;
+        return _files.find(f => {
+            if (!f._monthYear) return false;
+            return f.uploadedBy === uploaderKey &&
+                   f._monthYear.month === monthYear.month &&
+                   f._monthYear.year === monthYear.year;
+        });
+    }
+
+    // ==================== UPLOAD (with overwrite) ====================
     async function uploadFile(file) {
         const user = Auth.getCurrentUser();
         if (!user) return;
 
-        const isAdmin = Auth.isAdmin();
         const timestamp = Date.now();
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const storagePath = `hours/${user.id || user.username}_${timestamp}_${safeName}`;
+        const monthYear = _extractMonthYear(file.name);
 
         try {
             App.showToast('Upload', 'Caricamento in corso...', 'info');
 
-            // Upload to Firebase Storage
+            const duplicate = _findDuplicate(user.username, monthYear);
+
             const ref = storage.ref(storagePath);
             await ref.put(file);
             const downloadURL = await ref.getDownloadURL();
 
-            // Save metadata to Firestore
-            await db.collection(COLLECTION).add({
+            const metadata = {
                 fileName: file.name,
                 storagePath: storagePath,
                 downloadURL: downloadURL,
@@ -71,9 +107,16 @@ const Hours = (() => {
                 employeeId: user.employeeId || user.id,
                 uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 uploadedAtLocal: new Date().toISOString()
-            });
+            };
 
-            App.showToast('Successo', 'File caricato con successo!', 'success');
+            if (duplicate) {
+                try { await storage.ref(duplicate.storagePath).delete(); } catch (e) { /* ignore */ }
+                await db.collection(COLLECTION).doc(duplicate.id).set(metadata);
+                App.showToast('Aggiornato', `File di ${monthYear ? monthYear.label : 'questo mese'} aggiornato!`, 'success');
+            } else {
+                await db.collection(COLLECTION).add(metadata);
+                App.showToast('Successo', 'File caricato con successo!', 'success');
+            }
         } catch (error) {
             console.error('Upload error:', error);
             App.showToast('Errore', 'Errore durante il caricamento: ' + error.message, 'error');
@@ -86,13 +129,8 @@ const Hours = (() => {
         if (!fileData) return;
 
         try {
-            // Delete from Storage
-            const ref = storage.ref(fileData.storagePath);
-            await ref.delete();
-
-            // Delete metadata from Firestore
+            try { await storage.ref(fileData.storagePath).delete(); } catch (e) { /* ignore */ }
             await db.collection(COLLECTION).doc(fileId).delete();
-
             App.showToast('Eliminato', 'File eliminato con successo', 'success');
         } catch (error) {
             console.error('Delete error:', error);
@@ -110,7 +148,6 @@ const Hours = (() => {
         const user = Auth.getCurrentUser();
         const isAdmin = Auth.isAdmin();
 
-        // Filter: admin sees all, employee sees own
         const visibleFiles = isAdmin
             ? _files
             : _files.filter(f => f.employeeId === user.employeeId || f.uploadedBy === user.username);
@@ -121,10 +158,7 @@ const Hours = (() => {
             fileInput.dataset.bound = 'true';
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
-                if (file) {
-                    uploadFile(file);
-                    fileInput.value = '';
-                }
+                if (file) { uploadFile(file); fileInput.value = ''; }
             });
         }
 
@@ -140,53 +174,79 @@ const Hours = (() => {
             return;
         }
 
-        // Group files by employee
+        // Group: employee → month/year
         const grouped = {};
         visibleFiles.forEach(f => {
-            const key = f.uploadedByName || f.uploadedBy || 'Sconosciuto';
-            if (!grouped[key]) grouped[key] = [];
-            grouped[key].push(f);
+            const empKey = f.uploadedByName || f.uploadedBy || 'Sconosciuto';
+            if (!grouped[empKey]) grouped[empKey] = {};
+            const monthLabel = f._monthYear ? f._monthYear.label : 'Altro';
+            if (!grouped[empKey][monthLabel]) grouped[empKey][monthLabel] = [];
+            grouped[empKey][monthLabel].push(f);
         });
 
         let html = '';
 
-        Object.keys(grouped).sort().forEach(name => {
-            const files = grouped[name];
-            html += `<div class="hours-group glass-card">`;
-            html += `<div class="hours-group-header">
-                        <div class="hours-group-avatar">${_getInitials(name)}</div>
-                        <div>
-                            <div class="hours-group-name">${name}</div>
-                            <div class="hours-group-count">${files.length} file</div>
-                        </div>
-                     </div>`;
-            html += `<div class="hours-file-list">`;
+        Object.keys(grouped).sort().forEach(empName => {
+            const months = grouped[empName];
+            const totalFiles = Object.values(months).reduce((s, a) => s + a.length, 0);
 
-            files.forEach(f => {
-                const date = f.uploadedAt
-                    ? new Date(f.uploadedAt.seconds * 1000).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                    : (f.uploadedAtLocal ? new Date(f.uploadedAtLocal).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '');
-                const size = _formatFileSize(f.fileSize);
+            html += `<div class="hours-employee-card glass-card">`;
+            html += `
+                <div class="hours-emp-header">
+                    <div class="hours-emp-avatar">${_getInitials(empName)}</div>
+                    <div class="hours-emp-info">
+                        <div class="hours-emp-name">${empName}</div>
+                        <div class="hours-emp-stats">${totalFiles} file · ${Object.keys(months).length} mesi</div>
+                    </div>
+                </div>`;
 
-                html += `
-                    <div class="hours-file-item">
-                        <div class="hours-file-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        </div>
-                        <div class="hours-file-info">
-                            <div class="hours-file-name">${f.fileName}</div>
-                            <div class="hours-file-meta">${date} · ${size}</div>
-                        </div>
-                        <div class="hours-file-actions">
-                            <a href="${f.downloadURL}" target="_blank" class="icon-btn hours-action-btn" title="Scarica">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            </a>
-                            ${isAdmin ? `
-                            <button class="icon-btn hours-action-btn hours-delete-btn" onclick="Hours.confirmDelete('${f.id}')" title="Elimina">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            </button>` : ''}
-                        </div>
-                    </div>`;
+            const sortedMonths = Object.keys(months).sort((a, b) => {
+                const mA = _parseMonthLabel(a), mB = _parseMonthLabel(b);
+                if (!mA && !mB) return 0;
+                if (!mA) return 1;
+                if (!mB) return -1;
+                return mB.year !== mA.year ? mB.year - mA.year : mB.month - mA.month;
+            });
+
+            html += `<div class="hours-months-grid">`;
+            sortedMonths.forEach(monthLabel => {
+                const files = months[monthLabel];
+                const isOther = monthLabel === 'Altro';
+                const monthData = _parseMonthLabel(monthLabel);
+                const monthColor = monthData ? _getMonthColor(monthData.month) : '#6366f1';
+
+                files.forEach(f => {
+                    const uploadDate = _getFileDate(f);
+                    const size = _formatFileSize(f.fileSize);
+                    const source = f.source === 'ore-pws-auto' ? 'Ore PWS' : 'Manuale';
+
+                    html += `
+                        <div class="hours-month-card" style="--month-accent: ${monthColor}">
+                            <div class="hours-month-badge" style="background: ${monthColor}15; color: ${monthColor}">
+                                <span class="hours-month-icon">${isOther ? '📄' : _getMonthIcon(monthData.month)}</span>
+                                <span>${monthLabel}</span>
+                            </div>
+                            <div class="hours-month-file">
+                                <div class="hours-month-filename" title="${f.fileName}">${f.fileName}</div>
+                                <div class="hours-month-details">
+                                    <span>${uploadDate}</span>
+                                    <span class="hours-dot">·</span>
+                                    <span>${size}</span>
+                                    <span class="hours-dot">·</span>
+                                    <span class="hours-source-tag hours-source-${f.source === 'ore-pws-auto' ? 'auto' : 'manual'}">${source}</span>
+                                </div>
+                            </div>
+                            <div class="hours-month-actions">
+                                <a href="${f.downloadURL}" target="_blank" class="hours-btn hours-btn-download" title="Scarica">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                </a>
+                                ${isAdmin ? `
+                                <button class="hours-btn hours-btn-delete" onclick="Hours.confirmDelete('${f.id}')" title="Elimina">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>` : ''}
+                            </div>
+                        </div>`;
+                });
             });
 
             html += `</div></div>`;
@@ -218,10 +278,31 @@ const Hours = (() => {
         return (bytes / 1048576).toFixed(1) + ' MB';
     }
 
-    return {
-        render,
-        uploadFile,
-        deleteFile,
-        confirmDelete
-    };
+    function _getFileDate(f) {
+        const ts = f.uploadedAt ? new Date(f.uploadedAt.seconds * 1000)
+                 : f.uploadedAtLocal ? new Date(f.uploadedAtLocal) : null;
+        if (!ts) return '';
+        return ts.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function _parseMonthLabel(label) {
+        if (label === 'Altro') return null;
+        for (let i = 0; i < MONTH_NAMES.length; i++) {
+            if (label.startsWith(MONTH_NAMES[i])) {
+                return { month: i, year: parseInt(label.split(' ')[1]) || 0 };
+            }
+        }
+        return null;
+    }
+
+    function _getMonthColor(m) {
+        return ['#3b82f6','#6366f1','#10b981','#f59e0b','#ef4444','#ec4899',
+                '#f97316','#eab308','#14b8a6','#8b5cf6','#64748b','#06b6d4'][m] || '#6366f1';
+    }
+
+    function _getMonthIcon(m) {
+        return ['❄️','💜','🌱','🌸','☀️','🌹','🔥','⛱️','🍂','🎃','🍁','🎄'][m] || '📅';
+    }
+
+    return { render, uploadFile, deleteFile, confirmDelete };
 })();
