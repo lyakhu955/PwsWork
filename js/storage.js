@@ -85,71 +85,15 @@ const Storage = (() => {
     // ==================== DEFAULT DATA ==
     const DEFAULT_ADMIN_CODE = 'admin123';
 
-    const DEFAULT_EMPLOYEES = [
-        {
-            id: 'emp_1',
-            firstName: 'Marco',
-            lastName: 'Rossi',
-            email: 'marco.rossi@email.com',
-            phone: '+39 333 111 2222',
-            position: 'Operaio',
-            username: 'marco.rossi',
-            password: 'password123',
-            createdAt: '2026-01-15'
-        },
-        {
-            id: 'emp_2',
-            firstName: 'Laura',
-            lastName: 'Bianchi',
-            email: 'laura.bianchi@email.com',
-            phone: '+39 333 222 3333',
-            position: 'Operaia',
-            username: 'laura.bianchi',
-            password: 'password123',
-            createdAt: '2026-02-01'
-        },
-        {
-            id: 'emp_3',
-            firstName: 'Giuseppe',
-            lastName: 'Verdi',
-            email: 'giuseppe.verdi@email.com',
-            phone: '+39 333 333 4444',
-            position: 'Operaio',
-            username: 'giuseppe.verdi',
-            password: 'password123',
-            createdAt: '2026-02-10'
-        },
-        {
-            id: 'emp_4',
-            firstName: 'Sofia',
-            lastName: 'Marino',
-            email: 'sofia.marino@email.com',
-            phone: '+39 333 444 5555',
-            position: 'Operaia',
-            username: 'sofia.marino',
-            password: 'password123',
-            createdAt: '2026-03-01'
-        },
-        {
-            id: 'emp_5',
-            firstName: 'Alessandro',
-            lastName: 'Ferrari',
-            email: 'alessandro.ferrari@email.com',
-            phone: '+39 333 555 6666',
-            position: 'Operaio',
-            username: 'alessandro.ferrari',
-            password: 'password123',
-            createdAt: '2026-03-15'
-        }
-    ];
+    const DEFAULT_EMPLOYEES = [];
 
     /*
      * ASSIGNMENT structure:
      * {
      *   id: 'asgn_...',
      *   date: 'YYYY-MM-DD',
-     *   teamName: 'Squadra 1',             // nome squadra
-     *   employeeIds: ['emp_1', 'emp_3'],   // squadra
+     *   teamName: 'Squadra 1',
+     *   employeeIds: ['emp_1', 'emp_3'],
      *   workplaces: [
      *     {
      *       name: 'Iveco Orecchia',
@@ -164,61 +108,6 @@ const Storage = (() => {
      * }
      */
 
-    function generateDemoAssignments() {
-        const assignments = [];
-        const today = new Date();
-        const employees = DEFAULT_EMPLOYEES;
-
-        const demoWorkplaces = [
-            { name: 'Iveco Orecchia', address: 'Via Puglia 9, Torino', lat: 45.0703, lng: 7.6869, info: 'Portare chiavi magazzino B' },
-            { name: 'Stabilimento FIAT', address: 'Corso Agnelli 200, Torino', lat: 45.0355, lng: 7.6166, info: '' },
-            { name: 'Cantiere Bergamo', address: 'Via Broseta 56, Bergamo', lat: 45.6983, lng: 9.6773, info: 'Contattare capo cantiere: 333-1234567' },
-            { name: 'Magazzino Milano Nord', address: 'Via Stephenson 43, Milano', lat: 45.5098, lng: 9.1548, info: '' }
-        ];
-
-        const demoTeamNames = ['Squadra Manutenzione', 'Squadra Impianti', 'Squadra Logistica', 'Squadra Montaggio'];
-
-        for (let dayOffset = -3; dayOffset <= 10; dayOffset++) {
-            const date = new Date(today);
-            date.setDate(date.getDate() + dayOffset);
-            const dateStr = toLocalDateStr(date);
-            const dayOfWeek = date.getDay();
-
-            if (dayOfWeek === 0) continue; // Skip Sunday
-
-            // Create 1-2 assignments (squads) per day
-            const numAssignments = 1 + Math.floor(Math.random() * 2);
-            const shuffledEmps = [...employees].sort(() => Math.random() - 0.5);
-            let empIndex = 0;
-
-            for (let a = 0; a < numAssignments; a++) {
-                const teamSize = 1 + Math.floor(Math.random() * 3);
-                const team = [];
-                for (let t = 0; t < teamSize && empIndex < shuffledEmps.length; t++) {
-                    team.push(shuffledEmps[empIndex].id);
-                    empIndex++;
-                }
-                if (team.length === 0) break;
-
-                const numPlaces = 1 + Math.floor(Math.random() * 2);
-                const shuffledPlaces = [...demoWorkplaces].sort(() => Math.random() - 0.5);
-                const places = shuffledPlaces.slice(0, numPlaces);
-
-                assignments.push({
-                    id: `asgn_${dateStr}_${a}`,
-                    date: dateStr,
-                    teamName: demoTeamNames[a % demoTeamNames.length],
-                    employeeIds: team,
-                    workplaces: places,
-                    notes: '',
-                    createdAt: new Date().toISOString()
-                });
-            }
-        }
-
-        return assignments;
-    }
-
     // ==================== INIT ====================
     function init() {
         if (!localStorage.getItem(KEYS.ADMIN_CODE)) {
@@ -228,7 +117,7 @@ const Storage = (() => {
             localStorage.setItem(KEYS.EMPLOYEES, JSON.stringify(DEFAULT_EMPLOYEES));
         }
         if (!localStorage.getItem(KEYS.ASSIGNMENTS)) {
-            localStorage.setItem(KEYS.ASSIGNMENTS, JSON.stringify(generateDemoAssignments()));
+            localStorage.setItem(KEYS.ASSIGNMENTS, JSON.stringify([]));
         }
     }
 
