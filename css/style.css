@@ -415,11 +415,39 @@ input, select, textarea, button {
 
 .sidebar.collapsed .nav-item {
     justify-content: center;
-    padding: var(--space-md);
+    padding: 14px var(--space-md);
+}
+
+.sidebar.collapsed .nav-item svg {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
 }
 
 .sidebar.collapsed .sidebar-user {
     justify-content: center;
+}
+
+.sidebar.collapsed .user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.95rem;
+}
+
+.sidebar.collapsed .logo-icon-sm {
+    width: 36px;
+    height: 36px;
+}
+
+.sidebar.collapsed .sidebar-toggle-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+.sidebar.collapsed .sidebar-footer .btn svg {
+    width: 22px;
+    height: 22px;
 }
 
 .sidebar-header {
@@ -484,6 +512,11 @@ input, select, textarea, button {
     font-weight: 500;
     font-size: 0.9rem;
     position: relative;
+}
+
+.nav-item svg {
+    flex-shrink: 0;
+    transition: width 0.2s ease, height 0.2s ease;
 }
 
 .nav-item:hover {
