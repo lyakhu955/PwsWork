@@ -118,11 +118,11 @@ const Storage = (() => {
 
     // ==================== REAL-TIME LISTENERS ====================
     let _listenersStarted = false;
-    let _loadedSources = { employees: false, assignments: false, settings: false };
+    let _loadedSources = { employees: false, assignments: false };
     let _firstLoad = true;
 
     function _checkAllLoaded() {
-        if (_loadedSources.employees && _loadedSources.assignments && _loadedSources.settings) {
+        if (_loadedSources.employees && _loadedSources.assignments) {
             _markReady();
         }
     }
