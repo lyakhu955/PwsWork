@@ -8,15 +8,13 @@ const Storage = (() => {
     // ==================== IN-MEMORY CACHE ====================
     let _employees = [];
     let _assignments = [];
-    let _adminCode = 'admin123';
     let _dataReady = false;
     let _readyCallbacks = [];
 
     // Firestore collections
     const COLLECTIONS = {
         EMPLOYEES: 'employees',
-        ASSIGNMENTS: 'assignments',
-        SETTINGS: 'settings'
+        ASSIGNMENTS: 'assignments'
     };
 
     // Local-only keys (stay in localStorage — per-browser)
@@ -165,22 +163,6 @@ const Storage = (() => {
             _checkAllLoaded();
         });
 
-        // --- Settings listener (admin code) ---
-        db.collection(COLLECTIONS.SETTINGS).doc('admin').onSnapshot((doc) => {
-            if (doc.exists) {
-                _adminCode = doc.data().code || 'admin123';
-            } else {
-                // Create default admin code in Firestore
-                db.collection(COLLECTIONS.SETTINGS).doc('admin').set({ code: 'admin123' });
-                _adminCode = 'admin123';
-            }
-            _loadedSources.settings = true;
-            _checkAllLoaded();
-        }, (error) => {
-            console.error('Firestore settings listener error:', error);
-            _loadedSources.settings = true;
-            _checkAllLoaded();
-        });
     }
 
     // Called when Firestore data changes from another device — refresh visible page
@@ -193,14 +175,6 @@ const Storage = (() => {
                 App.refreshCurrentPage();
             }
         }, 300);
-    }
-
-    // ==================== ADMIN CODE ====================
-    function getAdminCode() { return _adminCode; }
-
-    function setAdminCode(code) {
-        _adminCode = code;
-        db.collection(COLLECTIONS.SETTINGS).doc('admin').set({ code: code });
     }
 
     // ==================== EMPLOYEES (sync read from cache, async write to Firestore) ====================
@@ -360,7 +334,6 @@ const Storage = (() => {
         _assignments.forEach(a => {
             batch.delete(db.collection(COLLECTIONS.ASSIGNMENTS).doc(a.id));
         });
-        batch.set(db.collection(COLLECTIONS.SETTINGS).doc('admin'), { code: 'admin123' });
 
         batch.commit().then(() => {
             console.log('✅ All Firestore data reset');
@@ -371,7 +344,6 @@ const Storage = (() => {
         // Clear caches
         _employees = [];
         _assignments = [];
-        _adminCode = 'admin123';
 
         // Clear local storage
         Object.values(LOCAL_KEYS).forEach(key => localStorage.removeItem(key));
@@ -386,7 +358,6 @@ const Storage = (() => {
         init, onReady,
         toLocalDateStr, formatDateIT, formatDateLong,
         getItalianHolidays, isHoliday,
-        getAdminCode, setAdminCode,
         getEmployees, getEmployee, getEmployeeByUsername,
         addEmployee, updateEmployee, deleteEmployee,
         getAssignments, getAssignment, getAssignmentsByDate,

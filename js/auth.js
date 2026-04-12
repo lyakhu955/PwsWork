@@ -6,6 +6,12 @@
 const Auth = (() => {
     let currentUser = null;
 
+    // Boss admin credentials (cannot be deleted or changed)
+    const BOSS = {
+        username: 'Mauro.boss',
+        password: 'presidente2103'
+    };
+
     function init() {
         const savedUser = Storage.getCurrentUser();
         if (savedUser) {
@@ -15,29 +21,26 @@ const Auth = (() => {
         return false;
     }
 
-    function login(username, password, adminCode) {
-        // Check if admin login
-        if (adminCode && adminCode === Storage.getAdminCode()) {
-            // Admin login - just needs valid admin code + any username/password
-            const employee = Storage.getEmployeeByUsername(username);
-            
+    function login(username, password) {
+        // 1. Check if boss admin
+        if (username === BOSS.username && password === BOSS.password) {
             currentUser = {
-                id: employee ? employee.id : 'admin_master',
-                employeeId: employee ? employee.id : null,
-                username: username,
-                firstName: employee ? employee.firstName : username,
-                lastName: employee ? employee.lastName : '',
-                position: employee ? employee.position : 'Amministratore',
-                email: employee ? employee.email : '',
-                phone: employee ? employee.phone : '',
-                role: 'admin'
+                id: 'boss_admin',
+                employeeId: null,
+                username: BOSS.username,
+                firstName: 'Mauro',
+                lastName: 'Boss',
+                position: 'Amministratore Capo',
+                email: '',
+                phone: '',
+                role: 'admin',
+                isBoss: true
             };
-            
             Storage.setCurrentUser(currentUser);
             return { success: true, user: currentUser };
         }
 
-        // Employee login
+        // 2. Check employees (admin or regular)
         const employee = Storage.getEmployeeByUsername(username);
         
         if (!employee) {
@@ -48,10 +51,7 @@ const Auth = (() => {
             return { success: false, error: 'Password non corretta' };
         }
 
-        // Wrong admin code
-        if (adminCode && adminCode !== Storage.getAdminCode()) {
-            return { success: false, error: 'Codice admin non valido' };
-        }
+        const role = employee.role || 'employee';
 
         currentUser = {
             id: employee.id,
@@ -62,11 +62,16 @@ const Auth = (() => {
             position: employee.position,
             email: employee.email,
             phone: employee.phone,
-            role: 'employee'
+            role: role,
+            isBoss: false
         };
 
         Storage.setCurrentUser(currentUser);
         return { success: true, user: currentUser };
+    }
+
+    function isBoss() {
+        return currentUser && currentUser.isBoss === true;
     }
 
     function logout() {
@@ -111,6 +116,7 @@ const Auth = (() => {
         logout,
         getCurrentUser,
         isAdmin,
+        isBoss,
         isLoggedIn,
         updateCurrentUser,
         getFullName,

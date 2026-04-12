@@ -542,3 +542,59 @@
         display: block;
     }
 }
+
+/* Role badges */
+.emp-role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+
+.emp-role-admin {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+}
+
+.emp-role-employee {
+    background: var(--glass-bg, rgba(255,255,255,0.1));
+    color: var(--text-secondary, #aaa);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+}
+
+/* Form select styling */
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: var(--radius-md, 12px);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.15));
+    background: var(--glass-bg, rgba(255,255,255,0.05));
+    color: var(--text-primary, #fff);
+    font-size: 0.95rem;
+    transition: border-color 0.3s;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary, #6366f1);
+}
+
+.form-select option {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.settings-description {
+    color: var(--text-secondary, #aaa);
+    font-size: 0.9rem;
+    margin-top: 4px;
+}

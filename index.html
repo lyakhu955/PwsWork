@@ -60,13 +60,7 @@
                         </label>
                         <input type="password" id="login-password" placeholder="Inserisci la password" required>
                     </div>
-                    <div class="form-group admin-code-group">
-                        <label for="login-admin-code">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            Codice Admin <span class="optional-badge">opzionale</span>
-                        </label>
-                        <input type="password" id="login-admin-code" placeholder="Solo per amministratori">
-                    </div>
+
                     <button type="submit" class="btn btn-primary btn-lg btn-block">
                         <span>Accedi</span>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -443,25 +437,9 @@
                         <div class="settings-section glass-card">
                             <h4>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                Codice Admin
+                                Amministratori
                             </h4>
-                            <p class="settings-description">Modifica il codice admin per l'accesso come amministratore.</p>
-                            <form id="admin-code-form" class="profile-form">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Codice Admin Attuale</label>
-                                        <input type="password" id="current-admin-code" placeholder="Codice attuale">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Nuovo Codice Admin</label>
-                                        <input type="password" id="new-admin-code" placeholder="Nuovo codice">
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                    Aggiorna Codice
-                                </button>
-                            </form>
+                            <p class="settings-description">Gli admin vengono gestiti dalla sezione Dipendenti. Aggiungi un dipendente e impostalo come "Amministratore".</p>
                         </div>
 
                         <div class="settings-section glass-card danger-zone">
@@ -524,9 +502,18 @@
                         <input type="text" id="emp-username" placeholder="nome.cognome" required>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Password Iniziale</label>
-                    <input type="password" id="emp-password" placeholder="Password per il dipendente">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Password Iniziale</label>
+                        <input type="password" id="emp-password" placeholder="Password per il dipendente">
+                    </div>
+                    <div class="form-group">
+                        <label>Livello Accesso</label>
+                        <select id="emp-role" class="form-select">
+                            <option value="employee">👷 Dipendente</option>
+                            <option value="admin">🛡️ Amministratore</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="Employees.closeModal()">Annulla</button>

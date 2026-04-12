@@ -73,6 +73,10 @@ const Employees = (() => {
             const colors = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#ec4899'];
             const bgColor = colors[index % colors.length];
 
+            const roleBadge = emp.role === 'admin'
+                ? '<span class="emp-role-badge emp-role-admin">🛡️ Admin</span>'
+                : '<span class="emp-role-badge emp-role-employee">👷 Dipendente</span>';
+
             html += `
                 <div class="employee-card glass-card stagger-item" style="animation-delay: ${index * 0.05}s">
                     <div class="employee-card-header">
@@ -80,7 +84,7 @@ const Employees = (() => {
                             ${initials}
                         </div>
                         <div>
-                            <div class="employee-name">${emp.firstName} ${emp.lastName}</div>
+                            <div class="employee-name">${emp.firstName} ${emp.lastName} ${roleBadge}</div>
                             <div class="employee-position">${emp.position}</div>
                         </div>
                     </div>
@@ -126,6 +130,8 @@ const Employees = (() => {
 
         form.reset();
 
+        const roleSelect = document.getElementById('emp-role');
+
         if (employeeId) {
             // Edit mode
             const emp = Storage.getEmployee(employeeId);
@@ -139,12 +145,14 @@ const Employees = (() => {
             document.getElementById('emp-phone').value = emp.phone || '';
             document.getElementById('emp-position').value = emp.position || '';
             document.getElementById('emp-username').value = emp.username;
+            if (roleSelect) roleSelect.value = emp.role || 'employee';
             passwordField.placeholder = 'Lascia vuoto per non cambiare';
             passwordField.required = false;
         } else {
             // Create mode
             title.textContent = 'Nuovo Dipendente';
             document.getElementById('employee-id').value = '';
+            if (roleSelect) roleSelect.value = 'employee';
             passwordField.placeholder = 'Password per il dipendente';
             passwordField.required = true;
         }
@@ -167,7 +175,8 @@ const Employees = (() => {
             email: document.getElementById('emp-email').value.trim(),
             phone: document.getElementById('emp-phone').value.trim(),
             position: document.getElementById('emp-position').value.trim(),
-            username: document.getElementById('emp-username').value.trim()
+            username: document.getElementById('emp-username').value.trim(),
+            role: document.getElementById('emp-role').value || 'employee'
         };
 
         const password = document.getElementById('emp-password').value;

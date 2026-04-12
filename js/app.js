@@ -79,7 +79,6 @@ const App = (() => {
 
         const username = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value;
-        const adminCode = document.getElementById('login-admin-code').value.trim();
 
         if (!username || !password) {
             showToast('Errore', 'Inserisci nome utente e password', 'error');
@@ -97,7 +96,7 @@ const App = (() => {
 
         // Wait for Firestore data to be ready before authenticating
         Storage.onReady(() => {
-            const result = Auth.login(username, password, adminCode);
+            const result = Auth.login(username, password);
 
             if (loginBtn) {
                 loginBtn.disabled = false;
@@ -266,30 +265,6 @@ const App = (() => {
     }
 
     function bindSettingsForms() {
-        // Admin code form
-        const adminCodeForm = document.getElementById('admin-code-form');
-        if (adminCodeForm) {
-            adminCodeForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const currentCode = document.getElementById('current-admin-code').value;
-                const newCode = document.getElementById('new-admin-code').value;
-
-                if (currentCode !== Storage.getAdminCode()) {
-                    showToast('Errore', 'Codice admin attuale non corretto', 'error');
-                    return;
-                }
-
-                if (!newCode || newCode.length < 4) {
-                    showToast('Errore', 'Il nuovo codice deve essere almeno 4 caratteri', 'error');
-                    return;
-                }
-
-                Storage.setAdminCode(newCode);
-                adminCodeForm.reset();
-                showToast('Successo', 'Codice admin aggiornato', 'success');
-            });
-        }
-
         // Reset all
         const resetBtn = document.getElementById('reset-all-btn');
         if (resetBtn) {
