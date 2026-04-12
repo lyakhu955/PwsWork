@@ -456,6 +456,7 @@ input, select, textarea, button {
     justify-content: space-between;
     padding: var(--space-lg);
     border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 .sidebar-logo {
@@ -494,6 +495,7 @@ input, select, textarea, button {
 
 .sidebar-nav {
     flex: 1;
+    min-height: 0;
     padding: var(--space-md);
     display: flex;
     flex-direction: column;
@@ -558,6 +560,7 @@ input, select, textarea, button {
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
+    flex-shrink: 0;
 }
 
 .sidebar-user {
@@ -2316,6 +2319,27 @@ input, select, textarea, button {
     
     .sidebar.mobile-open {
         transform: translateX(0);
+    }
+
+    .sidebar {
+        height: 100vh;
+        height: 100dvh;
+        max-height: -webkit-fill-available;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar-footer {
+        flex-shrink: 0;
+        padding: var(--space-sm) var(--space-md);
+        position: sticky;
+        bottom: 0;
+        background: var(--bg-sidebar);
     }
     
     .main-content {
