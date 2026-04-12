@@ -1,6 +1,6 @@
 /* ========================================
    PWSWORK - MAIN STYLESHEET
-   Modern Glassmorphism Design System
+   Neumorphism (Soft UI) Design System
    ======================================== */
 
 /* ==================== CSS VARIABLES ==================== */
@@ -38,28 +38,38 @@
 
 /* ==================== DARK THEME (Default) ==================== */
 [data-theme="dark"] {
-    --bg-primary: #0a0a0f;
-    --bg-secondary: #12121a;
-    --bg-tertiary: #1a1a2e;
-    --bg-card: rgba(26, 26, 46, 0.8);
-    --bg-card-hover: rgba(30, 30, 55, 0.9);
-    --bg-glass: rgba(255, 255, 255, 0.06);
-    --bg-glass-border: rgba(255, 255, 255, 0.1);
-    --bg-glass-hover: rgba(255, 255, 255, 0.1);
-    --bg-input: #1e1e30;
-    --bg-input-focus: #252540;
-    --bg-sidebar: rgba(12, 12, 20, 0.97);
-    --bg-modal-overlay: rgba(0, 0, 0, 0.7);
-    --bg-select-dropdown: #1e1e30;
-    --bg-select-option-hover: #2a2a45;
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #1a1a2e;
+    --bg-tertiary: #1e1e34;
+    --bg-card: #1a1a2e;
+    --bg-card-hover: #1e1e34;
+    --bg-glass: #1a1a2e;
+    --bg-glass-border: transparent;
+    --bg-glass-hover: #1e1e34;
+    --bg-input: #1a1a2e;
+    --bg-input-focus: #1a1a2e;
+    --bg-sidebar: #1a1a2e;
+    --bg-modal-overlay: rgba(0, 0, 0, 0.6);
+    --bg-select-dropdown: #1a1a2e;
+    --bg-select-option-hover: #1e1e34;
     
-    --text-primary: #f0f0f5;
+    /* Neumorphic shadows */
+    --neu-shadow-dark: rgba(5, 5, 12, 0.8);
+    --neu-shadow-light: rgba(40, 40, 70, 0.7);
+    --neu-raised: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+    --neu-raised-sm: 3px 3px 6px var(--neu-shadow-dark), -3px -3px 6px var(--neu-shadow-light);
+    --neu-raised-lg: 10px 10px 20px var(--neu-shadow-dark), -10px -10px 20px var(--neu-shadow-light);
+    --neu-inset: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+    --neu-inset-sm: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
+    --neu-flat: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
+    
+    --text-primary: #e0e0f0;
     --text-secondary: #a0a0b8;
     --text-tertiary: #6b6b80;
-    --text-inverse: #0a0a0f;
+    --text-inverse: #1a1a2e;
     
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-color-strong: rgba(255, 255, 255, 0.15);
+    --border-color: transparent;
+    --border-color-strong: rgba(255, 255, 255, 0.06);
     
     --accent-primary: #7c3aed;
     --accent-primary-hover: #6d28d9;
@@ -69,18 +79,18 @@
     --accent-gradient-hover: linear-gradient(135deg, #6d28d9, #1d4ed8);
     
     --success: #10b981;
-    --success-light: rgba(16, 185, 129, 0.15);
+    --success-light: rgba(16, 185, 129, 0.12);
     --warning: #f59e0b;
-    --warning-light: rgba(245, 158, 11, 0.15);
+    --warning-light: rgba(245, 158, 11, 0.12);
     --danger: #ef4444;
-    --danger-light: rgba(239, 68, 68, 0.15);
+    --danger-light: rgba(239, 68, 68, 0.12);
     --info: #3b82f6;
-    --info-light: rgba(59, 130, 246, 0.15);
+    --info-light: rgba(59, 130, 246, 0.12);
     
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.3);
+    --shadow-sm: var(--neu-raised-sm);
+    --shadow-md: var(--neu-raised);
+    --shadow-lg: var(--neu-raised-lg);
+    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.25);
     
     --login-bg-1: #7c3aed;
     --login-bg-2: #2563eb;
@@ -89,28 +99,38 @@
 
 /* ==================== LIGHT THEME ==================== */
 [data-theme="light"] {
-    --bg-primary: #f5f5fa;
-    --bg-secondary: #ffffff;
-    --bg-tertiary: #eeeef5;
-    --bg-card: rgba(255, 255, 255, 0.85);
-    --bg-card-hover: rgba(255, 255, 255, 0.95);
-    --bg-glass: rgba(255, 255, 255, 0.7);
-    --bg-glass-border: rgba(0, 0, 0, 0.08);
-    --bg-glass-hover: rgba(255, 255, 255, 0.85);
-    --bg-input: #f0f0f8;
-    --bg-input-focus: #e8e8f2;
-    --bg-sidebar: rgba(255, 255, 255, 0.97);
-    --bg-modal-overlay: rgba(0, 0, 0, 0.35);
-    --bg-select-dropdown: #ffffff;
-    --bg-select-option-hover: #f0f0f8;
+    --bg-primary: #e0e5ec;
+    --bg-secondary: #e0e5ec;
+    --bg-tertiary: #d5dae3;
+    --bg-card: #e0e5ec;
+    --bg-card-hover: #d8dde6;
+    --bg-glass: #e0e5ec;
+    --bg-glass-border: transparent;
+    --bg-glass-hover: #d8dde6;
+    --bg-input: #e0e5ec;
+    --bg-input-focus: #e0e5ec;
+    --bg-sidebar: #e0e5ec;
+    --bg-modal-overlay: rgba(0, 0, 0, 0.3);
+    --bg-select-dropdown: #e0e5ec;
+    --bg-select-option-hover: #d5dae3;
     
-    --text-primary: #1a1a2e;
-    --text-secondary: #555570;
-    --text-tertiary: #8888a0;
-    --text-inverse: #ffffff;
+    /* Neumorphic shadows */
+    --neu-shadow-dark: rgba(163, 177, 198, 0.6);
+    --neu-shadow-light: rgba(255, 255, 255, 0.8);
+    --neu-raised: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+    --neu-raised-sm: 3px 3px 6px var(--neu-shadow-dark), -3px -3px 6px var(--neu-shadow-light);
+    --neu-raised-lg: 10px 10px 20px var(--neu-shadow-dark), -10px -10px 20px var(--neu-shadow-light);
+    --neu-inset: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+    --neu-inset-sm: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
+    --neu-flat: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
     
-    --border-color: rgba(0, 0, 0, 0.06);
-    --border-color-strong: rgba(0, 0, 0, 0.12);
+    --text-primary: #2d3748;
+    --text-secondary: #5a6577;
+    --text-tertiary: #8893a4;
+    --text-inverse: #e0e5ec;
+    
+    --border-color: transparent;
+    --border-color-strong: rgba(0, 0, 0, 0.05);
     
     --accent-primary: #7c3aed;
     --accent-primary-hover: #6d28d9;
@@ -128,10 +148,10 @@
     --info: #2563eb;
     --info-light: rgba(37, 99, 235, 0.1);
     
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
-    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.15);
+    --shadow-sm: var(--neu-raised-sm);
+    --shadow-md: var(--neu-raised);
+    --shadow-lg: var(--neu-raised-lg);
+    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.12);
     
     --login-bg-1: #7c3aed;
     --login-bg-2: #2563eb;
@@ -389,8 +409,8 @@ input, select, textarea, button {
     top: 0;
     left: 0;
     background: var(--bg-sidebar);
-    backdrop-filter: blur(20px);
-    border-right: 1px solid var(--border-color);
+    border-right: none;
+    box-shadow: var(--neu-raised-sm);
     display: flex;
     flex-direction: column;
     z-index: 100;
@@ -455,7 +475,7 @@ input, select, textarea, button {
     align-items: center;
     justify-content: space-between;
     padding: var(--space-lg);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: none;
     flex-shrink: 0;
 }
 
@@ -490,7 +510,7 @@ input, select, textarea, button {
 
 .sidebar-toggle-btn:hover {
     color: var(--text-primary);
-    background: var(--bg-glass-hover);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .sidebar-nav {
@@ -523,12 +543,13 @@ input, select, textarea, button {
 
 .nav-item:hover {
     color: var(--text-primary);
-    background: var(--bg-glass-hover);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .nav-item.active {
     color: var(--accent-primary);
     background: var(--accent-primary-light);
+    box-shadow: var(--neu-inset-sm);
     font-weight: 600;
 }
 
@@ -556,7 +577,7 @@ input, select, textarea, button {
 
 .sidebar-footer {
     padding: var(--space-md);
-    border-top: 1px solid var(--border-color);
+    border-top: none;
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
@@ -628,11 +649,11 @@ input, select, textarea, button {
     justify-content: space-between;
     padding: var(--space-lg) var(--space-xl);
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: none;
+    box-shadow: var(--neu-raised-sm);
     position: sticky;
     top: 0;
     z-index: 50;
-    backdrop-filter: blur(20px);
     transition: background var(--transition-theme);
 }
 
@@ -770,14 +791,15 @@ input, select, textarea, button {
     align-items: center;
     gap: var(--space-md);
     padding: var(--space-md);
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     border-radius: var(--radius-md);
     border-left: 3px solid var(--accent-primary);
+    box-shadow: var(--neu-raised-sm);
     transition: all var(--transition-fast);
 }
 
 .today-shift-item:hover {
-    background: var(--bg-glass-hover);
+    box-shadow: var(--neu-inset-sm);
     transform: translateX(4px);
 }
 
@@ -830,9 +852,10 @@ input, select, textarea, button {
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-xl);
-    background: var(--bg-glass);
-    border: 1px dashed var(--border-color-strong);
+    background: var(--bg-primary);
+    border: none;
     border-radius: var(--radius-lg);
+    box-shadow: var(--neu-raised-sm);
     color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -841,9 +864,8 @@ input, select, textarea, button {
 }
 
 .quick-action-btn:hover {
-    background: var(--accent-primary-light);
     color: var(--accent-primary);
-    border-color: var(--accent-primary);
+    box-shadow: var(--neu-inset-sm);
     transform: translateY(-2px);
 }
 
@@ -912,7 +934,7 @@ input, select, textarea, button {
 
 .employee-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--neu-raised-lg);
 }
 
 .employee-card-header {
@@ -1065,8 +1087,9 @@ input, select, textarea, button {
 .week-day-header {
     padding: var(--space-md);
     text-align: center;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-glass);
+    border-bottom: none;
+    background: var(--bg-primary);
+    box-shadow: var(--neu-flat);
 }
 
 .week-day-header.today {
@@ -1089,7 +1112,7 @@ input, select, textarea, button {
 }
 
 .week-day-body:hover {
-    background: var(--bg-glass);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .add-hint {
@@ -1204,19 +1227,19 @@ input, select, textarea, button {
     align-items: center;
     justify-content: center;
     padding: 6px;
-    border: 1px dashed var(--border-color);
+    border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
     opacity: 0.3;
     transition: all var(--transition-fast);
     color: var(--text-secondary);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .add-squad-btn:hover {
     opacity: 1;
-    border-color: var(--accent-primary);
     color: var(--accent-primary);
-    background: var(--accent-primary-light);
+    box-shadow: var(--neu-raised-sm);
 }
 
 .no-assignment {
@@ -1230,19 +1253,20 @@ input, select, textarea, button {
 
 /* ==================== ASSIGNMENT CARD (Calendar) ==================== */
 .assignment-card {
-    background: var(--bg-glass);
-    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    border: none;
     border-left: 3px solid var(--accent-primary);
     border-radius: var(--radius-md);
     padding: var(--space-sm);
     cursor: pointer;
     transition: all var(--transition-fast);
     font-size: 0.75rem;
+    box-shadow: var(--neu-raised-sm);
 }
 
 .assignment-card:hover {
     transform: scale(1.02);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--neu-inset-sm);
     border-left-color: var(--accent-secondary);
 }
 
@@ -1370,7 +1394,7 @@ input, select, textarea, button {
 }
 
 .month-table td.month-cell:hover {
-    background: var(--bg-glass);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .month-day-num {
@@ -1423,9 +1447,10 @@ input, select, textarea, button {
 
 .month-list-day {
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    border: none;
     overflow: hidden;
     background: var(--bg-card);
+    box-shadow: var(--neu-raised-sm);
 }
 
 .month-list-day.month-list-today {
@@ -1442,7 +1467,7 @@ input, select, textarea, button {
     align-items: center;
     justify-content: space-between;
     padding: var(--space-md) var(--space-lg);
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     cursor: pointer;
 }
 
@@ -1504,18 +1529,19 @@ input, select, textarea, button {
     flex-direction: column;
     gap: var(--space-xs);
     padding: var(--space-md);
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     border-radius: var(--radius-md);
     border-left: 3px solid var(--accent-primary);
     cursor: pointer;
     transition: all var(--transition-fast);
+    box-shadow: var(--neu-raised-sm);
     -webkit-tap-highlight-color: rgba(99, 102, 241, 0.1);
 }
 
 .month-list-squad-card:hover,
 .month-list-squad-card:active {
     transform: translateX(4px);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--neu-inset-sm);
     border-left-color: var(--accent-secondary);
 }
 
@@ -1560,7 +1586,7 @@ input, select, textarea, button {
     justify-content: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    border: 1px dashed var(--border-color);
+    border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
     color: var(--text-tertiary);
@@ -1568,23 +1594,24 @@ input, select, textarea, button {
     font-weight: 500;
     transition: all var(--transition-fast);
     margin-bottom: var(--space-xs);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .month-list-add-squad:hover,
 .month-list-add-squad:active {
-    border-color: var(--accent-primary);
     color: var(--accent-primary);
-    background: var(--accent-primary-light);
+    box-shadow: var(--neu-raised-sm);
 }
 
 /* ==================== EMPLOYEE MULTISELECT ==================== */
 .employee-multiselect {
     max-height: 200px;
     overflow-y: auto;
-    border: 1px solid var(--border-color);
+    border: none;
     border-radius: var(--radius-md);
     padding: var(--space-sm);
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
+    box-shadow: var(--neu-inset);
 }
 
 .checkbox-item {
@@ -1599,7 +1626,7 @@ input, select, textarea, button {
 }
 
 .checkbox-item:hover {
-    background: var(--bg-glass);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .checkbox-item input[type="checkbox"] {
@@ -1635,10 +1662,11 @@ input, select, textarea, button {
 }
 
 .workplace-item {
-    background: var(--bg-glass);
-    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    border: none;
     border-radius: var(--radius-md);
     padding: var(--space-md);
+    box-shadow: var(--neu-raised-sm);
     animation: fadeIn 0.3s ease;
 }
 
@@ -1740,7 +1768,7 @@ input, select, textarea, button {
 .map-search-container input:focus {
     outline: none;
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px var(--accent-primary-light);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .map-selected-info {
@@ -1802,14 +1830,15 @@ input, select, textarea, button {
     padding: var(--space-md) var(--space-lg);
     border-radius: var(--radius-md);
     border-left: 3px solid var(--accent-primary);
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     transition: all var(--transition-fast);
     margin-bottom: var(--space-sm);
+    box-shadow: var(--neu-raised-sm);
 }
 
 .today-assignment-card:hover {
     transform: translateX(4px);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .today-assignment-card.highlight-own {
@@ -1901,9 +1930,10 @@ input, select, textarea, button {
 
 .detail-assignment.detail-multi {
     padding: var(--space-lg);
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
+    border: none;
+    box-shadow: var(--neu-raised-sm);
 }
 
 .detail-assignment-num {
@@ -1953,15 +1983,15 @@ input, select, textarea, button {
     align-items: center;
     gap: var(--space-md);
     padding: var(--space-md);
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    border: none;
+    box-shadow: var(--neu-raised-sm);
     transition: all var(--transition-fast);
 }
 
 .detail-team-member:hover {
-    border-color: var(--accent-primary);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .detail-member-avatar {
@@ -2026,17 +2056,17 @@ input, select, textarea, button {
     flex-direction: column;
     gap: var(--space-sm);
     padding: var(--space-md) var(--space-lg);
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    border: none;
     border-left: 3px solid var(--danger);
+    box-shadow: var(--neu-raised-sm);
     transition: all var(--transition-fast);
 }
 
 .detail-workplace-item:hover {
-    border-color: var(--accent-primary);
+    box-shadow: var(--neu-inset-sm);
     border-left-color: var(--accent-primary);
-    box-shadow: var(--shadow-sm);
 }
 
 .detail-workplace-top {
@@ -2055,11 +2085,12 @@ input, select, textarea, button {
     align-items: flex-start;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     border-radius: var(--radius-sm);
     font-size: 0.8rem;
     color: var(--text-secondary);
     line-height: 1.5;
+    box-shadow: var(--neu-inset-sm);
 }
 
 .detail-workplace-extra svg {
@@ -2091,13 +2122,14 @@ input, select, textarea, button {
 
 .detail-notes {
     padding: var(--space-md);
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     border-radius: var(--radius-md);
     border-left: 3px solid var(--info);
     color: var(--text-secondary);
     font-size: 0.85rem;
     font-style: italic;
     line-height: 1.5;
+    box-shadow: var(--neu-inset-sm);
 }
 
 .day-date {
@@ -2243,9 +2275,10 @@ input, select, textarea, button {
     align-items: center;
     gap: var(--space-md);
     padding: var(--space-md);
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     border-radius: var(--radius-md);
     border-left: 3px solid;
+    box-shadow: var(--neu-raised-sm);
 }
 
 .preset-shift-item .preset-info {
@@ -2730,9 +2763,9 @@ input, select, textarea, button {
     width: 340px;
     max-height: 440px;
     background: var(--bg-secondary);
-    border: 1px solid var(--border-color-strong);
+    border: none;
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--neu-raised-lg);
     z-index: 1000;
     display: none;
     overflow: hidden;
@@ -2771,7 +2804,7 @@ input, select, textarea, button {
 }
 
 .notif-item:hover {
-    background: var(--bg-glass-hover);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .notif-item.unread {
@@ -2812,12 +2845,13 @@ input, select, textarea, button {
 .absences-tabs {
     display: flex;
     gap: 4px;
-    background: var(--bg-glass);
-    border: 1px solid var(--bg-glass-border);
+    background: var(--bg-primary);
+    border: none;
     border-radius: var(--radius-lg);
     padding: 4px;
     margin-bottom: var(--space-lg);
     flex-wrap: wrap;
+    box-shadow: var(--neu-inset);
 }
 
 .abs-tab {
@@ -2843,7 +2877,7 @@ input, select, textarea, button {
 
 .abs-tab:hover {
     color: var(--text-primary);
-    background: var(--bg-glass-hover);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .abs-tab.active {
@@ -2993,7 +3027,7 @@ input, select, textarea, button {
 }
 
 .abs-cal-cell:hover:not(.empty):not(.sunday):not(.holiday) {
-    background: var(--bg-glass-hover);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .abs-cal-cell.empty {
@@ -3248,8 +3282,9 @@ input, select, textarea, button {
 
 .abs-count-item {
     padding: 10px 12px;
-    background: var(--bg-glass);
+    background: var(--bg-primary);
     border-radius: var(--radius-md);
+    box-shadow: var(--neu-inset-sm);
 }
 
 .abs-count-val {

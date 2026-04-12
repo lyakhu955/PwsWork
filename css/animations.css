@@ -176,13 +176,13 @@
     }
 }
 
-/* Glow Pulse */
+/* Neumorphic Shadow Pulse */
 @keyframes glowPulse {
     0%, 100% {
-        box-shadow: 0 0 5px rgba(124, 58, 237, 0.3);
+        box-shadow: var(--neu-raised-sm);
     }
     50% {
-        box-shadow: 0 0 20px rgba(124, 58, 237, 0.5), 0 0 40px rgba(124, 58, 237, 0.2);
+        box-shadow: var(--neu-raised-lg);
     }
 }
 
@@ -266,7 +266,7 @@
 
 .hover-lift:hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--neu-raised-lg);
 }
 
 .hover-scale {
@@ -301,5 +301,6 @@
     transition: background var(--transition-theme), 
                 color var(--transition-theme), 
                 border-color var(--transition-theme),
-                box-shadow var(--transition-theme) !important;
+                box-shadow var(--transition-theme),
+                filter var(--transition-theme) !important;
 }

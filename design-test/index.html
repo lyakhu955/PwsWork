@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PwsWork - Design Comparison</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #f0f0f5;
+            min-height: 100vh;
+        }
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .hero h1 span { 
+            background: linear-gradient(135deg, #7c3aed, #a855f7, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            color: #a0a0b8;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            padding: 40px 24px 80px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 32px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.15);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .card-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+        .badge-current { background: rgba(124,58,237,0.2); color: #a855f7; }
+        .badge-requested { background: rgba(6,182,212,0.2); color: #06b6d4; }
+        .badge-trend { background: rgba(16,185,129,0.2); color: #10b981; }
+        .badge-hot { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .card p {
+            color: #a0a0b8;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .card .arrow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #7c3aed;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .card .arrow svg {
+            transition: transform 0.3s ease;
+        }
+        .card:hover .arrow svg {
+            transform: translateX(4px);
+        }
+        .section-title {
+            text-align: center;
+            padding: 20px;
+            color: #6b6b80;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .info-box {
+            max-width: 900px;
+            margin: 0 auto 40px;
+            padding: 0 24px;
+        }
+        .info-box .info-card {
+            background: rgba(124,58,237,0.08);
+            border: 1px solid rgba(124,58,237,0.2);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        .info-box h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #a855f7;
+        }
+        .info-box ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .info-box li {
+            color: #a0a0b8;
+            font-size: 0.85rem;
+            padding: 4px 0;
+        }
+        .info-box li::before {
+            content: '→ ';
+            color: #7c3aed;
+        }
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 1.8rem; }
+            .info-box ul { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>PwsWork <span>Design Lab</span></h1>
+        <p>Confronta diversi stili di design per scegliere il migliore per PwsWork. Clicca su ciascuno per vederlo in azione.</p>
+    </div>
+
+    <div class="info-box">
+        <div class="info-card">
+            <h3>🔥 Trend Design 2025-2026 per Dashboard/Admin Panel</h3>
+            <ul>
+                <li><strong>Neumorphism (Soft UI)</strong> — ombre soft, effetto "push/pull"</li>
+                <li><strong>Glassmorphism</strong> — vetro smerigliato + blur (attuale)</li>
+                <li><strong>Aurora UI</strong> — gradienti vibranti + glow ambientale</li>
+                <li><strong>Claymorphism</strong> — ombre colorate 3D, stile argilla</li>
+                <li><strong>Bento Grid</strong> — layout a griglia stile Apple/Figma</li>
+                <li><strong>Flat 2.0 / Material You</strong> — piatto e pulito + colore</li>
+            </ul>
+        </div>
+    </div>
+
+    <p class="section-title">Scegli un design da provare</p>
+
+    <div class="grid">
+        <a class="card" href="neumorphism.html">
+            <span class="card-badge badge-requested">Richiesto</span>
+            <h3>🌑 Neumorphism (Soft UI)</h3>
+            <p>Design con ombre morbide che creano un effetto "in rilievo" o "incassato". Stile elegante e tattile, come se i componenti fossero scolpiti dalla superficie.</p>
+            <div class="arrow">
+                Vedi anteprima
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+        </a>
+
+        <a class="card" href="aurora.html">
+            <span class="card-badge badge-hot">🔥 Top 2026</span>
+            <h3>🌌 Aurora UI</h3>
+            <p>Gradienti vibranti con effetti glow ambientali. Design futuristico e immersivo con luce dinamica che si diffonde dietro i componenti. Ideale per dark mode.</p>
+            <div class="arrow">
+                Vedi anteprima
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+        </a>
+
+        <a class="card" href="claymorphism.html">
+            <span class="card-badge badge-trend">Trend</span>
+            <h3>🎨 Claymorphism</h3>
+            <p>Effetto "argilla 3D" con ombre colorate e bordi arrotondati. Giocoso e moderno, dà profondità senza appesantire. Popolarissimo nelle app mobile 2025.</p>
+            <div class="arrow">
+                Vedi anteprima
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+        </a>
+
+        <a class="card" href="bento.html">
+            <span class="card-badge badge-hot">🔥 Top 2026</span>
+            <h3>📦 Bento Grid</h3>
+            <p>Layout a griglia ispirato da Apple e Figma. Sezioni organizzate in blocchi di diverse dimensioni che creano una composizione visiva dinamica e ordinata.</p>
+            <div class="arrow">
+                Vedi anteprima
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+        </a>
+
+        <a class="card" href="flat2.html">
+            <span class="card-badge badge-trend">Trend</span>
+            <h3>✨ Flat 2.0 / Material You</h3>
+            <p>Evoluzione del Material Design: superfici piatte e pulite con colori personalizzabili, ombre sottili e tipografia forte. Massima leggibilità e accessibilità.</p>
+            <div class="arrow">
+                Vedi anteprima
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+        </a>
+
+        <a class="card" href="../index.html">
+            <span class="card-badge badge-current">Attuale</span>
+            <h3>🔮 Glassmorphism (Attuale)</h3>
+            <p>Il design attuale di PwsWork: vetro smerigliato con blur, bordi trasparenti e sfondo scuro. Elegante ma può sembrare "piatto" su alcuni dispositivi.</p>
+            <div class="arrow">
+                Vai al sito attuale
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+        </a>
+    </div>
+</body>
+</html>
