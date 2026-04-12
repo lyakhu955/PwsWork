@@ -16,16 +16,11 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Firestore database instance
+// Firestore database instance with offline cache
 const db = firebase.firestore();
-
-// Enable offline persistence for better UX
-db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-    if (err.code === 'failed-precondition') {
-        console.warn('Firestore persistence failed: multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-        console.warn('Firestore persistence not available in this browser');
-    }
+db.settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+    merge: true
 });
 
 console.log('🔥 Firebase initialized — project:', firebaseConfig.projectId);
