@@ -278,10 +278,70 @@ const App = (() => {
 
     // ==================== SETTINGS ====================
     function renderSettings() {
-        // Settings page - no presets needed anymore
+        updateInstallButtonState();
+    }
+
+    function updateInstallButtonState() {
+        const installBtn = document.getElementById('pwa-install-btn');
+        const installStatus = document.getElementById('pwa-install-status');
+        if (!installBtn || !installStatus) return;
+
+        const pwa = window.PWAInstall;
+        if (!pwa) {
+            installBtn.disabled = true;
+            installStatus.textContent = 'Installazione app non disponibile su questo browser.';
+            return;
+        }
+
+        const state = pwa.getState();
+        if (state === 'installed') {
+            installBtn.disabled = true;
+            installBtn.textContent = 'App già installata';
+            installStatus.textContent = 'PwsWork è già installata su questo dispositivo.';
+            return;
+        }
+
+        if (state === 'available') {
+            installBtn.disabled = false;
+            installBtn.textContent = 'Installa App';
+            installStatus.textContent = 'Puoi installare PwsWork sul telefono per usarla come app.';
+            return;
+        }
+
+        installBtn.disabled = true;
+        installBtn.textContent = 'Installa App';
+        installStatus.textContent = 'Per installare: apri dal browser del telefono e usa "Aggiungi a Home" o "Installa app".';
     }
 
     function bindSettingsForms() {
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn && !installBtn.dataset.bound) {
+            installBtn.dataset.bound = 'true';
+            installBtn.addEventListener('click', async () => {
+                const pwa = window.PWAInstall;
+                if (!pwa) {
+                    showToast('Installazione', 'Installazione non supportata su questo browser', 'warning');
+                    return;
+                }
+
+                const result = await pwa.promptInstall();
+                if (result.ok) {
+                    showToast('Installazione', 'Installazione avviata con successo', 'success');
+                } else if (result.reason === 'dismissed') {
+                    showToast('Installazione', 'Installazione annullata', 'info');
+                } else {
+                    showToast('Installazione', 'Installazione non disponibile al momento', 'warning');
+                }
+
+                updateInstallButtonState();
+            });
+        }
+
+        if (!window.__pwaInstallStateBound) {
+            window.__pwaInstallStateBound = true;
+            window.addEventListener('pwa-install-state', updateInstallButtonState);
+        }
+
         // Reset all
         const resetBtn = document.getElementById('reset-all-btn');
         if (resetBtn) {
