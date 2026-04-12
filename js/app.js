@@ -87,15 +87,31 @@ const App = (() => {
             return;
         }
 
-        const result = Auth.login(username, password, adminCode);
-
-        if (result.success) {
-            showToast('Benvenuto!', `Ciao ${Auth.getFullName()}!`, 'success');
-            showApp();
-        } else {
-            showToast('Errore di accesso', result.error, 'error');
-            shakeElement(document.querySelector('.login-card'));
+        // Disable login button and show loading
+        const loginBtn = document.querySelector('#login-form button[type="submit"]');
+        if (loginBtn) {
+            loginBtn.disabled = true;
+            loginBtn.dataset.originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<span class="spinner-sm"></span> Connessione...';
         }
+
+        // Wait for Firestore data to be ready before authenticating
+        Storage.onReady(() => {
+            const result = Auth.login(username, password, adminCode);
+
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = loginBtn.dataset.originalText;
+            }
+
+            if (result.success) {
+                showToast('Benvenuto!', `Ciao ${Auth.getFullName()}!`, 'success');
+                showApp();
+            } else {
+                showToast('Errore di accesso', result.error, 'error');
+                shakeElement(document.querySelector('.login-card'));
+            }
+        });
     }
 
     function handleLogout() {
