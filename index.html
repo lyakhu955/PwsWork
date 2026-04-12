@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0f1e">
+    <title>PwsWork - Gestione Dipendenti</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+
+    <!-- ==================== LOGIN PAGE ==================== -->
+    <div id="login-page" class="page login-page active">
+        <div class="login-bg">
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+                <div class="shape shape-4"></div>
+                <div class="shape shape-5"></div>
+            </div>
+        </div>
+        <div class="login-container">
+            <div class="login-card glass-card">
+                <div class="login-header">
+                    <div class="login-logo">
+                        <div class="logo-icon">
+                            <svg viewBox="0 0 40 40" fill="none">
+                                <rect x="4" y="4" width="14" height="14" rx="3" fill="currentColor" opacity="0.8"/>
+                                <rect x="22" y="4" width="14" height="14" rx="3" fill="currentColor" opacity="0.4"/>
+                                <rect x="4" y="22" width="14" height="14" rx="3" fill="currentColor" opacity="0.4"/>
+                                <rect x="22" y="22" width="14" height="14" rx="3" fill="currentColor" opacity="0.6"/>
+                            </svg>
+                        </div>
+                        <h1>Pws<span class="text-gradient">Work</span></h1>
+                    </div>
+                    <p class="login-subtitle">Gestione intelligente del tuo team</p>
+                </div>
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="login-username">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Nome Utente
+                        </label>
+                        <input type="text" id="login-username" placeholder="Inserisci il tuo nome utente" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            Password
+                        </label>
+                        <input type="password" id="login-password" placeholder="Inserisci la password" required>
+                    </div>
+                    <div class="form-group admin-code-group">
+                        <label for="login-admin-code">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Codice Admin <span class="optional-badge">opzionale</span>
+                        </label>
+                        <input type="password" id="login-admin-code" placeholder="Solo per amministratori">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">
+                        <span>Accedi</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </form>
+                <div class="login-footer">
+                    <div class="theme-toggle-login">
+                        <button id="theme-toggle-login" class="theme-toggle-btn" title="Cambia tema">
+                            <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                            <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="app" class="app-container" style="display:none;">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="logo-icon-sm">
+                        <svg viewBox="0 0 40 40" fill="none">
+                            <rect x="4" y="4" width="14" height="14" rx="3" fill="currentColor" opacity="0.8"/>
+                            <rect x="22" y="4" width="14" height="14" rx="3" fill="currentColor" opacity="0.4"/>
+                            <rect x="4" y="22" width="14" height="14" rx="3" fill="currentColor" opacity="0.4"/>
+                            <rect x="22" y="22" width="14" height="14" rx="3" fill="currentColor" opacity="0.6"/>
+                        </svg>
+                    </div>
+                    <span class="sidebar-title">Pws<span class="text-gradient">Work</span></span>
+                </div>
+                <button id="sidebar-toggle" class="sidebar-toggle-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="employees">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Dipendenti</span>
+                    <span class="nav-badge admin-only-badge" style="display:none;">Admin</span>
+                </a>
+                <a href="#" class="nav-item" data-page="schedule">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>Programma</span>
+                </a>
+                <a href="#" class="nav-item" data-page="absences">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/><path d="M9 9h6v6H9z"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/></svg>
+                    <span>Assenze</span>
+                </a>
+                <a href="#" class="nav-item" data-page="profile">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Profilo</span>
+                </a>
+                <a href="#" class="nav-item admin-only" data-page="settings" style="display:none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Impostazioni</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="user-avatar" id="sidebar-avatar">
+                        <span id="sidebar-avatar-text">U</span>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="sidebar-username">Utente</span>
+                        <span class="user-role" id="sidebar-role">Dipendente</span>
+                    </div>
+                </div>
+                <div class="sidebar-actions">
+                    <button id="theme-toggle-app" class="icon-btn" title="Cambia tema">
+                        <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+                    <button id="logout-btn" class="icon-btn" title="Esci">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button id="mobile-menu-btn" class="icon-btn mobile-only">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <h2 id="page-title" class="page-title">Dashboard</h2>
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-wrapper">
+                        <button id="notification-bell" class="icon-btn notification-bell" onclick="Absences.toggleNotificationsPanel()" title="Notifiche">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            <span id="notification-badge" class="notification-badge" style="display:none;">0</span>
+                        </button>
+                        <div id="notifications-panel" class="notifications-panel">
+                            <div class="notif-panel-header">
+                                <h4>Notifiche</h4>
+                                <button class="btn btn-outline btn-sm" onclick="Absences.markAllNotificationsRead()">Segna lette</button>
+                            </div>
+                            <div id="notifications-list" class="notifications-list"></div>
+                        </div>
+                    </div>
+                    <div class="topbar-date">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span id="current-date"></span>
+                    </div>
+                    <div class="topbar-user">
+                        <span id="topbar-greeting">Ciao,</span>
+                        <strong id="topbar-name">Utente</strong>
+                    </div>
+                </div>
+            </header>
+
+            <!-- PAGE CONTENT AREA -->
+            <div class="content-area">
+
+                <!-- DASHBOARD PAGE -->
+                <section id="page-dashboard" class="page-content active">
+                    <div class="dashboard-grid">
+                        <!-- Stats Cards -->
+                        <div class="stats-row">
+                            <div class="stat-card glass-card" data-stat="employees">
+                                <div class="stat-icon bg-gradient-purple">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="stat-total-employees">0</span>
+                                    <span class="stat-label">Dipendenti Totali</span>
+                                </div>
+                            </div>
+                            <div class="stat-card glass-card" data-stat="today">
+                                <div class="stat-icon bg-gradient-blue">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="stat-today-assigned">0</span>
+                                    <span class="stat-label">Assegnati Oggi</span>
+                                </div>
+                            </div>
+                            <div class="stat-card glass-card" data-stat="week">
+                                <div class="stat-icon bg-gradient-green">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="stat-today-workplaces">0</span>
+                                    <span class="stat-label">Posti di Lavoro Oggi</span>
+                                </div>
+                            </div>
+                            <div class="stat-card glass-card" data-stat="absent">
+                                <div class="stat-icon bg-gradient-orange">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="stat-week-assignments">0</span>
+                                    <span class="stat-label">Squadre Settimana</span>
+                                </div>
+                            </div>
+                            <div class="stat-card glass-card" data-stat="absent-today">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #f97316);">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="18" y1="11" x2="22" y2="11"/></svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="stat-today-absent">0</span>
+                                    <span class="stat-label">Assenti Oggi</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Today's Schedule -->
+                        <div class="dashboard-section glass-card">
+                            <div class="section-header">
+                                <h3>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                    Chi Lavora Oggi
+                                </h3>
+                            </div>
+                            <div id="today-schedule" class="today-schedule">
+                                <div class="empty-state">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    <p>Nessuna assegnazione per oggi</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions (Admin) -->
+                        <div class="dashboard-section glass-card admin-only" style="display:none;">
+                            <div class="section-header">
+                                <h3>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                    Azioni Rapide
+                                </h3>
+                            </div>
+                            <div class="quick-actions">
+                                <button class="quick-action-btn" onclick="App.navigateTo('employees')">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                                    <span>Aggiungi Dipendente</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="App.navigateTo('schedule')">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+                                    <span>Gestisci Squadre</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="App.navigateTo('absences')">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/><path d="M9 9h6v6H9z"/></svg>
+                                    <span>Gestisci Assenze</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="App.navigateTo('settings')">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                                    <span>Impostazioni</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- EMPLOYEES PAGE -->
+                <section id="page-employees" class="page-content">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <h3>Gestione Dipendenti</h3>
+                            <p class="page-description">Gestisci il tuo team in modo efficiente</p>
+                        </div>
+                        <div class="page-header-right admin-only" style="display:none;">
+                            <button id="add-employee-btn" class="btn btn-primary">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span>Nuovo Dipendente</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="search-bar glass-card">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="employee-search" placeholder="Cerca dipendente...">
+                    </div>
+                    <div id="employees-list" class="employees-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- SCHEDULE PAGE -->
+                <section id="page-schedule" class="page-content">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <h3>Programma Lavorativo</h3>
+                            <p class="page-description">Visualizza e gestisci le squadre e i posti di lavoro</p>
+                        </div>
+                        <div class="page-header-right">
+                            <div class="schedule-nav">
+                                <button id="prev-week" class="btn btn-outline btn-sm">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                                </button>
+                                <span id="current-week-label" class="week-label">Settimana Corrente</span>
+                                <button id="next-week" class="btn btn-outline btn-sm">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="schedule-toolbar glass-card">
+                        <div class="schedule-filters">
+                            <select id="schedule-employee-filter" class="form-select">
+                                <option value="all">Tutti i dipendenti</option>
+                            </select>
+                            <select id="schedule-view-mode" class="form-select">
+                                <option value="week">Vista Settimanale</option>
+                                <option value="month">Vista Mensile</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="schedule-container" class="schedule-grid glass-card">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- ABSENCES PAGE -->
+                <section id="page-absences" class="page-content">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <h3>Assenze — Ferie, Malattie, Permessi</h3>
+                            <p class="page-description">Gestisci ferie, malattie e permessi del team</p>
+                        </div>
+                    </div>
+                    <div id="absences-content"></div>
+                </section>
+
+                <!-- PROFILE PAGE -->
+                <section id="page-profile" class="page-content">
+                    <div class="profile-container">
+                        <div class="profile-header glass-card">
+                            <div class="profile-avatar-large">
+                                <span id="profile-avatar-text">U</span>
+                            </div>
+                            <div class="profile-info">
+                                <h3 id="profile-name">Nome Utente</h3>
+                                <span class="profile-role-badge" id="profile-role-badge">Dipendente</span>
+                            </div>
+                        </div>
+                        <div class="profile-sections">
+                            <div class="profile-section glass-card">
+                                <h4>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    Informazioni Personali
+                                </h4>
+                                <form id="profile-form" class="profile-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Nome Completo</label>
+                                            <input type="text" id="profile-fullname" placeholder="Il tuo nome">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <input type="email" id="profile-email" placeholder="email@esempio.com">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Telefono</label>
+                                            <input type="tel" id="profile-phone" placeholder="+39 000 000 0000">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Ruolo</label>
+                                            <input type="text" id="profile-position" placeholder="Il tuo ruolo" readonly>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                        Salva Modifiche
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="profile-section glass-card">
+                                <h4>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    Cambio Password
+                                </h4>
+                                <form id="password-form" class="profile-form">
+                                    <div class="form-group">
+                                        <label>Password Attuale</label>
+                                        <input type="password" id="current-password" placeholder="Password attuale">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Nuova Password</label>
+                                            <input type="password" id="new-password" placeholder="Nuova password">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Conferma Password</label>
+                                            <input type="password" id="confirm-password" placeholder="Conferma password">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                        Aggiorna Password
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SETTINGS PAGE (Admin Only) -->
+                <section id="page-settings" class="page-content">
+                    <div class="settings-container">
+                        <div class="settings-section glass-card">
+                            <h4>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                Codice Admin
+                            </h4>
+                            <p class="settings-description">Modifica il codice admin per l'accesso come amministratore.</p>
+                            <form id="admin-code-form" class="profile-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Codice Admin Attuale</label>
+                                        <input type="password" id="current-admin-code" placeholder="Codice attuale">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nuovo Codice Admin</label>
+                                        <input type="password" id="new-admin-code" placeholder="Nuovo codice">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                    Aggiorna Codice
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="settings-section glass-card danger-zone">
+                            <h4>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                Zona Pericolosa
+                            </h4>
+                            <p class="settings-description">Attenzione: queste azioni sono irreversibili.</p>
+                            <button id="reset-all-btn" class="btn btn-danger">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Resetta Tutti i Dati
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+    
+    <!-- Employee Modal -->
+    <div id="employee-modal" class="modal-overlay">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3 id="employee-modal-title">Nuovo Dipendente</h3>
+                <button class="modal-close" onclick="Employees.closeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="employee-form" class="modal-form">
+                <input type="hidden" id="employee-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" id="emp-firstname" placeholder="Nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cognome</label>
+                        <input type="text" id="emp-lastname" placeholder="Cognome" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="emp-email" placeholder="email@esempio.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefono</label>
+                        <input type="tel" id="emp-phone" placeholder="+39 000 000 0000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ruolo / Posizione</label>
+                        <input type="text" id="emp-position" placeholder="Es: Cameriere, Chef, Barista">
+                    </div>
+                    <div class="form-group">
+                        <label>Nome Utente (per login)</label>
+                        <input type="text" id="emp-username" placeholder="nome.cognome" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Password Iniziale</label>
+                    <input type="password" id="emp-password" placeholder="Password per il dipendente">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="Employees.closeModal()">Annulla</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        <span>Salva</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assignment Modal -->
+    <div id="assignment-modal" class="modal-overlay">
+        <div class="modal glass-card modal-lg">
+            <div class="modal-header">
+                <h3 id="assignment-modal-title">Nuova Assegnazione</h3>
+                <button class="modal-close" onclick="Schedule.closeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="assignment-form" class="modal-form">
+                <input type="hidden" id="assignment-id">
+
+                <!-- Data -->
+                <div class="form-group">
+                    <label>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Data
+                    </label>
+                    <input type="date" id="assignment-date" required>
+                </div>
+
+                <!-- Nome Squadra -->
+                <div class="form-group">
+                    <label>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Nome Squadra
+                    </label>
+                    <input type="text" id="assignment-team-name" class="form-input" placeholder="es. Squadra 1, Squadra Manutenzione..." required>
+                </div>
+
+                <!-- Multi-select dipendenti -->
+                <div class="form-group">
+                    <label>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Squadra / Dipendenti
+                    </label>
+                    <div class="employee-multiselect" id="employee-multiselect">
+                        <!-- Checkboxes populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Posti di lavoro dinamici -->
+                <div class="form-group">
+                    <label>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Posti di Lavoro
+                    </label>
+                    <div id="workplaces-list" class="workplaces-list">
+                        <!-- Workplace items added dynamically -->
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="add-workplace-btn" onclick="Schedule.addWorkplaceField()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Aggiungi Posto di Lavoro
+                    </button>
+                </div>
+
+                <!-- Note -->
+                <div class="form-group">
+                    <label>Note (opzionale)</label>
+                    <textarea id="assignment-notes" placeholder="Note aggiuntive..." rows="2"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="Schedule.closeModal()">Annulla</button>
+                    <button type="button" class="btn btn-danger" id="delete-assignment-btn" style="display:none;" onclick="Schedule.deleteAssignment()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Elimina
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        <span>Salva</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Map Picker Modal -->
+    <div id="map-modal" class="modal-overlay">
+        <div class="modal glass-card modal-lg">
+            <div class="modal-header">
+                <h3>Seleziona Posizione</h3>
+                <button class="modal-close" onclick="Schedule.closeMapModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="map-search-container">
+                <input type="text" id="map-search-input" class="form-input" placeholder="Cerca indirizzo o azienda...">
+            </div>
+            <div id="map-container" style="width:100%;height:400px;border-radius:12px;overflow:hidden;"></div>
+            <div class="map-selected-info" id="map-selected-info" style="display:none;">
+                <span id="map-selected-address">Nessun indirizzo selezionato</span>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="Schedule.closeMapModal()">Annulla</button>
+                <button type="button" class="btn btn-primary" onclick="Schedule.confirmMapSelection()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    Conferma Posizione
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Detail Modal (Employee View) -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal glass-card modal-lg">
+            <div class="modal-header">
+                <h3 id="detail-modal-title">Dettaglio Assegnazione</h3>
+                <button class="modal-close" onclick="Schedule.closeDetailModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div id="detail-modal-body" class="detail-modal-body">
+                <!-- Populated by JS -->
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-primary" onclick="Schedule.closeDetailModal()">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Confirm Dialog -->
+    <div id="confirm-dialog" class="modal-overlay">
+        <div class="modal glass-card modal-sm">
+            <div class="modal-header">
+                <h3 id="confirm-title">Conferma</h3>
+            </div>
+            <p id="confirm-message" class="confirm-message">Sei sicuro?</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="confirm-cancel">Annulla</button>
+                <button class="btn btn-danger" id="confirm-ok">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAa6cEbvbuuKqk-6OidCRTiNPVtrXpyiZo&libraries=places&callback=Function.prototype" async defer></script>
+    <script src="js/storage.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/employees.js"></script>
+    <script src="js/schedule.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/absences.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

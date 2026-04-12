@@ -1,0 +1,918 @@
+/* ========================================
+   PWSWORK - ABSENCES MODULE
+   Ferie, Malattie, Permessi Management
+   with Calendar Picker & Notifications
+   ======================================== */
+
+const Absences = (() => {
+    const KEYS = {
+        ABSENCES: 'pws_absences',
+        LEAVE_REQUESTS: 'pws_leave_requests',
+        NOTIFICATIONS: 'pws_notifications'
+    };
+
+    const ABSENCE_TYPES = {
+        ferie: { label: 'Ferie', icon: '🏖️', color: '#3b82f6', colorLight: 'rgba(59,130,246,0.15)' },
+        malattia: { label: 'Malattia', icon: '🤒', color: '#ef4444', colorLight: 'rgba(239,68,68,0.15)' },
+        permesso: { label: 'Permesso', icon: '📋', color: '#8b5cf6', colorLight: 'rgba(139,92,246,0.15)' }
+    };
+
+    const REQUEST_STATUS = {
+        pending: { label: 'In Attesa', color: '#f59e0b', icon: '🟡' },
+        approved: { label: 'Approvata', color: '#10b981', icon: '🟢' },
+        rejected: { label: 'Rifiutata', color: '#ef4444', icon: '🔴' }
+    };
+
+    let calendarSelectedDates = [];
+    let calendarMonth = new Date().getMonth();
+    let calendarYear = new Date().getFullYear();
+
+    // ==================== INIT ====================
+    function init() {
+        if (!localStorage.getItem(KEYS.ABSENCES)) {
+            localStorage.setItem(KEYS.ABSENCES, JSON.stringify([]));
+        }
+        if (!localStorage.getItem(KEYS.LEAVE_REQUESTS)) {
+            localStorage.setItem(KEYS.LEAVE_REQUESTS, JSON.stringify([]));
+        }
+        if (!localStorage.getItem(KEYS.NOTIFICATIONS)) {
+            localStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify([]));
+        }
+        updateNotificationBadge();
+    }
+
+    // ==================== DATA ACCESS ====================
+    function getAbsences() {
+        try { return JSON.parse(localStorage.getItem(KEYS.ABSENCES)) || []; }
+        catch { return []; }
+    }
+
+    function getLeaveRequests() {
+        try { return JSON.parse(localStorage.getItem(KEYS.LEAVE_REQUESTS)) || []; }
+        catch { return []; }
+    }
+
+    function getNotifications() {
+        try { return JSON.parse(localStorage.getItem(KEYS.NOTIFICATIONS)) || []; }
+        catch { return []; }
+    }
+
+    function saveAbsences(absences) {
+        localStorage.setItem(KEYS.ABSENCES, JSON.stringify(absences));
+    }
+
+    function saveLeaveRequests(requests) {
+        localStorage.setItem(KEYS.LEAVE_REQUESTS, JSON.stringify(requests));
+    }
+
+    function saveNotifications(notifications) {
+        localStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+    }
+
+    // ==================== NOTIFICATIONS ====================
+    function addNotification(userId, message, type, relatedId) {
+        const notifications = getNotifications();
+        notifications.unshift({
+            id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            userId: userId,
+            message: message,
+            type: type, // 'request_new', 'request_approved', 'request_rejected', 'absence_added'
+            read: false,
+            createdAt: new Date().toISOString(),
+            relatedId: relatedId || null
+        });
+        saveNotifications(notifications);
+        updateNotificationBadge();
+    }
+
+    function getMyNotifications() {
+        const user = Auth.getCurrentUser();
+        if (!user) return [];
+        const all = getNotifications();
+        if (Auth.isAdmin()) {
+            return all.filter(n => n.userId === 'admin' || n.userId === user.id);
+        }
+        return all.filter(n => n.userId === user.id);
+    }
+
+    function markNotificationRead(notifId) {
+        const notifications = getNotifications();
+        const n = notifications.find(x => x.id === notifId);
+        if (n) n.read = true;
+        saveNotifications(notifications);
+        updateNotificationBadge();
+    }
+
+    function markAllNotificationsRead() {
+        const notifications = getNotifications();
+        const user = Auth.getCurrentUser();
+        if (!user) return;
+        notifications.forEach(n => {
+            if (Auth.isAdmin()) {
+                if (n.userId === 'admin' || n.userId === user.id) n.read = true;
+            } else {
+                if (n.userId === user.id) n.read = true;
+            }
+        });
+        saveNotifications(notifications);
+        updateNotificationBadge();
+    }
+
+    function updateNotificationBadge() {
+        const badge = document.getElementById('notification-badge');
+        if (!badge) return;
+        const unread = getMyNotifications().filter(n => !n.read).length;
+        badge.textContent = unread;
+        badge.style.display = unread > 0 ? 'flex' : 'none';
+    }
+
+    function toggleNotificationsPanel() {
+        const panel = document.getElementById('notifications-panel');
+        if (!panel) return;
+        const isActive = panel.classList.contains('active');
+        if (isActive) {
+            panel.classList.remove('active');
+        } else {
+            renderNotificationsPanel();
+            panel.classList.add('active');
+        }
+    }
+
+    function renderNotificationsPanel() {
+        const list = document.getElementById('notifications-list');
+        if (!list) return;
+
+        const myNotifs = getMyNotifications().slice(0, 20);
+        
+        if (myNotifs.length === 0) {
+            list.innerHTML = '<div class="notif-empty">Nessuna notifica</div>';
+            return;
+        }
+
+        list.innerHTML = myNotifs.map(n => {
+            const time = formatTimeAgo(n.createdAt);
+            const typeIcons = {
+                'request_new': '📩',
+                'request_approved': '✅',
+                'request_rejected': '❌',
+                'absence_added': '📅'
+            };
+            return `
+                <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="Absences.markNotificationRead('${n.id}'); Absences.updateNotificationBadge(); this.classList.remove('unread'); this.classList.add('read');">
+                    <span class="notif-icon">${typeIcons[n.type] || '🔔'}</span>
+                    <div class="notif-content">
+                        <p class="notif-message">${n.message}</p>
+                        <span class="notif-time">${time}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function formatTimeAgo(isoStr) {
+        const now = new Date();
+        const then = new Date(isoStr);
+        const diffMs = now - then;
+        const minutes = Math.floor(diffMs / 60000);
+        if (minutes < 1) return 'Adesso';
+        if (minutes < 60) return `${minutes} min fa`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h fa`;
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days}g fa`;
+        return Storage.formatDateIT(isoStr.split('T')[0]);
+    }
+
+    // ==================== MAIN RENDER ====================
+    function render() {
+        const container = document.getElementById('absences-content');
+        if (!container) return;
+
+        const isAdmin = Auth.isAdmin();
+        const user = Auth.getCurrentUser();
+
+        let html = '';
+
+        // --- Tab bar ---
+        html += `<div class="absences-tabs">`;
+        if (isAdmin) {
+            html += `
+                <button class="abs-tab active" onclick="Absences.switchTab('manage')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Gestisci Assenze
+                </button>
+                <button class="abs-tab" onclick="Absences.switchTab('requests')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Richieste Ferie
+                    <span class="abs-tab-badge" id="pending-requests-badge"></span>
+                </button>
+                <button class="abs-tab" onclick="Absences.switchTab('overview')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                    Riepilogo
+                </button>
+            `;
+        } else {
+            html += `
+                <button class="abs-tab active" onclick="Absences.switchTab('mycalendar')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Le Mie Assenze
+                </button>
+                <button class="abs-tab" onclick="Absences.switchTab('request')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Richiedi Ferie
+                </button>
+                <button class="abs-tab" onclick="Absences.switchTab('myrequests')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Le Mie Richieste
+                </button>
+            `;
+        }
+        html += `</div>`;
+
+        html += `<div id="absences-tab-content" class="absences-tab-content"></div>`;
+        container.innerHTML = html;
+
+        // Render default tab
+        if (isAdmin) {
+            renderManageTab();
+        } else {
+            renderMyCalendarTab();
+        }
+
+        // Update pending badge
+        updatePendingBadge();
+    }
+
+    function switchTab(tabName) {
+        // Update tab active state
+        document.querySelectorAll('.abs-tab').forEach((btn, i) => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        switch (tabName) {
+            case 'manage': renderManageTab(); break;
+            case 'requests': renderRequestsTab(); break;
+            case 'overview': renderOverviewTab(); break;
+            case 'mycalendar': renderMyCalendarTab(); break;
+            case 'request': renderRequestFormTab(); break;
+            case 'myrequests': renderMyRequestsTab(); break;
+        }
+    }
+
+    function updatePendingBadge() {
+        const badge = document.getElementById('pending-requests-badge');
+        if (!badge) return;
+        const pending = getLeaveRequests().filter(r => r.status === 'pending').length;
+        badge.textContent = pending;
+        badge.style.display = pending > 0 ? 'inline-flex' : 'none';
+    }
+
+    // ==================== ADMIN: MANAGE TAB ====================
+    function renderManageTab() {
+        const content = document.getElementById('absences-tab-content');
+        const employees = Storage.getEmployees();
+
+        let html = `
+            <div class="abs-manage-section">
+                <div class="abs-manage-header">
+                    <h4>Registra Assenza</h4>
+                    <p>Seleziona un dipendente, scegli il tipo e i giorni dal calendario</p>
+                </div>
+                <div class="abs-manage-form glass-card">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dipendente</label>
+                            <select id="abs-employee-select" class="form-select">
+                                <option value="">-- Seleziona dipendente --</option>
+                                ${employees.map(e => `<option value="${e.id}">${e.firstName} ${e.lastName}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo Assenza</label>
+                            <select id="abs-type-select" class="form-select">
+                                <option value="ferie">🏖️ Ferie</option>
+                                <option value="malattia">🤒 Malattia</option>
+                                <option value="permesso">📋 Permesso</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Giorni Selezionati</label>
+                        <div class="abs-selected-dates" id="abs-selected-dates">
+                            <span class="abs-no-dates">Nessun giorno selezionato — clicca sul calendario</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Note (opzionale)</label>
+                        <input type="text" id="abs-note" class="form-input" placeholder="Es: Visita medica, motivi personali...">
+                    </div>
+                    <button class="btn btn-primary" onclick="Absences.saveAdminAbsence()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        Salva Assenza
+                    </button>
+                </div>
+                <div class="abs-calendar-wrapper glass-card">
+                    <div id="abs-admin-calendar"></div>
+                </div>
+            </div>
+        `;
+
+        // List existing absences
+        html += renderAbsencesList(null);
+
+        content.innerHTML = html;
+        calendarSelectedDates = [];
+        renderCalendar('abs-admin-calendar', true);
+    }
+
+    // ==================== ADMIN: REQUESTS TAB ====================
+    function renderRequestsTab() {
+        const content = document.getElementById('absences-tab-content');
+        const requests = getLeaveRequests();
+        const pendingRequests = requests.filter(r => r.status === 'pending');
+        const handledRequests = requests.filter(r => r.status !== 'pending');
+
+        let html = '<div class="abs-requests-section">';
+
+        // Pending
+        html += `<h4 class="abs-section-title">⏳ Richieste in Attesa (${pendingRequests.length})</h4>`;
+        if (pendingRequests.length === 0) {
+            html += '<div class="abs-empty glass-card">Nessuna richiesta in attesa</div>';
+        } else {
+            pendingRequests.forEach(req => {
+                const emp = Storage.getEmployee(req.employeeId);
+                const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Sconosciuto';
+                const dates = req.dates.map(d => Storage.formatDateIT(d)).join(', ');
+                html += `
+                    <div class="abs-request-card glass-card pending">
+                        <div class="abs-request-header">
+                            <div class="abs-request-emp">
+                                <strong>${empName}</strong>
+                                <span class="abs-type-badge" style="background:${ABSENCE_TYPES.ferie.colorLight};color:${ABSENCE_TYPES.ferie.color}">🏖️ Ferie</span>
+                            </div>
+                            <span class="abs-request-date-info">${req.dates.length} giorno/i</span>
+                        </div>
+                        <div class="abs-request-dates">📅 ${dates}</div>
+                        ${req.note ? `<div class="abs-request-note">💬 ${req.note}</div>` : ''}
+                        <div class="abs-request-actions">
+                            <button class="btn btn-sm btn-success" onclick="Absences.handleRequest('${req.id}', 'approved')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                Approva
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="Absences.promptRejectRequest('${req.id}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                Rifiuta
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Handled
+        html += `<h4 class="abs-section-title" style="margin-top:24px;">📋 Storico Richieste</h4>`;
+        if (handledRequests.length === 0) {
+            html += '<div class="abs-empty glass-card">Nessuna richiesta gestita</div>';
+        } else {
+            handledRequests.slice(0, 20).forEach(req => {
+                const emp = Storage.getEmployee(req.employeeId);
+                const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Sconosciuto';
+                const dates = req.dates.map(d => Storage.formatDateIT(d)).join(', ');
+                const st = REQUEST_STATUS[req.status];
+                html += `
+                    <div class="abs-request-card glass-card ${req.status}">
+                        <div class="abs-request-header">
+                            <div class="abs-request-emp">
+                                <strong>${empName}</strong>
+                                <span class="abs-status-badge" style="color:${st.color}">${st.icon} ${st.label}</span>
+                            </div>
+                        </div>
+                        <div class="abs-request-dates">📅 ${dates}</div>
+                        ${req.rejectionReason ? `<div class="abs-request-note">❌ Motivo: ${req.rejectionReason}</div>` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        html += '</div>';
+        content.innerHTML = html;
+    }
+
+    // ==================== ADMIN: OVERVIEW TAB ====================
+    function renderOverviewTab() {
+        const content = document.getElementById('absences-tab-content');
+        const employees = Storage.getEmployees();
+        const absences = getAbsences();
+
+        let html = '<div class="abs-overview-section">';
+        html += '<h4 class="abs-section-title">📊 Riepilogo Assenze per Dipendente</h4>';
+
+        employees.forEach(emp => {
+            const empAbsences = absences.filter(a => a.employeeId === emp.id);
+            const ferieCount = empAbsences.filter(a => a.type === 'ferie').reduce((sum, a) => sum + a.dates.length, 0);
+            const malattiaCount = empAbsences.filter(a => a.type === 'malattia').reduce((sum, a) => sum + a.dates.length, 0);
+            const permessoCount = empAbsences.filter(a => a.type === 'permesso').reduce((sum, a) => sum + a.dates.length, 0);
+            const total = ferieCount + malattiaCount + permessoCount;
+
+            html += `
+                <div class="abs-overview-card glass-card">
+                    <div class="abs-overview-name">
+                        <div class="abs-overview-avatar">${emp.firstName[0]}${emp.lastName[0]}</div>
+                        <div>
+                            <strong>${emp.firstName} ${emp.lastName}</strong>
+                            <span class="abs-overview-total">${total} giorni totali</span>
+                        </div>
+                    </div>
+                    <div class="abs-overview-counts">
+                        <div class="abs-count-item" style="border-left: 3px solid ${ABSENCE_TYPES.ferie.color}">
+                            <span class="abs-count-val">${ferieCount}</span>
+                            <span class="abs-count-label">🏖️ Ferie</span>
+                        </div>
+                        <div class="abs-count-item" style="border-left: 3px solid ${ABSENCE_TYPES.malattia.color}">
+                            <span class="abs-count-val">${malattiaCount}</span>
+                            <span class="abs-count-label">🤒 Malattia</span>
+                        </div>
+                        <div class="abs-count-item" style="border-left: 3px solid ${ABSENCE_TYPES.permesso.color}">
+                            <span class="abs-count-val">${permessoCount}</span>
+                            <span class="abs-count-label">📋 Permesso</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        content.innerHTML = html;
+    }
+
+    // ==================== EMPLOYEE: MY CALENDAR TAB ====================
+    function renderMyCalendarTab() {
+        const content = document.getElementById('absences-tab-content');
+        const user = Auth.getCurrentUser();
+        const empId = user?.employeeId || user?.id;
+
+        let html = `
+            <div class="abs-my-calendar-section">
+                <div class="abs-calendar-wrapper glass-card">
+                    <div id="abs-my-calendar"></div>
+                </div>
+                <div class="abs-legend">
+                    <span class="abs-legend-item"><span class="abs-legend-dot" style="background:${ABSENCE_TYPES.ferie.color}"></span> Ferie</span>
+                    <span class="abs-legend-item"><span class="abs-legend-dot" style="background:${ABSENCE_TYPES.malattia.color}"></span> Malattia</span>
+                    <span class="abs-legend-item"><span class="abs-legend-dot" style="background:${ABSENCE_TYPES.permesso.color}"></span> Permesso</span>
+                    <span class="abs-legend-item"><span class="abs-legend-dot" style="background:#f59e0b"></span> In Attesa</span>
+                    <span class="abs-legend-item"><span class="abs-legend-dot" style="background:#ef4444"></span> Festivo</span>
+                </div>
+            </div>
+        `;
+
+        html += renderAbsencesList(empId);
+
+        content.innerHTML = html;
+        calendarSelectedDates = [];
+        renderCalendar('abs-my-calendar', false, empId);
+    }
+
+    // ==================== EMPLOYEE: REQUEST FORM TAB ====================
+    function renderRequestFormTab() {
+        const content = document.getElementById('absences-tab-content');
+
+        let html = `
+            <div class="abs-request-form-section">
+                <div class="abs-manage-header">
+                    <h4>Richiedi Ferie</h4>
+                    <p>Seleziona i giorni dal calendario e invia la richiesta all'amministratore</p>
+                </div>
+                <div class="abs-manage-form glass-card">
+                    <div class="form-group">
+                        <label>Giorni Selezionati</label>
+                        <div class="abs-selected-dates" id="abs-selected-dates">
+                            <span class="abs-no-dates">Nessun giorno selezionato — clicca sul calendario</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Motivazione (opzionale)</label>
+                        <textarea id="abs-request-note" class="form-input" rows="2" placeholder="Es: Vacanza, impegno familiare..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="Absences.submitLeaveRequest()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Invia Richiesta
+                    </button>
+                </div>
+                <div class="abs-calendar-wrapper glass-card">
+                    <div id="abs-request-calendar"></div>
+                </div>
+            </div>
+        `;
+
+        content.innerHTML = html;
+        calendarSelectedDates = [];
+        renderCalendar('abs-request-calendar', true);
+    }
+
+    // ==================== EMPLOYEE: MY REQUESTS TAB ====================
+    function renderMyRequestsTab() {
+        const content = document.getElementById('absences-tab-content');
+        const user = Auth.getCurrentUser();
+        const empId = user?.employeeId || user?.id;
+        const requests = getLeaveRequests().filter(r => r.employeeId === empId);
+
+        let html = '<div class="abs-my-requests-section">';
+        html += `<h4 class="abs-section-title">📋 Le Mie Richieste (${requests.length})</h4>`;
+
+        if (requests.length === 0) {
+            html += '<div class="abs-empty glass-card">Non hai ancora fatto richieste di ferie</div>';
+        } else {
+            requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            requests.forEach(req => {
+                const dates = req.dates.map(d => Storage.formatDateIT(d)).join(', ');
+                const st = REQUEST_STATUS[req.status];
+                html += `
+                    <div class="abs-request-card glass-card ${req.status}">
+                        <div class="abs-request-header">
+                            <span class="abs-status-badge" style="color:${st.color}">${st.icon} ${st.label}</span>
+                            <span class="abs-request-date-info">${req.dates.length} giorno/i</span>
+                        </div>
+                        <div class="abs-request-dates">📅 ${dates}</div>
+                        ${req.note ? `<div class="abs-request-note">💬 ${req.note}</div>` : ''}
+                        ${req.rejectionReason ? `<div class="abs-request-note abs-rejection">❌ Motivo rifiuto: ${req.rejectionReason}</div>` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        html += '</div>';
+        content.innerHTML = html;
+    }
+
+    // ==================== CALENDAR RENDERER ====================
+    function renderCalendar(containerId, selectable, viewEmployeeId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+            'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+        const dayNames = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
+        const absences = getAbsences();
+        const requests = getLeaveRequests();
+
+        // Build calendar HTML
+        let html = `
+            <div class="abs-cal-header">
+                <button class="btn btn-outline btn-sm abs-cal-nav" onclick="Absences.calNavMonth(-1, '${containerId}', ${selectable}, '${viewEmployeeId || ''}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <h4 class="abs-cal-title">${monthNames[calendarMonth]} ${calendarYear}</h4>
+                <button class="btn btn-outline btn-sm abs-cal-nav" onclick="Absences.calNavMonth(1, '${containerId}', ${selectable}, '${viewEmployeeId || ''}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+            <div class="abs-cal-grid">
+        `;
+
+        // Day headers
+        dayNames.forEach(d => {
+            html += `<div class="abs-cal-day-header">${d}</div>`;
+        });
+
+        // Calculate days
+        const firstDay = new Date(calendarYear, calendarMonth, 1);
+        let startDow = firstDay.getDay(); // 0=Sun
+        startDow = startDow === 0 ? 6 : startDow - 1; // Convert to Mon=0
+
+        const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+        // Empty cells before
+        for (let i = 0; i < startDow; i++) {
+            html += '<div class="abs-cal-cell empty"></div>';
+        }
+
+        // Day cells
+        const today = Storage.toLocalDateStr();
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isToday = dateStr === today;
+            const isSelected = calendarSelectedDates.includes(dateStr);
+            const isSunday = new Date(calendarYear, calendarMonth, day).getDay() === 0;
+            const holidayInfo = Storage.isHoliday(dateStr);
+            const isNonWorking = isSunday || !!holidayInfo;
+
+            // Check for absences on this date
+            let absenceInfo = null;
+            let pendingInfo = null;
+            if (viewEmployeeId) {
+                const abs = absences.find(a => a.employeeId === viewEmployeeId && a.dates.includes(dateStr));
+                if (abs) absenceInfo = abs;
+                const req = requests.find(r => r.employeeId === viewEmployeeId && r.dates.includes(dateStr) && r.status === 'pending');
+                if (req) pendingInfo = req;
+            }
+
+            let classes = 'abs-cal-cell';
+            if (isToday) classes += ' today';
+            if (isSelected) classes += ' selected';
+            if (isSunday) classes += ' sunday';
+            if (holidayInfo) classes += ' holiday';
+            if (absenceInfo) classes += ` absence-${absenceInfo.type}`;
+            if (pendingInfo) classes += ' absence-pending';
+
+            let dotHtml = '';
+            if (holidayInfo) {
+                dotHtml = `<span class="abs-cal-holiday-label" title="${holidayInfo.name}">🔴</span>`;
+            }
+            if (absenceInfo) {
+                dotHtml = `<span class="abs-cal-dot" style="background:${ABSENCE_TYPES[absenceInfo.type].color}" title="${ABSENCE_TYPES[absenceInfo.type].label}"></span>`;
+            }
+            if (pendingInfo) {
+                dotHtml = `<span class="abs-cal-dot" style="background:#f59e0b" title="Richiesta in attesa"></span>`;
+            }
+
+            const clickHandler = selectable && !isNonWorking
+                ? `onclick="Absences.toggleCalendarDate('${dateStr}', '${containerId}', ${selectable}, '${viewEmployeeId || ''}')"`
+                : '';
+
+            html += `<div class="${classes}" ${clickHandler}><span class="abs-cal-day-num">${day}</span>${dotHtml}</div>`;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function calNavMonth(dir, containerId, selectable, viewEmployeeId) {
+        calendarMonth += dir;
+        if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+        if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+        renderCalendar(containerId, selectable, viewEmployeeId || null);
+    }
+
+    function toggleCalendarDate(dateStr, containerId, selectable, viewEmployeeId) {
+        const idx = calendarSelectedDates.indexOf(dateStr);
+        if (idx !== -1) {
+            calendarSelectedDates.splice(idx, 1);
+        } else {
+            calendarSelectedDates.push(dateStr);
+        }
+        calendarSelectedDates.sort();
+        renderCalendar(containerId, selectable, viewEmployeeId || null);
+        updateSelectedDatesUI();
+    }
+
+    function updateSelectedDatesUI() {
+        const container = document.getElementById('abs-selected-dates');
+        if (!container) return;
+
+        if (calendarSelectedDates.length === 0) {
+            container.innerHTML = '<span class="abs-no-dates">Nessun giorno selezionato — clicca sul calendario</span>';
+        } else {
+            container.innerHTML = calendarSelectedDates.map(d =>
+                `<span class="abs-date-chip">${Storage.formatDateIT(d)} <button onclick="Absences.removeSelectedDate('${d}')">&times;</button></span>`
+            ).join('');
+        }
+    }
+
+    function removeSelectedDate(dateStr) {
+        calendarSelectedDates = calendarSelectedDates.filter(d => d !== dateStr);
+        updateSelectedDatesUI();
+        // Re-render whatever calendar is currently showing
+        const calEls = document.querySelectorAll('[id^="abs-"][id$="-calendar"]');
+        calEls.forEach(el => {
+            if (el.innerHTML) {
+                const selectable = el.id !== 'abs-my-calendar';
+                const empId = el.id === 'abs-my-calendar' ? (Auth.getCurrentUser()?.employeeId || Auth.getCurrentUser()?.id) : null;
+                renderCalendar(el.id, selectable, empId);
+            }
+        });
+    }
+
+    // ==================== ABSENCES LIST ====================
+    function renderAbsencesList(employeeId) {
+        const absences = getAbsences();
+        const filtered = employeeId ? absences.filter(a => a.employeeId === employeeId) : absences;
+
+        if (filtered.length === 0) {
+            return `<div class="abs-section-title" style="margin-top:24px;">📋 Assenze Registrate</div>
+                    <div class="abs-empty glass-card">Nessuna assenza registrata</div>`;
+        }
+
+        // Sort by most recent first
+        filtered.sort((a, b) => {
+            const aDate = a.dates[a.dates.length - 1] || '';
+            const bDate = b.dates[b.dates.length - 1] || '';
+            return bDate.localeCompare(aDate);
+        });
+
+        let html = `<div class="abs-section-title" style="margin-top:24px;">📋 Assenze Registrate (${filtered.length})</div>`;
+
+        filtered.forEach(abs => {
+            const emp = Storage.getEmployee(abs.employeeId);
+            const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Sconosciuto';
+            const typeInfo = ABSENCE_TYPES[abs.type] || ABSENCE_TYPES.ferie;
+            const dates = abs.dates.map(d => Storage.formatDateIT(d)).join(', ');
+
+            html += `
+                <div class="abs-record-card glass-card">
+                    <div class="abs-record-header">
+                        <div>
+                            ${!employeeId ? `<strong>${empName}</strong> — ` : ''}
+                            <span class="abs-type-badge" style="background:${typeInfo.colorLight};color:${typeInfo.color}">${typeInfo.icon} ${typeInfo.label}</span>
+                        </div>
+                        ${Auth.isAdmin() ? `<button class="btn btn-outline btn-sm btn-danger" onclick="Absences.deleteAbsence('${abs.id}')">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>` : ''}
+                    </div>
+                    <div class="abs-record-dates">📅 ${dates} (${abs.dates.length} gg)</div>
+                    ${abs.note ? `<div class="abs-record-note">💬 ${abs.note}</div>` : ''}
+                </div>
+            `;
+        });
+
+        return html;
+    }
+
+    // ==================== ACTIONS ====================
+    function saveAdminAbsence() {
+        const empId = document.getElementById('abs-employee-select').value;
+        const type = document.getElementById('abs-type-select').value;
+        const note = document.getElementById('abs-note')?.value || '';
+
+        if (!empId) {
+            App.showToast('Errore', 'Seleziona un dipendente', 'error');
+            return;
+        }
+        if (calendarSelectedDates.length === 0) {
+            App.showToast('Errore', 'Seleziona almeno un giorno dal calendario', 'error');
+            return;
+        }
+
+        const absences = getAbsences();
+        const newAbsence = {
+            id: 'abs_' + Date.now(),
+            employeeId: empId,
+            type: type,
+            dates: [...calendarSelectedDates],
+            note: note,
+            createdBy: 'admin',
+            createdAt: new Date().toISOString()
+        };
+        absences.push(newAbsence);
+        saveAbsences(absences);
+
+        // Notify the employee
+        const emp = Storage.getEmployee(empId);
+        const typeLabel = ABSENCE_TYPES[type].label;
+        addNotification(
+            empId,
+            `L'admin ti ha registrato ${calendarSelectedDates.length} giorno/i di ${typeLabel}`,
+            'absence_added',
+            newAbsence.id
+        );
+
+        calendarSelectedDates = [];
+        App.showToast('Salvato', `Assenza registrata con successo`, 'success');
+        renderManageTab();
+    }
+
+    function deleteAbsence(absId) {
+        App.showConfirm('Elimina Assenza', 'Sei sicuro di voler eliminare questa assenza?', () => {
+            let absences = getAbsences();
+            absences = absences.filter(a => a.id !== absId);
+            saveAbsences(absences);
+            App.showToast('Eliminato', 'Assenza eliminata', 'info');
+            render();
+        });
+    }
+
+    function submitLeaveRequest() {
+        const user = Auth.getCurrentUser();
+        const empId = user?.employeeId || user?.id;
+        const note = document.getElementById('abs-request-note')?.value || '';
+
+        if (calendarSelectedDates.length === 0) {
+            App.showToast('Errore', 'Seleziona almeno un giorno dal calendario', 'error');
+            return;
+        }
+
+        const requests = getLeaveRequests();
+        const newRequest = {
+            id: 'req_' + Date.now(),
+            employeeId: empId,
+            dates: [...calendarSelectedDates],
+            note: note,
+            status: 'pending',
+            rejectionReason: '',
+            createdAt: new Date().toISOString()
+        };
+        requests.push(newRequest);
+        saveLeaveRequests(requests);
+
+        // Notify admin
+        const emp = Storage.getEmployee(empId);
+        const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Dipendente';
+        addNotification(
+            'admin',
+            `${empName} ha richiesto ${calendarSelectedDates.length} giorno/i di ferie`,
+            'request_new',
+            newRequest.id
+        );
+
+        calendarSelectedDates = [];
+        App.showToast('Inviata', 'Richiesta ferie inviata all\'amministratore', 'success');
+        renderRequestFormTab();
+    }
+
+    function handleRequest(reqId, status) {
+        const requests = getLeaveRequests();
+        const req = requests.find(r => r.id === reqId);
+        if (!req) return;
+
+        req.status = status;
+
+        if (status === 'approved') {
+            // Auto-create absence entry
+            const absences = getAbsences();
+            absences.push({
+                id: 'abs_' + Date.now(),
+                employeeId: req.employeeId,
+                type: 'ferie',
+                dates: [...req.dates],
+                note: req.note || 'Approvata da admin',
+                createdBy: 'request_approved',
+                createdAt: new Date().toISOString()
+            });
+            saveAbsences(absences);
+
+            // Notify employee
+            addNotification(
+                req.employeeId,
+                `La tua richiesta di ferie (${req.dates.length} gg) è stata APPROVATA ✅`,
+                'request_approved',
+                req.id
+            );
+            App.showToast('Approvata', 'Richiesta ferie approvata', 'success');
+        }
+
+        saveLeaveRequests(requests);
+        renderRequestsTab();
+        updatePendingBadge();
+    }
+
+    function promptRejectRequest(reqId) {
+        // Show a simple prompt for rejection reason
+        const reason = prompt('Motivo del rifiuto (opzionale):');
+        if (reason === null) return; // cancelled
+
+        const requests = getLeaveRequests();
+        const req = requests.find(r => r.id === reqId);
+        if (!req) return;
+
+        req.status = 'rejected';
+        req.rejectionReason = reason || '';
+        saveLeaveRequests(requests);
+
+        // Notify employee
+        addNotification(
+            req.employeeId,
+            `La tua richiesta di ferie (${req.dates.length} gg) è stata RIFIUTATA ❌${reason ? ': ' + reason : ''}`,
+            'request_rejected',
+            req.id
+        );
+
+        App.showToast('Rifiutata', 'Richiesta ferie rifiutata', 'info');
+        renderRequestsTab();
+        updatePendingBadge();
+    }
+
+    // ==================== CHECK IF EMPLOYEE IS ABSENT ====================
+    function isEmployeeAbsent(employeeId, dateStr) {
+        const absences = getAbsences();
+        return absences.find(a => a.employeeId === employeeId && a.dates.includes(dateStr));
+    }
+
+    // ==================== CLOSE NOTIFICATIONS ON OUTSIDE CLICK ====================
+    document.addEventListener('click', (e) => {
+        const panel = document.getElementById('notifications-panel');
+        const bell = document.getElementById('notification-bell');
+        if (panel && panel.classList.contains('active') && !panel.contains(e.target) && !bell?.contains(e.target)) {
+            panel.classList.remove('active');
+        }
+    });
+
+    return {
+        init,
+        render,
+        switchTab,
+        calNavMonth,
+        toggleCalendarDate,
+        removeSelectedDate,
+        saveAdminAbsence,
+        deleteAbsence,
+        submitLeaveRequest,
+        handleRequest,
+        promptRejectRequest,
+        toggleNotificationsPanel,
+        markNotificationRead,
+        markAllNotificationsRead,
+        updateNotificationBadge,
+        isEmployeeAbsent,
+        ABSENCE_TYPES
+    };
+})();
