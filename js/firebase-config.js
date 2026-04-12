@@ -23,4 +23,7 @@ db.settings({
     merge: true
 });
 
+// Firebase Storage instance
+const storage = firebase.storage();
+
 console.log('🔥 Firebase initialized — project:', firebaseConfig.projectId);

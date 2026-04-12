@@ -118,6 +118,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/><path d="M9 9h6v6H9z"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/></svg>
                     <span>Assenze</span>
                 </a>
+                <a href="#" class="nav-item" data-page="hours">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Ore Dipendenti</span>
+                </a>
                 <a href="#" class="nav-item" data-page="profile">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <span>Profilo</span>
@@ -357,6 +361,24 @@
                         </div>
                     </div>
                     <div id="absences-content"></div>
+                </section>
+
+                <!-- HOURS PAGE -->
+                <section id="page-hours" class="page-content">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <h3>Ore Dipendenti</h3>
+                            <p class="page-description">File Excel delle ore lavorative</p>
+                        </div>
+                        <div class="page-header-right">
+                            <label for="hours-file-input" class="btn btn-primary hours-upload-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                Carica Excel
+                            </label>
+                            <input type="file" id="hours-file-input" accept=".xlsx,.xls" style="display:none;">
+                        </div>
+                    </div>
+                    <div id="hours-content"></div>
                 </section>
 
                 <!-- PROFILE PAGE -->
@@ -671,6 +693,7 @@
     <!-- Firebase SDK (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
     <script src="js/firebase-config.js"></script>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAa6cEbvbuuKqk-6OidCRTiNPVtrXpyiZo&libraries=places&callback=Function.prototype&loading=async" async defer></script>
@@ -682,6 +705,7 @@
     <script src="js/schedule.js"></script>
     <script src="js/profile.js"></script>
     <script src="js/absences.js"></script>
+    <script src="js/hours.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
