@@ -8,46 +8,33 @@ const App = (() => {
 
     // ==================== INITIALIZATION ====================
     function init() {
-        // Initialize storage (creates default data if needed)
+        // Initialize storage (starts Firestore listeners)
         Storage.init();
 
-        // Initialize theme
+        // Initialize theme (local, instant)
         Theme.init();
 
-        // Check for existing session
-        const hasSession = Auth.init();
-
-        if (hasSession) {
-            showApp();
-        } else {
-            showLogin();
-        }
-
-        // Bind login form
+        // Bind UI elements immediately (they don't need data)
         const loginForm = document.getElementById('login-form');
         if (loginForm) {
             loginForm.addEventListener('submit', handleLogin);
         }
 
-        // Bind logout
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', handleLogout);
         }
 
-        // Bind sidebar toggle
         const sidebarToggle = document.getElementById('sidebar-toggle');
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', toggleSidebar);
         }
 
-        // Bind mobile menu
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         if (mobileMenuBtn) {
             mobileMenuBtn.addEventListener('click', toggleMobileSidebar);
         }
 
-        // Bind navigation
         document.querySelectorAll('.nav-item[data-page]').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -55,16 +42,10 @@ const App = (() => {
             });
         });
 
-        // Bind settings forms
         bindSettingsForms();
-
-        // Update current date
         updateCurrentDate();
-
-        // Bind confirm dialog
         bindConfirmDialog();
 
-        // Close modals on overlay click
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
@@ -73,12 +54,21 @@ const App = (() => {
             });
         });
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.active').forEach(m => {
                     m.classList.remove('active');
                 });
+            }
+        });
+
+        // Wait for Firestore data to be ready, then check session
+        Storage.onReady(() => {
+            const hasSession = Auth.init();
+            if (hasSession) {
+                showApp();
+            } else {
+                showLogin();
             }
         });
     }
@@ -382,6 +372,19 @@ const App = (() => {
         setTimeout(() => element.classList.remove('animate-shake'), 500);
     }
 
+    // ==================== REFRESH (called by Firestore real-time sync) ====================
+    function refreshCurrentPage() {
+        if (!Auth.isLoggedIn()) return;
+        switch (currentPage) {
+            case 'dashboard': Dashboard.render(); break;
+            case 'employees': Employees.render(); break;
+            case 'schedule': Schedule.render(); break;
+            case 'absences': Absences.render(); break;
+            case 'profile': Profile.render(); break;
+        }
+        Absences.updateNotificationBadge();
+    }
+
     // ==================== START APP ====================
     document.addEventListener('DOMContentLoaded', init);
 
@@ -389,6 +392,7 @@ const App = (() => {
         navigateTo,
         showToast,
         showConfirm,
-        updateUserDisplay
+        updateUserDisplay,
+        refreshCurrentPage
     };
 })();

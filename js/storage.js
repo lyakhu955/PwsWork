@@ -1,14 +1,26 @@
 /* ========================================
    PWSWORK - STORAGE MODULE
-   LocalStorage Data Management
+   Firestore + In-Memory Cache
+   Real-time sync across all devices
    ======================================== */
 
 const Storage = (() => {
-    const KEYS = {
-        ADMIN_CODE: 'pws_admin_code',
-        USERS: 'pws_users',
-        EMPLOYEES: 'pws_employees',
-        ASSIGNMENTS: 'pws_assignments',
+    // ==================== IN-MEMORY CACHE ====================
+    let _employees = [];
+    let _assignments = [];
+    let _adminCode = 'admin123';
+    let _dataReady = false;
+    let _readyCallbacks = [];
+
+    // Firestore collections
+    const COLLECTIONS = {
+        EMPLOYEES: 'employees',
+        ASSIGNMENTS: 'assignments',
+        SETTINGS: 'settings'
+    };
+
+    // Local-only keys (stay in localStorage — per-browser)
+    const LOCAL_KEYS = {
         CURRENT_USER: 'pws_current_user',
         THEME: 'pws_theme',
         SIDEBAR_COLLAPSED: 'pws_sidebar_collapsed'
@@ -34,7 +46,6 @@ const Storage = (() => {
     }
 
     // ==================== ITALIAN HOLIDAYS ====================
-    // Calcolo Pasqua con algoritmo di Gauss/Meeus
     function getEasterDate(year) {
         const a = year % 19;
         const b = Math.floor(year / 100);
@@ -82,179 +93,297 @@ const Storage = (() => {
         return holidays.find(h => h.date === dateStr) || null;
     }
 
-    // ==================== DEFAULT DATA ==
-    const DEFAULT_ADMIN_CODE = 'admin123';
-
-    const DEFAULT_EMPLOYEES = [];
-
-    /*
-     * ASSIGNMENT structure:
-     * {
-     *   id: 'asgn_...',
-     *   date: 'YYYY-MM-DD',
-     *   teamName: 'Squadra 1',
-     *   employeeIds: ['emp_1', 'emp_3'],
-     *   workplaces: [
-     *     {
-     *       name: 'Iveco Orecchia',
-     *       address: 'Via Roma 10, Bergamo',
-     *       lat: 45.6983,
-     *       lng: 9.6773,
-     *       info: ''
-     *     }
-     *   ],
-     *   notes: '',
-     *   createdAt: '...'
-     * }
-     */
-
     // ==================== INIT ====================
     function init() {
-        if (!localStorage.getItem(KEYS.ADMIN_CODE)) {
-            localStorage.setItem(KEYS.ADMIN_CODE, DEFAULT_ADMIN_CODE);
-        }
-        if (!localStorage.getItem(KEYS.EMPLOYEES)) {
-            localStorage.setItem(KEYS.EMPLOYEES, JSON.stringify(DEFAULT_EMPLOYEES));
-        }
-        if (!localStorage.getItem(KEYS.ASSIGNMENTS)) {
-            localStorage.setItem(KEYS.ASSIGNMENTS, JSON.stringify([]));
-        }
+        _startListeners();
     }
 
-    // ==================== GENERIC GETTERS/SETTERS ====================
-    function get(key) {
-        const data = localStorage.getItem(key);
-        try { return JSON.parse(data); } catch { return data; }
-    }
-
-    function set(key, value) {
-        if (typeof value === 'object') {
-            localStorage.setItem(key, JSON.stringify(value));
+    // Wait for Firestore data to be loaded at least once
+    function onReady(callback) {
+        if (_dataReady) {
+            callback();
         } else {
-            localStorage.setItem(key, value);
+            _readyCallbacks.push(callback);
         }
+    }
+
+    function _markReady() {
+        if (!_dataReady) {
+            _dataReady = true;
+            console.log('✅ Firestore data ready — employees:', _employees.length, 'assignments:', _assignments.length);
+            _readyCallbacks.forEach(cb => {
+                try { cb(); } catch (e) { console.error('Ready callback error:', e); }
+            });
+            _readyCallbacks = [];
+        }
+    }
+
+    // ==================== REAL-TIME LISTENERS ====================
+    let _listenersStarted = false;
+    let _loadedSources = { employees: false, assignments: false, settings: false };
+    let _firstLoad = true;
+
+    function _checkAllLoaded() {
+        if (_loadedSources.employees && _loadedSources.assignments && _loadedSources.settings) {
+            _markReady();
+        }
+    }
+
+    function _startListeners() {
+        if (_listenersStarted) return;
+        _listenersStarted = true;
+
+        // --- Employees listener ---
+        db.collection(COLLECTIONS.EMPLOYEES).onSnapshot((snapshot) => {
+            _employees = [];
+            snapshot.forEach((doc) => {
+                _employees.push({ ...doc.data(), id: doc.id });
+            });
+            const wasLoaded = _loadedSources.employees;
+            _loadedSources.employees = true;
+            _checkAllLoaded();
+            if (wasLoaded) _onDataChange();
+        }, (error) => {
+            console.error('Firestore employees listener error:', error);
+            _loadedSources.employees = true;
+            _checkAllLoaded();
+        });
+
+        // --- Assignments listener ---
+        db.collection(COLLECTIONS.ASSIGNMENTS).onSnapshot((snapshot) => {
+            _assignments = [];
+            snapshot.forEach((doc) => {
+                _assignments.push({ ...doc.data(), id: doc.id });
+            });
+            const wasLoaded = _loadedSources.assignments;
+            _loadedSources.assignments = true;
+            _checkAllLoaded();
+            if (wasLoaded) _onDataChange();
+        }, (error) => {
+            console.error('Firestore assignments listener error:', error);
+            _loadedSources.assignments = true;
+            _checkAllLoaded();
+        });
+
+        // --- Settings listener (admin code) ---
+        db.collection(COLLECTIONS.SETTINGS).doc('admin').onSnapshot((doc) => {
+            if (doc.exists) {
+                _adminCode = doc.data().code || 'admin123';
+            } else {
+                // Create default admin code in Firestore
+                db.collection(COLLECTIONS.SETTINGS).doc('admin').set({ code: 'admin123' });
+                _adminCode = 'admin123';
+            }
+            _loadedSources.settings = true;
+            _checkAllLoaded();
+        }, (error) => {
+            console.error('Firestore settings listener error:', error);
+            _loadedSources.settings = true;
+            _checkAllLoaded();
+        });
+    }
+
+    // Called when Firestore data changes from another device — refresh visible page
+    let _refreshTimer = null;
+    function _onDataChange() {
+        if (!_dataReady) return;
+        clearTimeout(_refreshTimer);
+        _refreshTimer = setTimeout(() => {
+            if (typeof App !== 'undefined' && App.refreshCurrentPage) {
+                App.refreshCurrentPage();
+            }
+        }, 300);
     }
 
     // ==================== ADMIN CODE ====================
-    function getAdminCode() { return localStorage.getItem(KEYS.ADMIN_CODE) || DEFAULT_ADMIN_CODE; }
-    function setAdminCode(code) { localStorage.setItem(KEYS.ADMIN_CODE, code); }
+    function getAdminCode() { return _adminCode; }
 
-    // ==================== EMPLOYEES ====================
-    function getEmployees() { return get(KEYS.EMPLOYEES) || []; }
+    function setAdminCode(code) {
+        _adminCode = code;
+        db.collection(COLLECTIONS.SETTINGS).doc('admin').set({ code: code });
+    }
+
+    // ==================== EMPLOYEES (sync read from cache, async write to Firestore) ====================
+    function getEmployees() {
+        return [..._employees];
+    }
 
     function getEmployee(id) {
-        return getEmployees().find(e => e.id === id);
+        return _employees.find(e => e.id === id) || null;
     }
 
     function getEmployeeByUsername(username) {
-        return getEmployees().find(e => e.username === username);
+        return _employees.find(e => e.username === username) || null;
     }
 
     function addEmployee(employee) {
-        const employees = getEmployees();
-        employee.id = 'emp_' + Date.now();
+        const id = 'emp_' + Date.now();
+        employee.id = id;
         employee.createdAt = toLocalDateStr();
-        employees.push(employee);
-        set(KEYS.EMPLOYEES, employees);
+
+        // Optimistic: add to cache immediately
+        _employees.push({ ...employee });
+
+        // Write to Firestore
+        db.collection(COLLECTIONS.EMPLOYEES).doc(id).set(employee).catch(err => {
+            console.error('Error adding employee:', err);
+        });
+
         return employee;
     }
 
     function updateEmployee(id, data) {
-        const employees = getEmployees();
-        const index = employees.findIndex(e => e.id === id);
+        const index = _employees.findIndex(e => e.id === id);
         if (index !== -1) {
-            employees[index] = { ...employees[index], ...data };
-            set(KEYS.EMPLOYEES, employees);
-            return employees[index];
+            _employees[index] = { ..._employees[index], ...data };
+
+            db.collection(COLLECTIONS.EMPLOYEES).doc(id).update(data).catch(err => {
+                console.error('Error updating employee:', err);
+            });
+
+            return _employees[index];
         }
         return null;
     }
 
     function deleteEmployee(id) {
-        let employees = getEmployees();
-        employees = employees.filter(e => e.id !== id);
-        set(KEYS.EMPLOYEES, employees);
+        _employees = _employees.filter(e => e.id !== id);
 
-        // Remove from assignments
-        let assignments = getAssignments();
-        assignments.forEach(a => {
-            a.employeeIds = a.employeeIds.filter(eid => eid !== id);
+        db.collection(COLLECTIONS.EMPLOYEES).doc(id).delete().catch(err => {
+            console.error('Error deleting employee:', err);
         });
-        // Remove assignments with no employees left
-        assignments = assignments.filter(a => a.employeeIds.length > 0);
-        set(KEYS.ASSIGNMENTS, assignments);
+
+        // Remove from assignments (cache + Firestore)
+        _assignments.forEach(a => {
+            if (a.employeeIds && a.employeeIds.includes(id)) {
+                a.employeeIds = a.employeeIds.filter(eid => eid !== id);
+                if (a.employeeIds.length > 0) {
+                    db.collection(COLLECTIONS.ASSIGNMENTS).doc(a.id).update({
+                        employeeIds: a.employeeIds
+                    }).catch(err => console.error('Error updating assignment:', err));
+                } else {
+                    db.collection(COLLECTIONS.ASSIGNMENTS).doc(a.id).delete().catch(err =>
+                        console.error('Error deleting empty assignment:', err));
+                }
+            }
+        });
+        _assignments = _assignments.filter(a => a.employeeIds && a.employeeIds.length > 0);
     }
 
     // ==================== ASSIGNMENTS ====================
-    function getAssignments() { return get(KEYS.ASSIGNMENTS) || []; }
+    function getAssignments() {
+        return [..._assignments];
+    }
 
     function getAssignment(id) {
-        return getAssignments().find(a => a.id === id);
+        return _assignments.find(a => a.id === id) || null;
     }
 
     function getAssignmentsByDate(date) {
-        return getAssignments().filter(a => a.date === date);
+        return _assignments.filter(a => a.date === date);
     }
 
     function getAssignmentsByEmployee(employeeId) {
-        return getAssignments().filter(a => a.employeeIds.includes(employeeId));
+        return _assignments.filter(a => a.employeeIds && a.employeeIds.includes(employeeId));
     }
 
     function getAssignmentsByDateRange(startDate, endDate) {
-        return getAssignments().filter(a => a.date >= startDate && a.date <= endDate);
+        return _assignments.filter(a => a.date >= startDate && a.date <= endDate);
     }
 
     function addAssignment(assignment) {
-        const assignments = getAssignments();
-        assignment.id = 'asgn_' + Date.now();
+        const id = 'asgn_' + Date.now();
+        assignment.id = id;
         assignment.createdAt = new Date().toISOString();
-        assignments.push(assignment);
-        set(KEYS.ASSIGNMENTS, assignments);
+
+        _assignments.push({ ...assignment });
+
+        db.collection(COLLECTIONS.ASSIGNMENTS).doc(id).set(assignment).catch(err => {
+            console.error('Error adding assignment:', err);
+        });
+
         return assignment;
     }
 
     function updateAssignment(id, data) {
-        const assignments = getAssignments();
-        const index = assignments.findIndex(a => a.id === id);
+        const index = _assignments.findIndex(a => a.id === id);
         if (index !== -1) {
-            assignments[index] = { ...assignments[index], ...data };
-            set(KEYS.ASSIGNMENTS, assignments);
-            return assignments[index];
+            _assignments[index] = { ..._assignments[index], ...data };
+
+            db.collection(COLLECTIONS.ASSIGNMENTS).doc(id).update(data).catch(err => {
+                console.error('Error updating assignment:', err);
+            });
+
+            return _assignments[index];
         }
         return null;
     }
 
     function deleteAssignment(id) {
-        let assignments = getAssignments();
-        assignments = assignments.filter(a => a.id !== id);
-        set(KEYS.ASSIGNMENTS, assignments);
+        _assignments = _assignments.filter(a => a.id !== id);
+
+        db.collection(COLLECTIONS.ASSIGNMENTS).doc(id).delete().catch(err => {
+            console.error('Error deleting assignment:', err);
+        });
     }
 
-    // ==================== CURRENT USER ====================
-    function getCurrentUser() { return get(KEYS.CURRENT_USER); }
-    function setCurrentUser(user) { set(KEYS.CURRENT_USER, user); }
-    function clearCurrentUser() { localStorage.removeItem(KEYS.CURRENT_USER); }
+    // ==================== CURRENT USER (local only) ====================
+    function getCurrentUser() {
+        try { return JSON.parse(localStorage.getItem(LOCAL_KEYS.CURRENT_USER)); }
+        catch { return null; }
+    }
 
-    // ==================== THEME ====================
-    function getTheme() { return localStorage.getItem(KEYS.THEME) || 'dark'; }
-    function setTheme(theme) { localStorage.setItem(KEYS.THEME, theme); }
+    function setCurrentUser(user) {
+        localStorage.setItem(LOCAL_KEYS.CURRENT_USER, JSON.stringify(user));
+    }
 
-    // ==================== SIDEBAR ====================
-    function getSidebarCollapsed() { return localStorage.getItem(KEYS.SIDEBAR_COLLAPSED) === 'true'; }
-    function setSidebarCollapsed(collapsed) { localStorage.setItem(KEYS.SIDEBAR_COLLAPSED, String(collapsed)); }
+    function clearCurrentUser() {
+        localStorage.removeItem(LOCAL_KEYS.CURRENT_USER);
+    }
+
+    // ==================== THEME (local only) ====================
+    function getTheme() { return localStorage.getItem(LOCAL_KEYS.THEME) || 'dark'; }
+    function setTheme(theme) { localStorage.setItem(LOCAL_KEYS.THEME, theme); }
+
+    // ==================== SIDEBAR (local only) ====================
+    function getSidebarCollapsed() { return localStorage.getItem(LOCAL_KEYS.SIDEBAR_COLLAPSED) === 'true'; }
+    function setSidebarCollapsed(collapsed) { localStorage.setItem(LOCAL_KEYS.SIDEBAR_COLLAPSED, String(collapsed)); }
 
     // ==================== RESET ====================
     function resetAll() {
-        Object.values(KEYS).forEach(key => localStorage.removeItem(key));
-        // Also clear absences module data
-        localStorage.removeItem('pws_absences');
-        localStorage.removeItem('pws_leave_requests');
-        localStorage.removeItem('pws_notifications');
-        init();
+        // Delete all Firestore docs in a batch
+        const batch = db.batch();
+
+        _employees.forEach(e => {
+            batch.delete(db.collection(COLLECTIONS.EMPLOYEES).doc(e.id));
+        });
+        _assignments.forEach(a => {
+            batch.delete(db.collection(COLLECTIONS.ASSIGNMENTS).doc(a.id));
+        });
+        batch.set(db.collection(COLLECTIONS.SETTINGS).doc('admin'), { code: 'admin123' });
+
+        batch.commit().then(() => {
+            console.log('✅ All Firestore data reset');
+        }).catch(err => {
+            console.error('Error resetting Firestore data:', err);
+        });
+
+        // Clear caches
+        _employees = [];
+        _assignments = [];
+        _adminCode = 'admin123';
+
+        // Clear local storage
+        Object.values(LOCAL_KEYS).forEach(key => localStorage.removeItem(key));
+
+        // Also reset absences module
+        if (typeof Absences !== 'undefined' && Absences.resetAll) {
+            Absences.resetAll();
+        }
     }
 
     return {
-        init, KEYS,
+        init, onReady,
         toLocalDateStr, formatDateIT, formatDateLong,
         getItalianHolidays, isHoliday,
         getAdminCode, setAdminCode,

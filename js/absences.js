@@ -2,13 +2,15 @@
    PWSWORK - ABSENCES MODULE
    Ferie, Malattie, Permessi Management
    with Calendar Picker & Notifications
+   Firestore + In-Memory Cache
    ======================================== */
 
 const Absences = (() => {
-    const KEYS = {
-        ABSENCES: 'pws_absences',
-        LEAVE_REQUESTS: 'pws_leave_requests',
-        NOTIFICATIONS: 'pws_notifications'
+    // ==================== FIRESTORE COLLECTIONS ====================
+    const COLLECTIONS = {
+        ABSENCES: 'absences',
+        LEAVE_REQUESTS: 'leaveRequests',
+        NOTIFICATIONS: 'notifications'
     };
 
     const ABSENCE_TYPES = {
@@ -27,94 +29,142 @@ const Absences = (() => {
     let calendarMonth = new Date().getMonth();
     let calendarYear = new Date().getFullYear();
 
+    // ==================== IN-MEMORY CACHE ====================
+    let _absences = [];
+    let _leaveRequests = [];
+    let _notifications = [];
+    let _listenersStarted = false;
+
     // ==================== INIT ====================
     function init() {
-        if (!localStorage.getItem(KEYS.ABSENCES)) {
-            localStorage.setItem(KEYS.ABSENCES, JSON.stringify([]));
-        }
-        if (!localStorage.getItem(KEYS.LEAVE_REQUESTS)) {
-            localStorage.setItem(KEYS.LEAVE_REQUESTS, JSON.stringify([]));
-        }
-        if (!localStorage.getItem(KEYS.NOTIFICATIONS)) {
-            localStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify([]));
-        }
+        _startListeners();
         updateNotificationBadge();
     }
 
-    // ==================== DATA ACCESS ====================
+    function _startListeners() {
+        if (_listenersStarted) return;
+        _listenersStarted = true;
+
+        // --- Absences listener ---
+        db.collection(COLLECTIONS.ABSENCES).onSnapshot((snapshot) => {
+            _absences = [];
+            snapshot.forEach((doc) => {
+                _absences.push({ ...doc.data(), id: doc.id });
+            });
+        }, (error) => {
+            console.error('Firestore absences listener error:', error);
+        });
+
+        // --- Leave Requests listener ---
+        db.collection(COLLECTIONS.LEAVE_REQUESTS).onSnapshot((snapshot) => {
+            _leaveRequests = [];
+            snapshot.forEach((doc) => {
+                _leaveRequests.push({ ...doc.data(), id: doc.id });
+            });
+        }, (error) => {
+            console.error('Firestore leaveRequests listener error:', error);
+        });
+
+        // --- Notifications listener ---
+        db.collection(COLLECTIONS.NOTIFICATIONS).orderBy('createdAt', 'desc').limit(100).onSnapshot((snapshot) => {
+            _notifications = [];
+            snapshot.forEach((doc) => {
+                _notifications.push({ ...doc.data(), id: doc.id });
+            });
+            updateNotificationBadge();
+        }, (error) => {
+            console.error('Firestore notifications listener error:', error);
+        });
+    }
+
+    // ==================== DATA ACCESS (from cache) ====================
     function getAbsences() {
-        try { return JSON.parse(localStorage.getItem(KEYS.ABSENCES)) || []; }
-        catch { return []; }
+        return [..._absences];
     }
 
     function getLeaveRequests() {
-        try { return JSON.parse(localStorage.getItem(KEYS.LEAVE_REQUESTS)) || []; }
-        catch { return []; }
+        return [..._leaveRequests];
     }
 
     function getNotifications() {
-        try { return JSON.parse(localStorage.getItem(KEYS.NOTIFICATIONS)) || []; }
-        catch { return []; }
+        return [..._notifications];
     }
 
     function saveAbsences(absences) {
-        localStorage.setItem(KEYS.ABSENCES, JSON.stringify(absences));
+        // Not used anymore — individual add/delete operations instead
     }
 
     function saveLeaveRequests(requests) {
-        localStorage.setItem(KEYS.LEAVE_REQUESTS, JSON.stringify(requests));
+        // Not used anymore — individual operations instead
     }
 
     function saveNotifications(notifications) {
-        localStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+        // Not used anymore — individual operations instead
     }
 
     // ==================== NOTIFICATIONS ====================
     function addNotification(userId, message, type, relatedId) {
-        const notifications = getNotifications();
-        notifications.unshift({
+        const notif = {
             id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             userId: userId,
             message: message,
-            type: type, // 'request_new', 'request_approved', 'request_rejected', 'absence_added'
+            type: type,
             read: false,
             createdAt: new Date().toISOString(),
             relatedId: relatedId || null
+        };
+
+        // Optimistic cache update
+        _notifications.unshift(notif);
+
+        // Write to Firestore
+        db.collection(COLLECTIONS.NOTIFICATIONS).doc(notif.id).set(notif).catch(err => {
+            console.error('Error adding notification:', err);
         });
-        saveNotifications(notifications);
+
         updateNotificationBadge();
     }
 
     function getMyNotifications() {
         const user = Auth.getCurrentUser();
         if (!user) return [];
-        const all = getNotifications();
         if (Auth.isAdmin()) {
-            return all.filter(n => n.userId === 'admin' || n.userId === user.id);
+            return _notifications.filter(n => n.userId === 'admin' || n.userId === user.id);
         }
-        return all.filter(n => n.userId === user.id);
+        return _notifications.filter(n => n.userId === user.id);
     }
 
     function markNotificationRead(notifId) {
-        const notifications = getNotifications();
-        const n = notifications.find(x => x.id === notifId);
-        if (n) n.read = true;
-        saveNotifications(notifications);
+        const n = _notifications.find(x => x.id === notifId);
+        if (n) {
+            n.read = true;
+            db.collection(COLLECTIONS.NOTIFICATIONS).doc(notifId).update({ read: true }).catch(err => {
+                console.error('Error marking notification read:', err);
+            });
+        }
         updateNotificationBadge();
     }
 
     function markAllNotificationsRead() {
-        const notifications = getNotifications();
         const user = Auth.getCurrentUser();
         if (!user) return;
-        notifications.forEach(n => {
+
+        const batch = db.batch();
+        _notifications.forEach(n => {
+            let shouldMark = false;
             if (Auth.isAdmin()) {
-                if (n.userId === 'admin' || n.userId === user.id) n.read = true;
+                if (n.userId === 'admin' || n.userId === user.id) shouldMark = true;
             } else {
-                if (n.userId === user.id) n.read = true;
+                if (n.userId === user.id) shouldMark = true;
+            }
+            if (shouldMark && !n.read) {
+                n.read = true;
+                batch.update(db.collection(COLLECTIONS.NOTIFICATIONS).doc(n.id), { read: true });
             }
         });
-        saveNotifications(notifications);
+        batch.commit().catch(err => {
+            console.error('Error marking all notifications read:', err);
+        });
         updateNotificationBadge();
     }
 
@@ -244,7 +294,6 @@ const Absences = (() => {
     }
 
     function switchTab(tabName) {
-        // Update tab active state
         document.querySelectorAll('.abs-tab').forEach((btn, i) => btn.classList.remove('active'));
         event.currentTarget.classList.add('active');
 
@@ -261,7 +310,7 @@ const Absences = (() => {
     function updatePendingBadge() {
         const badge = document.getElementById('pending-requests-badge');
         if (!badge) return;
-        const pending = getLeaveRequests().filter(r => r.status === 'pending').length;
+        const pending = _leaveRequests.filter(r => r.status === 'pending').length;
         badge.textContent = pending;
         badge.style.display = pending > 0 ? 'inline-flex' : 'none';
     }
@@ -316,7 +365,6 @@ const Absences = (() => {
             </div>
         `;
 
-        // List existing absences
         html += renderAbsencesList(null);
 
         content.innerHTML = html;
@@ -333,7 +381,6 @@ const Absences = (() => {
 
         let html = '<div class="abs-requests-section">';
 
-        // Pending
         html += `<h4 class="abs-section-title">⏳ Richieste in Attesa (${pendingRequests.length})</h4>`;
         if (pendingRequests.length === 0) {
             html += '<div class="abs-empty glass-card">Nessuna richiesta in attesa</div>';
@@ -368,7 +415,6 @@ const Absences = (() => {
             });
         }
 
-        // Handled
         html += `<h4 class="abs-section-title" style="margin-top:24px;">📋 Storico Richieste</h4>`;
         if (handledRequests.length === 0) {
             html += '<div class="abs-empty glass-card">Nessuna richiesta gestita</div>';
@@ -514,7 +560,7 @@ const Absences = (() => {
         const content = document.getElementById('absences-tab-content');
         const user = Auth.getCurrentUser();
         const empId = user?.employeeId || user?.id;
-        const requests = getLeaveRequests().filter(r => r.employeeId === empId);
+        const requests = _leaveRequests.filter(r => r.employeeId === empId);
 
         let html = '<div class="abs-my-requests-section">';
         html += `<h4 class="abs-section-title">📋 Le Mie Richieste (${requests.length})</h4>`;
@@ -556,7 +602,6 @@ const Absences = (() => {
         const absences = getAbsences();
         const requests = getLeaveRequests();
 
-        // Build calendar HTML
         let html = `
             <div class="abs-cal-header">
                 <button class="btn btn-outline btn-sm abs-cal-nav" onclick="Absences.calNavMonth(-1, '${containerId}', ${selectable}, '${viewEmployeeId || ''}')">
@@ -570,24 +615,20 @@ const Absences = (() => {
             <div class="abs-cal-grid">
         `;
 
-        // Day headers
         dayNames.forEach(d => {
             html += `<div class="abs-cal-day-header">${d}</div>`;
         });
 
-        // Calculate days
         const firstDay = new Date(calendarYear, calendarMonth, 1);
-        let startDow = firstDay.getDay(); // 0=Sun
-        startDow = startDow === 0 ? 6 : startDow - 1; // Convert to Mon=0
+        let startDow = firstDay.getDay();
+        startDow = startDow === 0 ? 6 : startDow - 1;
 
         const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
 
-        // Empty cells before
         for (let i = 0; i < startDow; i++) {
             html += '<div class="abs-cal-cell empty"></div>';
         }
 
-        // Day cells
         const today = Storage.toLocalDateStr();
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -597,7 +638,6 @@ const Absences = (() => {
             const holidayInfo = Storage.isHoliday(dateStr);
             const isNonWorking = isSunday || !!holidayInfo;
 
-            // Check for absences on this date
             let absenceInfo = null;
             let pendingInfo = null;
             if (viewEmployeeId) {
@@ -672,7 +712,6 @@ const Absences = (() => {
     function removeSelectedDate(dateStr) {
         calendarSelectedDates = calendarSelectedDates.filter(d => d !== dateStr);
         updateSelectedDatesUI();
-        // Re-render whatever calendar is currently showing
         const calEls = document.querySelectorAll('[id^="abs-"][id$="-calendar"]');
         calEls.forEach(el => {
             if (el.innerHTML) {
@@ -693,7 +732,6 @@ const Absences = (() => {
                     <div class="abs-empty glass-card">Nessuna assenza registrata</div>`;
         }
 
-        // Sort by most recent first
         filtered.sort((a, b) => {
             const aDate = a.dates[a.dates.length - 1] || '';
             const bDate = b.dates[b.dates.length - 1] || '';
@@ -743,7 +781,6 @@ const Absences = (() => {
             return;
         }
 
-        const absences = getAbsences();
         const newAbsence = {
             id: 'abs_' + Date.now(),
             employeeId: empId,
@@ -753,8 +790,14 @@ const Absences = (() => {
             createdBy: 'admin',
             createdAt: new Date().toISOString()
         };
-        absences.push(newAbsence);
-        saveAbsences(absences);
+
+        // Optimistic cache update
+        _absences.push({ ...newAbsence });
+
+        // Write to Firestore
+        db.collection(COLLECTIONS.ABSENCES).doc(newAbsence.id).set(newAbsence).catch(err => {
+            console.error('Error saving absence:', err);
+        });
 
         // Notify the employee
         const emp = Storage.getEmployee(empId);
@@ -773,9 +816,12 @@ const Absences = (() => {
 
     function deleteAbsence(absId) {
         App.showConfirm('Elimina Assenza', 'Sei sicuro di voler eliminare questa assenza?', () => {
-            let absences = getAbsences();
-            absences = absences.filter(a => a.id !== absId);
-            saveAbsences(absences);
+            _absences = _absences.filter(a => a.id !== absId);
+
+            db.collection(COLLECTIONS.ABSENCES).doc(absId).delete().catch(err => {
+                console.error('Error deleting absence:', err);
+            });
+
             App.showToast('Eliminato', 'Assenza eliminata', 'info');
             render();
         });
@@ -791,7 +837,6 @@ const Absences = (() => {
             return;
         }
 
-        const requests = getLeaveRequests();
         const newRequest = {
             id: 'req_' + Date.now(),
             employeeId: empId,
@@ -801,8 +846,12 @@ const Absences = (() => {
             rejectionReason: '',
             createdAt: new Date().toISOString()
         };
-        requests.push(newRequest);
-        saveLeaveRequests(requests);
+
+        _leaveRequests.push({ ...newRequest });
+
+        db.collection(COLLECTIONS.LEAVE_REQUESTS).doc(newRequest.id).set(newRequest).catch(err => {
+            console.error('Error submitting leave request:', err);
+        });
 
         // Notify admin
         const emp = Storage.getEmployee(empId);
@@ -820,16 +869,14 @@ const Absences = (() => {
     }
 
     function handleRequest(reqId, status) {
-        const requests = getLeaveRequests();
-        const req = requests.find(r => r.id === reqId);
+        const req = _leaveRequests.find(r => r.id === reqId);
         if (!req) return;
 
         req.status = status;
 
         if (status === 'approved') {
             // Auto-create absence entry
-            const absences = getAbsences();
-            absences.push({
+            const newAbs = {
                 id: 'abs_' + Date.now(),
                 employeeId: req.employeeId,
                 type: 'ferie',
@@ -837,10 +884,13 @@ const Absences = (() => {
                 note: req.note || 'Approvata da admin',
                 createdBy: 'request_approved',
                 createdAt: new Date().toISOString()
-            });
-            saveAbsences(absences);
+            };
+            _absences.push({ ...newAbs });
 
-            // Notify employee
+            db.collection(COLLECTIONS.ABSENCES).doc(newAbs.id).set(newAbs).catch(err => {
+                console.error('Error creating absence from request:', err);
+            });
+
             addNotification(
                 req.employeeId,
                 `La tua richiesta di ferie (${req.dates.length} gg) è stata APPROVATA ✅`,
@@ -850,25 +900,34 @@ const Absences = (() => {
             App.showToast('Approvata', 'Richiesta ferie approvata', 'success');
         }
 
-        saveLeaveRequests(requests);
+        // Update request in Firestore
+        db.collection(COLLECTIONS.LEAVE_REQUESTS).doc(reqId).update({
+            status: status
+        }).catch(err => {
+            console.error('Error updating leave request:', err);
+        });
+
         renderRequestsTab();
         updatePendingBadge();
     }
 
     function promptRejectRequest(reqId) {
-        // Show a simple prompt for rejection reason
         const reason = prompt('Motivo del rifiuto (opzionale):');
-        if (reason === null) return; // cancelled
+        if (reason === null) return;
 
-        const requests = getLeaveRequests();
-        const req = requests.find(r => r.id === reqId);
+        const req = _leaveRequests.find(r => r.id === reqId);
         if (!req) return;
 
         req.status = 'rejected';
         req.rejectionReason = reason || '';
-        saveLeaveRequests(requests);
 
-        // Notify employee
+        db.collection(COLLECTIONS.LEAVE_REQUESTS).doc(reqId).update({
+            status: 'rejected',
+            rejectionReason: reason || ''
+        }).catch(err => {
+            console.error('Error rejecting leave request:', err);
+        });
+
         addNotification(
             req.employeeId,
             `La tua richiesta di ferie (${req.dates.length} gg) è stata RIFIUTATA ❌${reason ? ': ' + reason : ''}`,
@@ -883,8 +942,30 @@ const Absences = (() => {
 
     // ==================== CHECK IF EMPLOYEE IS ABSENT ====================
     function isEmployeeAbsent(employeeId, dateStr) {
-        const absences = getAbsences();
-        return absences.find(a => a.employeeId === employeeId && a.dates.includes(dateStr));
+        return _absences.find(a => a.employeeId === employeeId && a.dates && a.dates.includes(dateStr));
+    }
+
+    // ==================== RESET ALL (called by Storage.resetAll) ====================
+    function resetAll() {
+        const batch = db.batch();
+
+        _absences.forEach(a => {
+            batch.delete(db.collection(COLLECTIONS.ABSENCES).doc(a.id));
+        });
+        _leaveRequests.forEach(r => {
+            batch.delete(db.collection(COLLECTIONS.LEAVE_REQUESTS).doc(r.id));
+        });
+        _notifications.forEach(n => {
+            batch.delete(db.collection(COLLECTIONS.NOTIFICATIONS).doc(n.id));
+        });
+
+        batch.commit().catch(err => {
+            console.error('Error resetting absences data:', err);
+        });
+
+        _absences = [];
+        _leaveRequests = [];
+        _notifications = [];
     }
 
     // ==================== CLOSE NOTIFICATIONS ON OUTSIDE CLICK ====================
@@ -913,6 +994,7 @@ const Absences = (() => {
         markAllNotificationsRead,
         updateNotificationBadge,
         isEmployeeAbsent,
+        resetAll,
         ABSENCE_TYPES
     };
 })();
