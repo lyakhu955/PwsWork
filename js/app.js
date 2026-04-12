@@ -35,6 +35,11 @@ const App = (() => {
             mobileMenuBtn.addEventListener('click', toggleMobileSidebar);
         }
 
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeMobileSidebar);
+        }
+
         document.querySelectorAll('.nav-item[data-page]').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -198,8 +203,7 @@ const App = (() => {
         }
 
         // Close mobile sidebar
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.remove('mobile-open');
+        closeMobileSidebar();
     }
 
     // ==================== SIDEBAR ====================
@@ -211,7 +215,18 @@ const App = (() => {
 
     function toggleMobileSidebar() {
         const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
         sidebar.classList.toggle('mobile-open');
+        if (overlay) {
+            overlay.classList.toggle('active', sidebar.classList.contains('mobile-open'));
+        }
+    }
+
+    function closeMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        sidebar.classList.remove('mobile-open');
+        if (overlay) overlay.classList.remove('active');
     }
 
     // ==================== UI UPDATES ====================
