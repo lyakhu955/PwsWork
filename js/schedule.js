@@ -774,7 +774,7 @@ const Schedule = (() => {
                 return emp ? { name: emp.firstName + ' ' + emp.lastName, position: emp.position || '', phone: emp.phone || '' } : null;
             }).filter(Boolean);
 
-            var teamLabel = asgn.teamName || ('Squadra ' + (idx + 1));
+            var teamLabel = asgn.teamName || ('Gregge ' + (idx + 1));
             html += '<div class="detail-assignment' + (assignments.length > 1 ? ' detail-multi' : '') + '">';
 
             html += '<div class="detail-assignment-num">' + teamLabel + '</div>';
