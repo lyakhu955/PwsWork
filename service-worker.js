@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pwswork-v24';
+const CACHE_NAME = 'pwswork-v25';
 
 const APP_SHELL = [
   './',
@@ -18,6 +18,7 @@ const APP_SHELL = [
   './js/profile.js',
   './js/absences.js',
   './js/hours.js',
+  './js/whatsapp.js',
   './js/app.js',
   './icons/icon-192.png',
   './icons/icon-512.png'
