@@ -960,16 +960,13 @@ const Schedule = (() => {
         // Default center: Italy
         const defaultCenter = { lat: 41.9028, lng: 12.4964 };
 
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-
         mapInstance = new google.maps.Map(mapContainer, {
             center: defaultCenter,
             zoom: 6,
-            mapId: isDark ? 'DEMO_MAP_ID' : 'DEMO_MAP_ID',
+            mapId: 'DEMO_MAP_ID',
             mapTypeControl: false,
             streetViewControl: false,
-            fullscreenControl: false,
-            styles: isDark ? getMapStyles() : undefined
+            fullscreenControl: false
         });
 
         // AdvancedMarkerElement (replaces deprecated Marker)
