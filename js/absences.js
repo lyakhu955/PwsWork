@@ -999,7 +999,15 @@ const Absences = (() => {
 
         calendarSelectedDates = [];
         App.showToast('Salvato', `Assenza registrata con successo (${datesToSave.length} giorni)`, 'success');
-        renderManageTab();
+        
+        // Reset only specific fields, keep employee and type selected
+        const absNote = document.getElementById('abs-note');
+        if (absNote) absNote.value = '';
+        
+        // Re-render calendar and selected dates UI, but keep form state
+        renderCalendar('abs-admin-calendar', true, empId);
+        updateSelectedDatesUI();
+        renderAbsencesList(null);
     }
 
     function deleteAbsence(absId) {
