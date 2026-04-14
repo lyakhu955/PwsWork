@@ -501,9 +501,10 @@ const Absences = (() => {
             const malattiaCount = empAbsences.filter(a => a.type === 'malattia').reduce((sum, a) => sum + a.dates.length, 0);
             const permessoCount = empAbsences.filter(a => a.type === 'permesso').reduce((sum, a) => sum + a.dates.length, 0);
             const total = ferieCount + malattiaCount + permessoCount;
+            const hasAbsences = total > 0 ? 'has-absences' : '';
 
             html += `
-                <div class="abs-overview-card glass-card">
+                <div class="abs-overview-card glass-card ${hasAbsences}" onclick="Absences.openAbsencesDetailModal('${emp.id}', '${emp.firstName}', '${emp.lastName}')">
                     <div class="abs-overview-name">
                         <div class="abs-overview-avatar">${emp.firstName[0]}${emp.lastName[0]}</div>
                         <div>
@@ -1020,6 +1021,112 @@ const Absences = (() => {
         }
     });
 
+    // ==================== ABSENCES DETAIL MODAL ====================
+    function openAbsencesDetailModal(employeeId, firstName, lastName) {
+        const modal = document.getElementById('absences-detail-modal');
+        if (!modal) return;
+
+        const absences = getAbsences();
+        const empAbsences = absences.filter(a => a.employeeId === employeeId);
+
+        // Organizza per tipo
+        const byType = {
+            ferie: empAbsences.filter(a => a.type === 'ferie'),
+            malattia: empAbsences.filter(a => a.type === 'malattia'),
+            permesso: empAbsences.filter(a => a.type === 'permesso')
+        };
+
+        let html = `
+            <div class="modal-header">
+                <h3>Assenze — ${firstName} ${lastName}</h3>
+                <button class="modal-close" onclick="Absences.closeAbsencesDetailModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+        `;
+
+        // Ferie
+        if (byType.ferie.length > 0) {
+            html += `<div class="abs-detail-section">
+                <h4 style="color: ${ABSENCE_TYPES.ferie.color}; margin-bottom: 12px;">🏖️ Ferie</h4>
+                <div class="abs-detail-list">`;
+            byType.ferie.forEach(absence => {
+                const totalDays = absence.dates.length;
+                const dateRange = absence.dates.length > 0 
+                    ? `${new Date(absence.dates[0] + 'T00:00:00').toLocaleDateString('it-IT')} — ${new Date(absence.dates[absence.dates.length - 1] + 'T00:00:00').toLocaleDateString('it-IT')}`
+                    : '';
+                html += `
+                    <div class="abs-detail-item">
+                        <div class="abs-detail-info">
+                            <span class="abs-detail-dates">${dateRange}</span>
+                            <span class="abs-detail-count">${totalDays} giorno${totalDays > 1 ? 'i' : ''}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        }
+
+        // Malattia
+        if (byType.malattia.length > 0) {
+            html += `<div class="abs-detail-section">
+                <h4 style="color: ${ABSENCE_TYPES.malattia.color}; margin-bottom: 12px;">🤒 Malattia</h4>
+                <div class="abs-detail-list">`;
+            byType.malattia.forEach(absence => {
+                const totalDays = absence.dates.length;
+                const dateRange = absence.dates.length > 0 
+                    ? `${new Date(absence.dates[0] + 'T00:00:00').toLocaleDateString('it-IT')} — ${new Date(absence.dates[absence.dates.length - 1] + 'T00:00:00').toLocaleDateString('it-IT')}`
+                    : '';
+                html += `
+                    <div class="abs-detail-item">
+                        <div class="abs-detail-info">
+                            <span class="abs-detail-dates">${dateRange}</span>
+                            <span class="abs-detail-count">${totalDays} giorno${totalDays > 1 ? 'i' : ''}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        }
+
+        // Permesso
+        if (byType.permesso.length > 0) {
+            html += `<div class="abs-detail-section">
+                <h4 style="color: ${ABSENCE_TYPES.permesso.color}; margin-bottom: 12px;">📋 Permessi</h4>
+                <div class="abs-detail-list">`;
+            byType.permesso.forEach(absence => {
+                const totalDays = absence.dates.length;
+                const dateRange = absence.dates.length > 0 
+                    ? `${new Date(absence.dates[0] + 'T00:00:00').toLocaleDateString('it-IT')} — ${new Date(absence.dates[absence.dates.length - 1] + 'T00:00:00').toLocaleDateString('it-IT')}`
+                    : '';
+                html += `
+                    <div class="abs-detail-item">
+                        <div class="abs-detail-info">
+                            <span class="abs-detail-dates">${dateRange}</span>
+                            <span class="abs-detail-count">${totalDays} giorno${totalDays > 1 ? 'i' : ''}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        }
+
+        if (empAbsences.length === 0) {
+            html += `<div class="abs-empty">Nessuna assenza registrata</div>`;
+        }
+
+        html += `</div>`;
+        
+        modal.innerHTML = html;
+        modal.classList.add('active');
+    }
+
+    function closeAbsencesDetailModal() {
+        const modal = document.getElementById('absences-detail-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
     return {
         init,
         render,
@@ -1039,6 +1146,8 @@ const Absences = (() => {
         updateNotificationBadge,
         isEmployeeAbsent,
         resetAll,
+        openAbsencesDetailModal,
+        closeAbsencesDetailModal,
         ABSENCE_TYPES
     };
 })();
