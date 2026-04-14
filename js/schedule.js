@@ -1081,8 +1081,16 @@ const Schedule = (() => {
             return;
         }
 
+        // Snapshot selectedPlace before any async/DOM operations
+        const place = {
+            name: selectedPlace.name || '',
+            address: selectedPlace.address || '',
+            lat: selectedPlace.lat || '',
+            lng: selectedPlace.lng || ''
+        };
+
         const item = document.querySelector(`.workplace-item[data-index="${activeWorkplaceIndex}"]`);
-        if (!item) return;
+        if (!item) { closeMapModal(); return; }
 
         const nameInput = item.querySelector('.wp-name');
         const addressInput = item.querySelector('.wp-address');
@@ -1095,16 +1103,15 @@ const Schedule = (() => {
             return;
         }
 
-        // If name field is empty, fill with place name
-        if (nameInput && !nameInput.value.trim() && selectedPlace.name) {
-            nameInput.value = selectedPlace.name;
+        if (nameInput && !nameInput.value.trim() && place.name) {
+            nameInput.value = place.name;
         }
-        addressInput.value = selectedPlace.address || '';
-        if (latInput) latInput.value = selectedPlace.lat || '';
-        if (lngInput) lngInput.value = selectedPlace.lng || '';
+        addressInput.value = place.address;
+        if (latInput) latInput.value = place.lat;
+        if (lngInput) lngInput.value = place.lng;
 
         closeMapModal();
-        App.showToast('Posizione salvata', selectedPlace.address || '', 'success');
+        App.showToast('Posizione salvata', place.address || 'Posizione selezionata', 'success');
     }
 
     // ==================== FORM SUBMIT ====================
