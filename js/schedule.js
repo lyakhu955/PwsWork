@@ -923,6 +923,8 @@ const Schedule = (() => {
     }
 
     // ==================== GOOGLE MAPS PICKER ====================
+    let mapInitialized = false;
+
     function openMapPicker(wpIndex) {
         activeWorkplaceIndex = wpIndex;
         selectedPlace = null;
@@ -931,11 +933,24 @@ const Schedule = (() => {
         mapModal.classList.add('active');
 
         document.getElementById('map-selected-info').style.display = 'none';
-        document.getElementById('map-search-input').value = '';
 
-        // Initialize map after modal is visible
+        // Clear autocomplete input (handles both original input and PlaceAutocompleteElement)
+        const searchInput = document.getElementById('map-search-input');
+        if (searchInput) {
+            if (typeof searchInput.value !== 'undefined') searchInput.value = '';
+            else if (searchInput.clear) searchInput.clear();
+        }
+
+        // Initialize map only once; just re-center on subsequent opens
         setTimeout(() => {
-            initMap();
+            if (!mapInitialized) {
+                initMap();
+                mapInitialized = true;
+            } else if (mapInstance) {
+                mapInstance.setCenter({ lat: 41.9028, lng: 12.4964 });
+                mapInstance.setZoom(6);
+                if (mapMarker) mapMarker.position = null;
+            }
         }, 300);
     }
 
@@ -945,52 +960,74 @@ const Schedule = (() => {
         // Default center: Italy
         const defaultCenter = { lat: 41.9028, lng: 12.4964 };
 
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
         mapInstance = new google.maps.Map(mapContainer, {
             center: defaultCenter,
             zoom: 6,
-            styles: getMapStyles(),
+            mapId: isDark ? 'DEMO_MAP_ID' : 'DEMO_MAP_ID',
             mapTypeControl: false,
             streetViewControl: false,
-            fullscreenControl: false
+            fullscreenControl: false,
+            styles: isDark ? getMapStyles() : undefined
         });
 
-        mapMarker = new google.maps.Marker({
+        // AdvancedMarkerElement (replaces deprecated Marker)
+        mapMarker = new google.maps.marker.AdvancedMarkerElement({
             map: mapInstance,
-            draggable: true
+            gmpDraggable: true
         });
 
-        // Autocomplete
-        const input = document.getElementById('map-search-input');
-        autocomplete = new google.maps.places.Autocomplete(input, {
-            componentRestrictions: { country: 'it' },
-            fields: ['formatted_address', 'geometry', 'name']
+        // PlaceAutocompleteElement (replaces deprecated Autocomplete)
+        const searchContainer = document.getElementById('map-search-input').parentElement;
+        const oldInput = document.getElementById('map-search-input');
+
+        const placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
+            componentRestrictions: { country: 'it' }
         });
+        placeAutocomplete.id = 'map-search-input';
+        placeAutocomplete.className = oldInput.className;
+        oldInput.replaceWith(placeAutocomplete);
+        autocomplete = placeAutocomplete;
 
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
-            if (!place.geometry) return;
+        placeAutocomplete.addEventListener('gmp-placeselect', async (e) => {
+            const place = e.placeSummary || e.place;
+            if (!place) return;
 
-            const loc = place.geometry.location;
-            mapInstance.setCenter(loc);
+            // Fetch full details if needed
+            let location, formattedAddress, placeName;
+            if (place.fetchFields) {
+                await place.fetchFields({ fields: ['location', 'formattedAddress', 'displayName'] });
+                location = place.location;
+                formattedAddress = place.formattedAddress || '';
+                placeName = place.displayName || '';
+            } else {
+                // Fallback for older place object shape
+                location = place.geometry?.location;
+                formattedAddress = place.formatted_address || '';
+                placeName = place.name || '';
+            }
+
+            if (!location) return;
+
+            const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
+            const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
+            const latLng = new google.maps.LatLng(lat, lng);
+
+            mapInstance.setCenter(latLng);
             mapInstance.setZoom(16);
-            mapMarker.setPosition(loc);
+            mapMarker.position = latLng;
 
-            selectedPlace = {
-                name: place.name || '',
-                address: place.formatted_address || '',
-                lat: loc.lat(),
-                lng: loc.lng()
-            };
-
+            selectedPlace = { name: placeName, address: formattedAddress, lat, lng };
             document.getElementById('map-selected-info').style.display = 'flex';
-            document.getElementById('map-selected-address').textContent = selectedPlace.address;
+            document.getElementById('map-selected-address').textContent = formattedAddress;
         });
 
         // Click on map to set position
         mapInstance.addListener('click', (e) => {
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
-            mapMarker.setPosition(e.latLng);
+            mapMarker.position = e.latLng;
 
             // Reverse geocode
             const geocoder = new google.maps.Geocoder();
@@ -1003,10 +1040,10 @@ const Schedule = (() => {
         });
 
         // Marker drag end
-        mapMarker.addListener('dragend', () => {
-            const pos = mapMarker.getPosition();
-            const lat = pos.lat();
-            const lng = pos.lng();
+        mapMarker.addListener('dragend', (e) => {
+            const pos = mapMarker.position;
+            const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
+            const lng = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({ location: { lat, lng } }, (results, status) => {
                 const addr = status === 'OK' && results[0] ? results[0].formatted_address : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
@@ -1018,6 +1055,8 @@ const Schedule = (() => {
     }
 
     function getMapStyles() {
+        if (true) return [];
+        // Kept for reference - dark styles now applied via mapId or styles option in initMap
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         if (!isDark) return [];
         return [
