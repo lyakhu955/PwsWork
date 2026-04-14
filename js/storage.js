@@ -140,6 +140,20 @@ const Storage = (() => {
             const wasLoaded = _loadedSources.employees;
             _loadedSources.employees = true;
             _checkAllLoaded();
+            // Check if current user's role changed and update session
+            if (wasLoaded && typeof Auth !== 'undefined' && Auth.getCurrentUser) {
+                const currentUser = Auth.getCurrentUser();
+                if (currentUser && currentUser.employeeId) {
+                    const updatedEmp = _employees.find(e => e.id === currentUser.employeeId);
+                    if (updatedEmp && updatedEmp.role !== currentUser.role) {
+                        console.log('[Storage] Role changed for current user:', currentUser.role, '->', updatedEmp.role);
+                        Auth.updateCurrentUser({ role: updatedEmp.role });
+                        if (typeof App !== 'undefined' && App.updateAdminVisibility) {
+                            App.updateAdminVisibility();
+                        }
+                    }
+                }
+            }
             if (wasLoaded) _onDataChange();
         }, (error) => {
             console.error('Firestore employees listener error:', error);
