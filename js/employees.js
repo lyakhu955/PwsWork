@@ -188,6 +188,10 @@ const Employees = (() => {
             return;
         }
 
+        const currentUser = Auth.getCurrentUser();
+        const roleChanged = editingId && existing && existing.role !== data.role;
+        const isCurrentUserBeingPromoted = editingId === currentUser?.employeeId && roleChanged;
+
         if (editingId) {
             // Update
             if (password) {
@@ -195,7 +199,16 @@ const Employees = (() => {
                 data.password = '';
             }
             Storage.updateEmployee(editingId, data);
-            App.showToast('Successo', 'Dipendente aggiornato con successo', 'success');
+            
+            // If current user's role changed, update their session
+            if (isCurrentUserBeingPromoted) {
+                Auth.updateCurrentUser({ role: data.role });
+                App.showToast('Successo', 'Promosso a Admin! Pagina aggiornata.', 'success');
+                // Update admin visibility elements
+                Dashboard.updateAdminVisibility();
+            } else {
+                App.showToast('Successo', 'Dipendente aggiornato con successo', 'success');
+            }
         } else {
             // Create
             data.passwordHash = await CryptoUtil.hashSecret(password);
