@@ -7,6 +7,7 @@
 const Schedule = (() => {
     let currentWeekStart = null;
     let editingAssignmentId = null;
+    let assignmentViewMode = 'admin';
     let viewMode = 'week';
     let workplaceCounter = 0;
 
@@ -414,6 +415,7 @@ const Schedule = (() => {
         if (!Auth.isAdmin()) return;
 
         editingAssignmentId = assignmentId;
+        assignmentViewMode = 'admin';
         workplaceCounter = 0;
         const modal = document.getElementById('assignment-modal');
         const title = document.getElementById('assignment-modal-title');
@@ -460,11 +462,78 @@ const Schedule = (() => {
         }
 
         modal.classList.add('active');
+        updateAssignmentViewModeUI();
     }
 
     function closeModal() {
         document.getElementById('assignment-modal').classList.remove('active');
         editingAssignmentId = null;
+        assignmentViewMode = 'admin';
+    }
+
+    function toggleAssignmentViewMode() {
+        assignmentViewMode = assignmentViewMode === 'admin' ? 'worker' : 'admin';
+        updateAssignmentViewModeUI();
+    }
+
+    function updateAssignmentViewModeUI() {
+        const modal = document.getElementById('assignment-modal');
+        const title = document.getElementById('assignment-modal-title');
+        const form = document.getElementById('assignment-form');
+        const topToggle = document.getElementById('assignment-mode-toggle');
+        const footerToggle = document.getElementById('assignment-footer-mode-btn');
+        const saveBtn = document.getElementById('assignment-save-btn');
+        const deleteBtn = document.getElementById('delete-assignment-btn');
+        const addWorkplaceBtn = document.getElementById('add-workplace-btn');
+
+        if (!modal || !form) return;
+
+        const workerMode = assignmentViewMode === 'worker';
+        modal.dataset.viewMode = assignmentViewMode;
+
+        if (title) {
+            title.textContent = workerMode ? 'Vista Lavoratore' : (editingAssignmentId ? 'Modifica Squadra' : 'Nuova Squadra');
+        }
+        if (topToggle) {
+            topToggle.textContent = workerMode ? 'Modifica come admin' : 'Vista lavoratore';
+        }
+        if (footerToggle) {
+            footerToggle.textContent = workerMode ? 'Modifica' : 'Vista lavoratore';
+            footerToggle.classList.toggle('is-worker-mode', workerMode);
+        }
+
+        const fields = form.querySelectorAll('input, select, textarea, button');
+        fields.forEach(el => {
+            if (
+                el.id === 'assignment-mode-toggle' ||
+                el.id === 'assignment-footer-mode-btn' ||
+                el.id === 'assignment-save-btn' ||
+                el.id === 'delete-assignment-btn' ||
+                el.id === 'confirm-map-btn' ||
+                el.id === 'assignment-form'
+            ) {
+                return;
+            }
+
+            if (el.type === 'hidden') return;
+
+            if (el.tagName === 'BUTTON') {
+                el.disabled = workerMode;
+            } else if (el.type === 'checkbox') {
+                el.disabled = workerMode;
+            } else {
+                el.readOnly = workerMode && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+                if (el.tagName === 'SELECT') {
+                    el.disabled = workerMode;
+                }
+            }
+        });
+
+        if (addWorkplaceBtn) addWorkplaceBtn.disabled = workerMode;
+        if (deleteBtn) deleteBtn.disabled = workerMode;
+        if (saveBtn) saveBtn.disabled = workerMode;
+
+        form.classList.toggle('is-worker-mode', workerMode);
     }
 
     // ==================== EMPLOYEE CHECKBOXES ====================
@@ -898,6 +967,7 @@ const Schedule = (() => {
         openMapPicker,
         closeMapModal,
         confirmMapSelection,
+        toggleAssignmentViewMode,
         deleteAssignment,
         updateEmployeeFilter
     };
