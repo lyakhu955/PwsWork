@@ -21,15 +21,6 @@ const Schedule = (() => {
         currentWeekStart = getMonday(new Date());
         bindEvents();
         render();
-
-        // Se viene da Dashboard con un gruppo da aprire
-        setTimeout(() => {
-            const openGroupId = sessionStorage.getItem('openGroupId');
-            if (openGroupId) {
-                sessionStorage.removeItem('openGroupId');
-                openGroupDetail(openGroupId);
-            }
-        }, 300);
     }
 
     function bindEvents() {
@@ -94,6 +85,19 @@ const Schedule = (() => {
         } else {
             renderMonthView();
         }
+
+        consumePendingGroupOpen();
+    }
+
+    function consumePendingGroupOpen() {
+        const openGroupId = sessionStorage.getItem('openGroupId');
+        if (!openGroupId) return;
+
+        sessionStorage.removeItem('openGroupId');
+
+        setTimeout(() => {
+            openGroupDetail(openGroupId);
+        }, 50);
     }
 
     function updateWeekLabel() {
@@ -770,6 +774,10 @@ const Schedule = (() => {
 
     // Apri un gruppo dal link della dashboard
     function openGroupDetail(assignmentId) {
+        if (Auth.isAdmin()) {
+            openModal(assignmentId);
+            return;
+        }
         openDetailModal(assignmentId);
     }
 
