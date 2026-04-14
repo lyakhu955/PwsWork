@@ -10,69 +10,9 @@ const Dashboard = (() => {
     }
 
     function render() {
-        updateStats();
         renderTodaySchedule();
         renderTomorrowSchedule();
         updateAdminVisibility();
-    }
-
-    function updateStats() {
-        const employees = Storage.getEmployees();
-        const today = Storage.toLocalDateStr();
-        const todayAssignments = Storage.getAssignmentsByDate(today);
-
-        // Unique employees assigned today
-        const assignedToday = new Set();
-        let workplacesToday = 0;
-        todayAssignments.forEach(a => {
-            a.employeeIds.forEach(eid => assignedToday.add(eid));
-            workplacesToday += a.workplaces.length;
-        });
-
-        // Count absent today
-        let absentToday = 0;
-        if (typeof Absences !== 'undefined') {
-            employees.forEach(emp => {
-                if (Absences.isEmployeeAbsent(emp.id, today)) absentToday++;
-            });
-        }
-
-        // Week assignments count
-        const now = new Date();
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay() + 1);
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        const weekAssignments = Storage.getAssignmentsByDateRange(
-            Storage.toLocalDateStr(startOfWeek),
-            Storage.toLocalDateStr(endOfWeek)
-        );
-
-        animateValue('stat-total-employees', employees.length);
-        animateValue('stat-today-assigned', assignedToday.size);
-        animateValue('stat-today-workplaces', workplacesToday);
-        animateValue('stat-week-assignments', weekAssignments.length);
-        animateValue('stat-today-absent', absentToday);
-    }
-
-    function animateValue(elementId, targetValue) {
-        const element = document.getElementById(elementId);
-        if (!element) return;
-        
-        let current = 0;
-        const duration = 800;
-        const stepTime = 30;
-        const steps = duration / stepTime;
-        const increment = targetValue / steps;
-        
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= targetValue) {
-                current = targetValue;
-                clearInterval(timer);
-            }
-            element.textContent = Math.round(current);
-        }, stepTime);
     }
 
     function renderTodaySchedule() {
@@ -241,7 +181,6 @@ const Dashboard = (() => {
     return {
         init,
         render,
-        updateStats,
         goToGroupDetail
     };
 })();
