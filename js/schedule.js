@@ -21,6 +21,15 @@ const Schedule = (() => {
         currentWeekStart = getMonday(new Date());
         bindEvents();
         render();
+
+        // Se viene da Dashboard con un gruppo da aprire
+        setTimeout(() => {
+            const openGroupId = sessionStorage.getItem('openGroupId');
+            if (openGroupId) {
+                sessionStorage.removeItem('openGroupId');
+                openGroupDetail(openGroupId);
+            }
+        }, 300);
     }
 
     function bindEvents() {
@@ -759,6 +768,11 @@ const Schedule = (() => {
         renderDetailModal(dateStr, assignments);
     }
 
+    // Apri un gruppo dal link della dashboard
+    function openGroupDetail(assignmentId) {
+        openDetailModal(assignmentId);
+    }
+
     function renderDetailModal(dateStr, assignments) {
         const modal = document.getElementById('detail-modal');
         const title = document.getElementById('detail-modal-title');
@@ -869,6 +883,7 @@ const Schedule = (() => {
         closeModal,
         openDetailModal,
         openDetailModalByDate,
+        openGroupDetail,
         closeDetailModal,
         addWorkplaceField,
         removeWorkplace,

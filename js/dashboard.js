@@ -109,7 +109,10 @@ const Dashboard = (() => {
             const teamLabel = asgn.teamName || ('Gregge ' + (index + 1));
 
             html += `
-                <div class="today-assignment-card stagger-item ${isCurrentUser ? 'highlight-own' : ''}" style="animation-delay: ${index * 0.05}s;">
+                <div class="today-assignment-card stagger-item ${isCurrentUser ? 'highlight-own' : ''}" 
+                     data-assignment-id="${asgn.id}" 
+                     onclick="Dashboard.goToGroupDetail('${asgn.id}'); event.stopPropagation();"
+                     style="animation-delay: ${index * 0.05}s; cursor: pointer;">
                     <div class="today-assignment-team-label">${teamLabel}</div>
                     <div class="today-assignment-team">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -122,12 +125,17 @@ const Dashboard = (() => {
                 const navUrl = wp.lat && wp.lng
                     ? `https://www.google.com/maps/dir/?api=1&destination=${wp.lat},${wp.lng}`
                     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(wp.address || wp.name)}`;
+                const placeName = wp.name || 'Luogo di lavoro';
+                const addressText = wp.address || wp.name || 'Apri indirizzo';
 
                 html += `
-                    <a href="${navUrl}" target="_blank" rel="noopener" class="today-workplace-link">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        ${wp.name}${wp.address ? ` — ${wp.address}` : ''}
-                    </a>`;
+                    <div class="today-workplace-row">
+                        <span class="today-workplace-name">${placeName}</span>
+                        <a href="${navUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation();" class="today-workplace-link" title="Apri navigatore verso ${addressText}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            ${addressText}
+                        </a>
+                    </div>`;
             });
 
             html += `</div>`;
@@ -147,9 +155,17 @@ const Dashboard = (() => {
         });
     }
 
+    function goToGroupDetail(assignmentId) {
+        // Salva l'ID del gruppo da aprire in Schedule
+        sessionStorage.setItem('openGroupId', assignmentId);
+        // Naviga a Schedule
+        App.navigateTo('schedule');
+    }
+
     return {
         init,
         render,
-        updateStats
+        updateStats,
+        goToGroupDetail
     };
 })();
