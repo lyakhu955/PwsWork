@@ -233,7 +233,6 @@ const Employees = (() => {
 
         closeModal();
         render();
-        Dashboard.updateStats();
         Schedule.updateEmployeeFilter();
     }
 
@@ -251,7 +250,6 @@ const Employees = (() => {
             () => {
                 Storage.deleteEmployee(id);
                 render();
-                Dashboard.updateStats();
                 Schedule.updateEmployeeFilter();
                 App.showToast('Eliminato', 'Dipendente eliminato con successo', 'success');
             }
