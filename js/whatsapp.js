@@ -137,7 +137,7 @@ const WhatsApp = (() => {
                     asgn.workplaces.forEach(wp => {
                         const name = wp.name || '';
                         const address = wp.address || '';
-                        const desc = wp.description || wp.desc || '';
+                        const desc = wp.info || '';
 
                         // Build Google Maps navigation link
                         let mapsLink = '';
@@ -166,11 +166,6 @@ const WhatsApp = (() => {
                             lines.push(`🗺️ ${mapsLink}`);
                         }
                     });
-                }
-
-                // Notes as work description
-                if (asgn.notes && asgn.notes.trim()) {
-                    lines.push(`🔨 ${asgn.notes.trim()}`);
                 }
 
                 // Spacer between groups
