@@ -703,10 +703,21 @@ const Absences = (() => {
             if (holidayInfo) {
                 dotHtml = `<span class="abs-cal-holiday-label" title="${holidayInfo.name}">🔴</span>`;
             }
-            if (absenceInfo) {
+            
+            // Show emoji badges for existing absences (admin manage tab)
+            if (viewEmployeeId && containerId === 'abs-admin-calendar') {
+                const empAbsences = absences.filter(a => a.employeeId === viewEmployeeId && a.dates.includes(dateStr));
+                if (empAbsences.length > 0) {
+                    const emojis = empAbsences.map(a => ABSENCE_TYPES[a.type].icon).join('');
+                    dotHtml = `<span class="abs-cal-emoji-badge" title="Assenze registrate">${emojis}</span>`;
+                }
+            }
+            
+            // Show dot for absences in other views
+            if (!dotHtml && absenceInfo) {
                 dotHtml = `<span class="abs-cal-dot" style="background:${ABSENCE_TYPES[absenceInfo.type].color}" title="${ABSENCE_TYPES[absenceInfo.type].label}"></span>`;
             }
-            if (pendingInfo) {
+            if (!dotHtml && pendingInfo) {
                 dotHtml = `<span class="abs-cal-dot" style="background:#f59e0b" title="Richiesta in attesa"></span>`;
             }
 
@@ -735,9 +746,52 @@ const Absences = (() => {
         } else {
             calendarSelectedDates.push(dateStr);
         }
+        
+        // Merge overlapping dates (smart deduplication)
+        calendarSelectedDates = mergeDateRanges(calendarSelectedDates);
         calendarSelectedDates.sort();
+        
         renderCalendar(containerId, selectable, viewEmployeeId || null);
         updateSelectedDatesUI();
+    }
+
+    function mergeDateRanges(dates) {
+        if (dates.length === 0) return [];
+        
+        // Sort dates
+        const sorted = [...dates].sort();
+        const merged = [sorted[0]];
+        
+        for (let i = 1; i < sorted.length; i++) {
+            const current = new Date(sorted[i] + 'T00:00:00');
+            const last = new Date(merged[merged.length - 1] + 'T00:00:00');
+            const diffDays = Math.floor((current - last) / (1000 * 60 * 60 * 24));
+            
+            // If dates are adjacent or same, fill the gap
+            if (diffDays <= 1) {
+                // Fill in any missing dates between last and current
+                const filledDates = getDateRangeBetween(merged[merged.length - 1], sorted[i]);
+                merged.push(...filledDates.slice(1)); // Skip first (already in merged)
+            } else {
+                merged.push(sorted[i]);
+            }
+        }
+        
+        return [...new Set(merged)]; // Remove any remaining duplicates
+    }
+
+    function getDateRangeBetween(startStr, endStr) {
+        const dates = [];
+        const current = new Date(startStr + 'T00:00:00');
+        const end = new Date(endStr + 'T00:00:00');
+        
+        while (current <= end) {
+            const dateStr = Storage.toLocalDateStr(current);
+            dates.push(dateStr);
+            current.setDate(current.getDate() + 1);
+        }
+        
+        return dates;
     }
 
     function updateSelectedDatesUI() {

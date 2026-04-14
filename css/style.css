@@ -3300,6 +3300,13 @@ input[type="time"]::-webkit-inner-spin-button {
     display: block;
 }
 
+.abs-cal-emoji-badge {
+    display: block;
+    font-size: 0.85rem;
+    line-height: 1;
+    letter-spacing: -2px;
+}
+
 /* Legend */
 .abs-legend {
     display: flex;
