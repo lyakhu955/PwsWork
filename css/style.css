@@ -1939,6 +1939,32 @@ input[type="time"]::-webkit-inner-spin-button {
     overflow-y: auto;
 }
 
+/* Map modal: flex column so buttons stay fixed at bottom */
+.modal-map {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+.modal-map-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+    padding-bottom: var(--space-sm);
+}
+
+.modal-map-actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--space-md);
+    margin-top: var(--space-sm);
+    background: var(--bg-card);
+}
+
 /* ==================== DASHBOARD ASSIGNMENT CARDS ==================== */
 .today-assignment-card {
     padding: var(--space-md) var(--space-lg);
