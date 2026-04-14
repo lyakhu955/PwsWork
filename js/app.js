@@ -462,6 +462,7 @@ const App = (() => {
         showToast,
         showConfirm,
         updateUserDisplay,
+        updateAdminVisibility,
         refreshCurrentPage
     };
 })();

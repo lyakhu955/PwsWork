@@ -189,10 +189,24 @@ const Employees = (() => {
         }
 
         const currentUser = Auth.getCurrentUser();
-        const roleChanged = editingId && existing && existing.role !== data.role;
-        const isCurrentUserBeingPromoted = editingId === currentUser?.employeeId && roleChanged;
+        let roleChanged = false;
+        let isCurrentUserBeingPromoted = false;
 
         if (editingId) {
+            // Get original employee data before update
+            const originalEmployee = Storage.getEmployee(editingId);
+            roleChanged = originalEmployee && originalEmployee.role !== data.role;
+            isCurrentUserBeingPromoted = currentUser && editingId === currentUser.employeeId && roleChanged;
+            
+            console.log('[Debug Promotion]', {
+                editingId,
+                currentUserEmployeeId: currentUser?.employeeId,
+                originalRole: originalEmployee?.role,
+                newRole: data.role,
+                roleChanged,
+                isCurrentUserBeingPromoted
+            });
+            
             // Update
             if (password) {
                 data.passwordHash = await CryptoUtil.hashSecret(password);
@@ -205,7 +219,7 @@ const Employees = (() => {
                 Auth.updateCurrentUser({ role: data.role });
                 App.showToast('Successo', 'Promosso a Admin! Pagina aggiornata.', 'success');
                 // Update admin visibility elements
-                Dashboard.updateAdminVisibility();
+                App.updateAdminVisibility();
             } else {
                 App.showToast('Successo', 'Dipendente aggiornato con successo', 'success');
             }

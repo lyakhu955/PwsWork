@@ -181,7 +181,6 @@ const Dashboard = (() => {
     return {
         init,
         render,
-        updateAdminVisibility,
         goToGroupDetail
     };
 })();
