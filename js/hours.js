@@ -15,6 +15,59 @@ const Hours = (() => {
         'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
     ];
 
+    // ==================== EXTRACT EMPLOYEE NAME FROM FILENAME ====================
+    function _extractEmployeeNameFromFile(fileName) {
+        if (!fileName) return null;
+        // Remove month/year and file extension
+        let cleanName = fileName.toLowerCase();
+        
+        // Remove common months
+        MONTH_NAMES.forEach(month => {
+            cleanName = cleanName.replace(month.toLowerCase(), '');
+        });
+        
+        // Remove year (4 digits)
+        cleanName = cleanName.replace(/\d{4}/, '');
+        
+        // Remove common file extensions
+        cleanName = cleanName.replace(/\.(xlsx?|pdf|csv|txt)$/i, '');
+        
+        // Clean up special characters but keep spaces
+        cleanName = cleanName.replace(/[_\-\.]/g, ' ').trim();
+        
+        // Split into parts and filter out empty/short strings
+        const parts = cleanName.split(/\s+/).filter(p => p.length > 1);
+        
+        if (parts.length >= 2) {
+            // Assume first two parts are name and surname (order doesn't matter yet)
+            return parts.slice(0, 2);
+        }
+        return parts.length > 0 ? [parts[0]] : null;
+    }
+
+    // ==================== CHECK IF NAMES MATCH (flexible matching for both orders) ====================
+    function _namesMatch(fileNameParts, userFirstName, userLastName) {
+        if (!fileNameParts || !userFirstName) return false;
+        
+        const firstName = userFirstName.toLowerCase();
+        const lastName = userLastName ? userLastName.toLowerCase() : '';
+        
+        // If only one part in file, check if it matches either first or last name
+        if (fileNameParts.length === 1) {
+            return fileNameParts[0].toLowerCase() === firstName ||
+                   fileNameParts[0].toLowerCase() === lastName;
+        }
+        
+        // If two parts in file, check both orderings:
+        // "Mario Rossi" should match "Mario" "Rossi"
+        // "Rossi Mario" should also match "Mario" "Rossi"
+        const file1 = fileNameParts[0].toLowerCase();
+        const file2 = fileNameParts[1].toLowerCase();
+        
+        return (file1 === firstName && file2 === lastName) ||
+               (file1 === lastName && file2 === firstName);
+    }
+
     // ==================== EXTRACT MONTH/YEAR FROM FILENAME ====================
     function _extractMonthYear(fileName) {
         if (!fileName) return null;
@@ -150,7 +203,22 @@ const Hours = (() => {
 
         const visibleFiles = isAdmin
             ? _files
-            : _files.filter(f => f.employeeId === user.employeeId || f.uploadedBy === user.username);
+            : _files.filter(f => {
+                // Admin sees all files
+                // Non-admin sees only their files
+                
+                // First check: uploadedBy matches username
+                if (f.uploadedBy === user.username) return true;
+                
+                // Second check: employeeId matches
+                if (f.employeeId === user.employeeId || f.employeeId === user.id) return true;
+                
+                // Third check: name in file matches name/surname
+                const fileNameParts = _extractEmployeeNameFromFile(f.fileName);
+                if (_namesMatch(fileNameParts, user.firstName, user.lastName)) return true;
+                
+                return false;
+            });
 
         // Bind upload input
         const fileInput = document.getElementById('hours-file-input');
