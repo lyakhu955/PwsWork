@@ -750,10 +750,32 @@ const Absences = (() => {
 
     function toggleCalendarDate(dateStr, containerId, selectable, viewEmployeeId) {
         const idx = calendarSelectedDates.indexOf(dateStr);
-        if (idx !== -1) {
-            calendarSelectedDates.splice(idx, 1);
-        } else {
+        
+        // If trying to add a date
+        if (idx === -1) {
+            // Check for conflicts ONLY in admin manage tab
+            if (containerId === 'abs-admin-calendar' && viewEmployeeId && viewEmployeeId.trim()) {
+                const absences = getAbsences();
+                const selectedType = document.getElementById('abs-type-select')?.value;
+                
+                // Check if this date has an absence of DIFFERENT type
+                const conflictAbsence = absences.find(a =>
+                    a.employeeId === viewEmployeeId &&
+                    a.dates.includes(dateStr) &&
+                    a.type !== selectedType
+                );
+                
+                if (conflictAbsence) {
+                    const typeInfo = ABSENCE_TYPES[conflictAbsence.type];
+                    App.showToast('Errore', `Questo giorno ha già un'assenza di tipo ${typeInfo.label}`, 'error');
+                    return;
+                }
+            }
+            
             calendarSelectedDates.push(dateStr);
+        } else {
+            // Removing a date
+            calendarSelectedDates.splice(idx, 1);
         }
         
         // Merge overlapping dates (smart deduplication)
@@ -888,11 +910,70 @@ const Absences = (() => {
             return;
         }
 
+        // Check for conflicts with OTHER types of absences
+        const absences = getAbsences();
+        const conflictingDates = [];
+        const existingSameDates = [];
+
+        calendarSelectedDates.forEach(dateStr => {
+            const conflictAbsence = absences.find(a => 
+                a.employeeId === empId && 
+                a.dates.includes(dateStr) && 
+                a.type !== type
+            );
+            if (conflictAbsence) {
+                conflictingDates.push(dateStr);
+            }
+
+            // Track same-type dates for merging
+            const sameType = absences.find(a =>
+                a.employeeId === empId &&
+                a.dates.includes(dateStr) &&
+                a.type === type
+            );
+            if (sameType) {
+                existingSameDates.push(dateStr);
+            }
+        });
+
+        // Block if there are conflicting dates with different type
+        if (conflictingDates.length > 0) {
+            const conflictDatesStr = conflictingDates.map(d => Storage.formatDateIT(d)).join(', ');
+            App.showToast('Errore', `I giorni ${conflictDatesStr} hanno già un'assenza di tipo diverso`, 'error');
+            return;
+        }
+
+        // Merge with existing absences of SAME type
+        let datesToSave = [...calendarSelectedDates];
+        const existingSameTypeRecords = absences.filter(a => 
+            a.employeeId === empId && 
+            a.type === type
+        );
+
+        if (existingSameTypeRecords.length > 0) {
+            // Collect all dates from existing records
+            existingSameTypeRecords.forEach(rec => {
+                datesToSave.push(...rec.dates);
+            });
+            // Remove duplicates and sort
+            datesToSave = [...new Set(datesToSave)].sort();
+            // Merge ranges
+            datesToSave = mergeDateRanges(datesToSave);
+
+            // Delete old records
+            existingSameTypeRecords.forEach(rec => {
+                _absences = _absences.filter(a => a.id !== rec.id);
+                db.collection(COLLECTIONS.ABSENCES).doc(rec.id).delete().catch(err => {
+                    console.error('Error deleting old absence:', err);
+                });
+            });
+        }
+
         const newAbsence = {
             id: 'abs_' + Date.now(),
             employeeId: empId,
             type: type,
-            dates: [...calendarSelectedDates],
+            dates: datesToSave,
             note: note,
             createdBy: 'admin',
             createdAt: new Date().toISOString()
@@ -911,13 +992,13 @@ const Absences = (() => {
         const typeLabel = ABSENCE_TYPES[type].label;
         addNotification(
             empId,
-            `L'admin ti ha registrato ${calendarSelectedDates.length} giorno/i di ${typeLabel}`,
+            `L'admin ti ha registrato ${datesToSave.length} giorno/i di ${typeLabel}`,
             'absence_added',
             newAbsence.id
         );
 
         calendarSelectedDates = [];
-        App.showToast('Salvato', `Assenza registrata con successo`, 'success');
+        App.showToast('Salvato', `Assenza registrata con successo (${datesToSave.length} giorni)`, 'success');
         renderManageTab();
     }
 
