@@ -88,9 +88,17 @@ const WhatsApp = (() => {
     function _buildMessage(dates) {
         let lines = [];
         let hasAny = false;
+        let dayCount = 0;
 
-        lines.push('🏗️ *PROGRAMMA LAVORATIVO PWS*');
-        lines.push('━━━━━━━━━━━━━━━━━━━━━━━');
+        // Count days with assignments
+        dates.forEach(dateStr => {
+            if (Storage.getAssignmentsByDate(dateStr).length > 0) dayCount++;
+        });
+
+        // Header
+        lines.push('╔══════════════════════════════╗');
+        lines.push('║   🏗️  PROGRAMMA LAVORI PWS    ║');
+        lines.push('╚══════════════════════════════╝');
         lines.push('');
 
         dates.forEach(dateStr => {
@@ -100,16 +108,17 @@ const WhatsApp = (() => {
             hasAny = true;
 
             const dateObj = new Date(dateStr + 'T00:00:00');
-            const dayName = DAY_NAMES[dateObj.getDay()];
+            const dayName = DAY_NAMES[dateObj.getDay()].toUpperCase();
             const day = dateObj.getDate();
-            const month = MONTH_NAMES[dateObj.getMonth()];
+            const month = MONTH_NAMES[dateObj.getMonth()].toUpperCase();
             const year = dateObj.getFullYear();
 
-            lines.push(`📅 *${dayName} ${day} ${month} ${year}*`);
-            lines.push('─────────────────────');
+            // Day header — prominent separator
+            lines.push(`━━━ 📅 ${dayName} ${day} ${month} ${year} ━━━`);
+            lines.push('');
 
             assignments.forEach((asgn, idx) => {
-                const teamName = asgn.teamName || `Gregge ${idx + 1}`;
+                const teamName = (asgn.teamName || `Gregge ${idx + 1}`).toUpperCase();
 
                 // Get employee names
                 const members = (asgn.employeeIds || []).map(eid => {
@@ -117,7 +126,7 @@ const WhatsApp = (() => {
                     return emp ? `${emp.firstName} ${emp.lastName}` : null;
                 }).filter(Boolean);
 
-                lines.push(`👥 *${teamName}*`);
+                lines.push(`🟢 *${teamName}*`);
 
                 if (members.length > 0) {
                     lines.push(`👷 ${members.join(', ')}`);
@@ -128,6 +137,7 @@ const WhatsApp = (() => {
                     asgn.workplaces.forEach(wp => {
                         const name = wp.name || '';
                         const address = wp.address || '';
+                        const desc = wp.description || wp.desc || '';
 
                         // Build Google Maps navigation link
                         let mapsLink = '';
@@ -137,6 +147,11 @@ const WhatsApp = (() => {
                             mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
                         } else if (name) {
                             mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+                        }
+
+                        // Workplace description/type of work
+                        if (desc) {
+                            lines.push(`🔨 ${desc}`);
                         }
 
                         if (name && address && name !== address) {
@@ -153,23 +168,25 @@ const WhatsApp = (() => {
                     });
                 }
 
-                // Notes
+                // Notes as work description
                 if (asgn.notes && asgn.notes.trim()) {
-                    lines.push(`📝 ${asgn.notes.trim()}`);
+                    lines.push(`🔨 ${asgn.notes.trim()}`);
                 }
 
                 // Spacer between groups
-                if (idx < assignments.length - 1) {
-                    lines.push('');
-                }
+                lines.push('');
             });
 
-            lines.push('');
+            // Only add extra separator between days (not after last day)
+            if (dayCount > 1) {
+                lines.push('┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄');
+                lines.push('');
+            }
         });
 
         if (!hasAny) return '';
 
-        lines.push('━━━━━━━━━━━━━━━━━━━━━━━');
+        lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         lines.push('📲 _Inviato da PwsWork_');
 
         return lines.join('\n');
