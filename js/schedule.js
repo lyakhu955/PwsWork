@@ -656,14 +656,14 @@ const Schedule = (() => {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         Orario inizio
                     </label>
-                    <input type="time" class="form-input wp-time-start" value="${data?.timeStart || ''}">
+                    <input type="time" class="form-input wp-time-start" value="${data?.timeStart || ''}" step="900" placeholder="HH:MM">
                 </div>
                 <div class="time-input-group">
                     <label>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         Orario fine
                     </label>
-                    <input type="time" class="form-input wp-time-end" value="${data?.timeEnd || ''}">
+                    <input type="time" class="form-input wp-time-end" value="${data?.timeEnd || ''}" step="900" placeholder="HH:MM">
                 </div>
             </div>
             <textarea class="form-input wp-info" placeholder="Informazioni aggiuntive (cosa fare, contatti, materiale...)" rows="3">${data?.info || ''}</textarea>
