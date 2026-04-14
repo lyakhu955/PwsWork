@@ -413,6 +413,15 @@ const Absences = (() => {
         content.innerHTML = html;
         calendarSelectedDates = [];
         renderCalendar('abs-admin-calendar', true);
+
+        // Add event listener to employee select to update calendar with their absences
+        const empSelect = document.getElementById('abs-employee-select');
+        if (empSelect) {
+            empSelect.addEventListener('change', (e) => {
+                calendarSelectedDates = [];
+                renderCalendar('abs-admin-calendar', true, e.target.value || null);
+            });
+        }
     }
 
     // ==================== ADMIN: REQUESTS TAB ====================
@@ -705,7 +714,7 @@ const Absences = (() => {
             }
             
             // Show emoji badges for existing absences (admin manage tab)
-            if (viewEmployeeId && containerId === 'abs-admin-calendar') {
+            if (viewEmployeeId && viewEmployeeId.trim() && containerId === 'abs-admin-calendar') {
                 const empAbsences = absences.filter(a => a.employeeId === viewEmployeeId && a.dates.includes(dateStr));
                 if (empAbsences.length > 0) {
                     const emojis = empAbsences.map(a => ABSENCE_TYPES[a.type].icon).join('');
