@@ -1780,6 +1780,16 @@ input, select, textarea, button {
     transition: border-color var(--transition-fast);
 }
 
+/* Force 24-hour format (remove AM/PM picker on mobile) */
+input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+}
+
+input[type="time"]::-webkit-outer-spin-button,
+input[type="time"]::-webkit-inner-spin-button {
+    display: none;
+}
+
 .time-input-group input[type="time"]:focus {
     outline: none;
     border-color: var(--accent-primary);

@@ -654,22 +654,53 @@ const Schedule = (() => {
                 <div class="time-input-group">
                     <label>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Orario inizio
+                        Orario inizio (HH:MM)
                     </label>
-                    <input type="time" class="form-input wp-time-start" value="${data?.timeStart || ''}" step="900" placeholder="HH:MM">
+                    <input type="text" class="form-input wp-time-start" value="${data?.timeStart || ''}" placeholder="14:30" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric">
                 </div>
                 <div class="time-input-group">
                     <label>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Orario fine
+                        Orario fine (HH:MM)
                     </label>
-                    <input type="time" class="form-input wp-time-end" value="${data?.timeEnd || ''}" step="900" placeholder="HH:MM">
+                    <input type="text" class="form-input wp-time-end" value="${data?.timeEnd || ''}" placeholder="17:00" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" inputmode="numeric">
                 </div>
             </div>
             <textarea class="form-input wp-info" placeholder="Informazioni aggiuntive (cosa fare, contatti, materiale...)" rows="3">${data?.info || ''}</textarea>
         `;
 
         list.appendChild(item);
+
+        // Add time input validation and formatting
+        const timeStartInput = item.querySelector('.wp-time-start');
+        const timeEndInput = item.querySelector('.wp-time-end');
+
+        [timeStartInput, timeEndInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', formatTimeInput);
+                input.addEventListener('blur', validateTimeInput);
+            }
+        });
+    }
+
+    function formatTimeInput(e) {
+        let value = e.target.value.replace(/[^0-9:]/g, '');
+        
+        if (value.length >= 2 && !value.includes(':')) {
+            value = value.slice(0, 2) + ':' + value.slice(2, 4);
+        }
+        
+        e.target.value = value;
+    }
+
+    function validateTimeInput(e) {
+        const value = e.target.value.trim();
+        if (!value) return;
+        
+        if (!/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(value)) {
+            App.showToast('Errore', 'Formato orario non valido. Usa HH:MM (es: 14:30)', 'error');
+            e.target.value = '';
+        }
     }
 
     function removeWorkplace(idx) {
