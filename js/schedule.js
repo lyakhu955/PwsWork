@@ -1063,12 +1063,14 @@ const Schedule = (() => {
         if (nameInput && !nameInput.value.trim() && selectedPlace.name) {
             nameInput.value = selectedPlace.name;
         }
-        addressInput.value = selectedPlace.address || '';
+        const savedAddress = selectedPlace.address || '';
+        const savedName = selectedPlace.name || '';
+        addressInput.value = savedAddress;
         if (latInput) latInput.value = selectedPlace.lat || '';
         if (lngInput) lngInput.value = selectedPlace.lng || '';
 
         closeMapModal();
-        App.showToast('Posizione salvata', selectedPlace.address || '', 'success');
+        App.showToast('Posizione salvata', savedAddress || savedName || 'Posizione selezionata', 'success');
     }
 
     // ==================== FORM SUBMIT ====================
