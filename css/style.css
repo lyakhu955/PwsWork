@@ -780,6 +780,64 @@ input, select, textarea, button {
     padding: var(--space-xl);
 }
 
+/* Accordion styling */
+.accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    gap: var(--space-md);
+}
+
+.accordion-header h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin: 0;
+    flex: 1;
+}
+
+.accordion-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.accordion-toggle:hover {
+    background: var(--bg-primary);
+    color: var(--accent-primary);
+}
+
+.accordion-toggle svg {
+    transition: transform var(--transition-fast);
+}
+
+.accordion-content {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: all var(--transition-fast);
+}
+
+.dashboard-section.collapsed .accordion-toggle svg {
+    transform: rotate(180deg);
+}
+
+.dashboard-section.collapsed .accordion-content {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
 .today-schedule {
     display: flex;
     flex-direction: column;
