@@ -568,6 +568,16 @@ const Schedule = (() => {
             if (wp.address) {
                 html += '<div class="detail-workplace-address">' + wp.address + '</div>';
             }
+            if (wp.timeStart || wp.timeEnd) {
+                html += '<div class="detail-workplace-times">';
+                if (wp.timeStart) {
+                    html += '<span class="detail-time-badge">🕒 ' + wp.timeStart + '</span>';
+                }
+                if (wp.timeEnd) {
+                    html += '<span class="detail-time-badge">🕕 ' + wp.timeEnd + '</span>';
+                }
+                html += '</div>';
+            }
             html += '</div>';
             html += '<a href="' + navUrl + '" target="_blank" rel="noopener" class="btn btn-primary btn-sm detail-nav-btn">';
             html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>';
@@ -640,7 +650,23 @@ const Schedule = (() => {
                     </button>
                 </div>
             </div>
-            <textarea class="form-input wp-info" placeholder="Informazioni aggiuntive (cosa fare, orari, contatti, materiale...)" rows="3">${data?.info || ''}</textarea>
+            <div class="workplace-times">
+                <div class="time-input-group">
+                    <label>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Orario inizio
+                    </label>
+                    <input type="time" class="form-input wp-time-start" value="${data?.timeStart || ''}">
+                </div>
+                <div class="time-input-group">
+                    <label>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Orario fine
+                    </label>
+                    <input type="time" class="form-input wp-time-end" value="${data?.timeEnd || ''}">
+                </div>
+            </div>
+            <textarea class="form-input wp-info" placeholder="Informazioni aggiuntive (cosa fare, contatti, materiale...)" rows="3">${data?.info || ''}</textarea>
         `;
 
         list.appendChild(item);
@@ -816,9 +842,19 @@ const Schedule = (() => {
             const lat = parseFloat(item.querySelector('.wp-lat')?.value) || null;
             const lng = parseFloat(item.querySelector('.wp-lng')?.value) || null;
             const info = item.querySelector('.wp-info')?.value.trim() || '';
+            const timeStart = item.querySelector('.wp-time-start')?.value.trim() || null;
+            const timeEnd = item.querySelector('.wp-time-end')?.value.trim() || null;
 
             if (name || address) {
-                workplaces.push({ name: name || address, address: address || '', lat, lng, info });
+                workplaces.push({ 
+                    name: name || address, 
+                    address: address || '', 
+                    lat, 
+                    lng, 
+                    info,
+                    timeStart,
+                    timeEnd
+                });
             }
         });
 
@@ -977,6 +1013,16 @@ const Schedule = (() => {
                 html += '<div class="detail-workplace-name">' + wp.name + '</div>';
                 if (wp.address) {
                     html += '<div class="detail-workplace-address">' + wp.address + '</div>';
+                }
+                if (wp.timeStart || wp.timeEnd) {
+                    html += '<div class="detail-workplace-times">';
+                    if (wp.timeStart) {
+                        html += '<span class="detail-time-badge">🕒 ' + wp.timeStart + '</span>';
+                    }
+                    if (wp.timeEnd) {
+                        html += '<span class="detail-time-badge">🕕 ' + wp.timeEnd + '</span>';
+                    }
+                    html += '</div>';
                 }
                 html += '</div>';
                 html += '<a href="' + navUrl + '" target="_blank" rel="noopener" class="btn btn-primary btn-sm detail-nav-btn">';

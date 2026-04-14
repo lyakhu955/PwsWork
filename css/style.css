@@ -1739,6 +1739,52 @@ input, select, textarea, button {
     padding-top: 2px;
 }
 
+.workplace-times {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-top: var(--space-sm);
+}
+
+.time-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    flex: 1;
+    min-width: 140px;
+}
+
+.time-input-group label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.time-input-group label svg {
+    color: var(--accent-primary);
+}
+
+.time-input-group input[type="time"] {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: border-color var(--transition-fast);
+}
+
+.time-input-group input[type="time"]:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
 .btn-icon {
     width: 36px;
     height: 36px;
@@ -2130,6 +2176,26 @@ input, select, textarea, button {
     margin-top: 2px;
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+.detail-workplace-times {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+    margin-top: var(--space-sm);
+}
+
+.detail-time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--accent-light);
+    color: var(--accent-primary);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .detail-workplace-extra span {
@@ -2682,6 +2748,11 @@ input, select, textarea, button {
         font-size: 0.7rem;
     }
 
+    .detail-time-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+
     .detail-workplace-extra {
         font-size: 0.75rem;
         padding: var(--space-xs) var(--space-sm);
@@ -2738,6 +2809,15 @@ input, select, textarea, button {
     /* Workplace item compact */
     .workplace-item {
         padding: var(--space-sm);
+    }
+
+    .workplace-times {
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .time-input-group {
+        min-width: 100%;
     }
 
     .wp-info {
