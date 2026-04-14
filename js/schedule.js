@@ -1053,16 +1053,22 @@ const Schedule = (() => {
         const latInput = item.querySelector('.wp-lat');
         const lngInput = item.querySelector('.wp-lng');
 
+        if (!addressInput) {
+            console.error('confirmMapSelection: .wp-address not found in workplace item', activeWorkplaceIndex);
+            closeMapModal();
+            return;
+        }
+
         // If name field is empty, fill with place name
-        if (!nameInput.value.trim() && selectedPlace.name) {
+        if (nameInput && !nameInput.value.trim() && selectedPlace.name) {
             nameInput.value = selectedPlace.name;
         }
-        addressInput.value = selectedPlace.address;
-        latInput.value = selectedPlace.lat;
-        lngInput.value = selectedPlace.lng;
+        addressInput.value = selectedPlace.address || '';
+        if (latInput) latInput.value = selectedPlace.lat || '';
+        if (lngInput) lngInput.value = selectedPlace.lng || '';
 
         closeMapModal();
-        App.showToast('Posizione salvata', selectedPlace.address, 'success');
+        App.showToast('Posizione salvata', selectedPlace.address || '', 'success');
     }
 
     // ==================== FORM SUBMIT ====================
