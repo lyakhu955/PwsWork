@@ -480,13 +480,11 @@ const Schedule = (() => {
         const modal = document.getElementById('assignment-modal');
         const title = document.getElementById('assignment-modal-title');
         const form = document.getElementById('assignment-form');
+        const detailView = document.getElementById('assignment-detail-view');
         const topToggle = document.getElementById('assignment-mode-toggle');
         const footerToggle = document.getElementById('assignment-footer-mode-btn');
-        const saveBtn = document.getElementById('assignment-save-btn');
-        const deleteBtn = document.getElementById('delete-assignment-btn');
-        const addWorkplaceBtn = document.getElementById('add-workplace-btn');
 
-        if (!modal || !form) return;
+        if (!modal || !form || !detailView) return;
 
         const workerMode = assignmentViewMode === 'worker';
         modal.dataset.viewMode = assignmentViewMode;
@@ -495,45 +493,109 @@ const Schedule = (() => {
             title.textContent = workerMode ? 'Vista Lavoratore' : (editingAssignmentId ? 'Modifica Squadra' : 'Nuova Squadra');
         }
         if (topToggle) {
-            topToggle.textContent = workerMode ? 'Modifica come admin' : 'Vista lavoratore';
+            topToggle.textContent = workerMode ? 'Modifica' : 'Vista Lavoratore';
         }
         if (footerToggle) {
-            footerToggle.textContent = workerMode ? 'Modifica' : 'Vista lavoratore';
-            footerToggle.classList.toggle('is-worker-mode', workerMode);
+            footerToggle.textContent = workerMode ? 'Modifica' : 'Vista Lavoratore';
         }
 
-        const fields = form.querySelectorAll('input, select, textarea, button');
-        fields.forEach(el => {
-            if (
-                el.id === 'assignment-mode-toggle' ||
-                el.id === 'assignment-footer-mode-btn' ||
-                el.id === 'assignment-save-btn' ||
-                el.id === 'delete-assignment-btn' ||
-                el.id === 'confirm-map-btn' ||
-                el.id === 'assignment-form'
-            ) {
-                return;
-            }
+        // Toggle form and detail view visibility
+        form.style.display = workerMode ? 'none' : 'block';
+        detailView.style.display = workerMode ? 'block' : 'none';
 
-            if (el.type === 'hidden') return;
+        // If switching to worker mode, populate the detail view
+        if (workerMode && editingAssignmentId) {
+            renderAssignmentDetailView(editingAssignmentId);
+        }
+    }
 
-            if (el.tagName === 'BUTTON') {
-                el.disabled = workerMode;
-            } else if (el.type === 'checkbox') {
-                el.disabled = workerMode;
-            } else {
-                el.readOnly = workerMode && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
-                if (el.tagName === 'SELECT') {
-                    el.disabled = workerMode;
-                }
+    function renderAssignmentDetailView(assignmentId) {
+        const asgn = Storage.getAssignment(assignmentId);
+        if (!asgn) return;
+
+        const detailView = document.getElementById('assignment-detail-view');
+        
+        const teamMembers = asgn.employeeIds.map(eid => {
+            const emp = Storage.getEmployee(eid);
+            return emp ? { name: emp.firstName + ' ' + emp.lastName, position: emp.position || '', phone: emp.phone || '' } : null;
+        }).filter(Boolean);
+
+        let html = '<div class="assignment-detail-content">';
+        
+        // Team section
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">';
+        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+        html += ' Membri</div>';
+        html += '<div class="detail-team-list">';
+
+        teamMembers.forEach(function(member) {
+            var initials = member.name.split(' ').map(function(n) { return n[0]; }).join('');
+            html += '<div class="detail-team-member">';
+            html += '<div class="detail-member-avatar">' + initials + '</div>';
+            html += '<div class="detail-member-info">';
+            html += '<div class="detail-member-name">' + member.name + '</div>';
+            if (member.position) {
+                html += '<div class="detail-member-role">' + member.position + '</div>';
             }
+            html += '</div>';
+            if (member.phone) {
+                html += '<a href="tel:' + member.phone + '" class="detail-member-phone" title="Chiama ' + member.name + '">';
+                html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+                html += '</a>';
+            }
+            html += '</div>';
         });
 
-        if (addWorkplaceBtn) addWorkplaceBtn.disabled = workerMode;
-        if (deleteBtn) deleteBtn.disabled = workerMode;
-        if (saveBtn) saveBtn.disabled = workerMode;
+        html += '</div></div>';
 
-        form.classList.toggle('is-worker-mode', workerMode);
+        // Workplaces section
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">';
+        html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+        html += ' Posti di Lavoro</div>';
+        html += '<div class="detail-workplaces-list">';
+
+        asgn.workplaces.forEach(function(wp) {
+            var navUrl = (wp.lat && wp.lng)
+                ? 'https://www.google.com/maps/dir/?api=1&destination=' + wp.lat + ',' + wp.lng
+                : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(wp.address || wp.name);
+
+            html += '<div class="detail-workplace-item">';
+            html += '<div class="detail-workplace-top">';
+            html += '<div class="detail-workplace-info">';
+            html += '<div class="detail-workplace-name">' + wp.name + '</div>';
+            if (wp.address) {
+                html += '<div class="detail-workplace-address">' + wp.address + '</div>';
+            }
+            html += '</div>';
+            html += '<a href="' + navUrl + '" target="_blank" rel="noopener" class="btn btn-primary btn-sm detail-nav-btn">';
+            html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>';
+            html += ' Naviga</a>';
+            html += '</div>';
+            if (wp.info) {
+                html += '<div class="detail-workplace-extra">';
+                html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+                html += '<span>' + wp.info.replace(/\n/g, '<br>') + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+        });
+
+        html += '</div></div>';
+
+        // Notes section
+        if (asgn.notes) {
+            html += '<div class="detail-section">';
+            html += '<div class="detail-section-title">';
+            html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+            html += ' Note</div>';
+            html += '<div class="detail-notes">' + asgn.notes + '</div>';
+            html += '</div>';
+        }
+
+        html += '</div>';
+        detailView.innerHTML = html;
     }
 
     // ==================== EMPLOYEE CHECKBOXES ====================

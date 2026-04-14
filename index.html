@@ -633,22 +633,29 @@
                     <label>Note (opzionale)</label>
                     <textarea id="assignment-notes" placeholder="Note aggiuntive..." rows="2"></textarea>
                 </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-outline" onclick="Schedule.closeModal()">Annulla</button>
-                    <button type="button" class="btn btn-outline assignment-mode-footer-btn" id="assignment-footer-mode-btn" onclick="Schedule.toggleAssignmentViewMode()">
-                        Vista lavoratore
-                    </button>
-                    <button type="button" class="btn btn-danger" id="delete-assignment-btn" style="display:none;" onclick="Schedule.deleteAssignment()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                        Elimina
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="assignment-save-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        <span>Salva</span>
-                    </button>
-                </div>
             </form>
+
+            <!-- Worker View (Read-Only Detail) -->
+            <div id="assignment-detail-view" class="assignment-detail-view" style="display:none;">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Modal Actions (Sticky Footer - Outside Form/Detail View) -->
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="Schedule.closeModal()">Annulla</button>
+                <button type="button" class="btn btn-outline assignment-mode-footer-btn" id="assignment-footer-mode-btn" onclick="Schedule.toggleAssignmentViewMode()">
+                    Vista lavoratore
+                </button>
+                <button type="button" class="btn btn-danger" id="delete-assignment-btn" style="display:none;" onclick="Schedule.deleteAssignment()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Elimina
+                </button>
+                <button type="submit" class="btn btn-primary" id="assignment-save-btn" form="assignment-form">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    <span>Salva</span>
+                </button>
+            </div>
+            </div>
         </div>
     </div>
 
