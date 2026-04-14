@@ -1043,7 +1043,26 @@ const Absences = (() => {
         // Re-render calendar and selected dates UI, but keep form state
         renderCalendar('abs-admin-calendar', true, empId);
         updateSelectedDatesUI();
-        renderAbsencesList(null);
+        
+        // Update the absences list in the DOM immediately
+        const content = document.getElementById('absences-tab-content');
+        if (content) {
+            // Find the section title for absences list and replace everything after it
+            const existingSectionTitle = Array.from(content.children).find(el => 
+                el.classList.contains('abs-section-title') && el.textContent.includes('Assenze Registrate')
+            );
+            if (existingSectionTitle) {
+                // Remove all siblings after the manage section
+                let nextEl = existingSectionTitle;
+                while (nextEl) {
+                    const toRemove = nextEl;
+                    nextEl = nextEl.nextElementSibling;
+                    toRemove.remove();
+                }
+                // Add the updated absences list
+                content.insertAdjacentHTML('beforeend', renderAbsencesList(null));
+            }
+        }
     }
 
     function deleteAbsence(absId) {
