@@ -128,12 +128,27 @@ const WhatsApp = (() => {
                     asgn.workplaces.forEach(wp => {
                         const name = wp.name || '';
                         const address = wp.address || '';
+
+                        // Build Google Maps navigation link
+                        let mapsLink = '';
+                        if (wp.lat && wp.lng) {
+                            mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${wp.lat},${wp.lng}`;
+                        } else if (address) {
+                            mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+                        } else if (name) {
+                            mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+                        }
+
                         if (name && address && name !== address) {
                             lines.push(`📍 ${name} — ${address}`);
                         } else if (name) {
                             lines.push(`📍 ${name}`);
                         } else if (address) {
                             lines.push(`📍 ${address}`);
+                        }
+
+                        if (mapsLink) {
+                            lines.push(`🗺️ ${mapsLink}`);
                         }
                     });
                 }
