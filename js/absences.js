@@ -895,6 +895,35 @@ const Absences = (() => {
         return html;
     }
 
+    // ==================== SPLIT DATE RANGES ====================
+    function splitDateRanges(dates) {
+        if (dates.length === 0) return [];
+
+        const sorted = [...dates].sort();
+        const ranges = [];
+        let currentRange = [sorted[0]];
+
+        for (let i = 1; i < sorted.length; i++) {
+            const current = new Date(sorted[i] + 'T00:00:00');
+            const last = new Date(sorted[i - 1] + 'T00:00:00');
+            const diffDays = Math.floor((current - last) / (1000 * 60 * 60 * 24));
+
+            // If dates are adjacent (1 day apart), add to current range
+            if (diffDays === 1) {
+                currentRange.push(sorted[i]);
+            } else {
+                // Gap found, start new range
+                ranges.push(currentRange);
+                currentRange = [sorted[i]];
+            }
+        }
+
+        // Add the last range
+        ranges.push(currentRange);
+
+        return ranges;
+    }
+
     // ==================== ACTIONS ====================
     function saveAdminAbsence() {
         const empId = document.getElementById('abs-employee-select').value;
@@ -957,8 +986,6 @@ const Absences = (() => {
             });
             // Remove duplicates and sort
             datesToSave = [...new Set(datesToSave)].sort();
-            // Merge ranges
-            datesToSave = mergeDateRanges(datesToSave);
 
             // Delete old records
             existingSameTypeRecords.forEach(rec => {
@@ -969,36 +996,45 @@ const Absences = (() => {
             });
         }
 
-        const newAbsence = {
-            id: 'abs_' + Date.now(),
-            employeeId: empId,
-            type: type,
-            dates: datesToSave,
-            note: note,
-            createdBy: 'admin',
-            createdAt: new Date().toISOString()
-        };
+        // Split into ranges by gaps (non-contiguous dates)
+        const dateRanges = splitDateRanges(datesToSave);
+        const savedRecords = [];
 
-        // Optimistic cache update
-        _absences.push({ ...newAbsence });
+        // Create and save a record for each range
+        dateRanges.forEach(rangeData => {
+            const newAbsence = {
+                id: 'abs_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                employeeId: empId,
+                type: type,
+                dates: rangeData,
+                note: note,
+                createdBy: 'admin',
+                createdAt: new Date().toISOString()
+            };
 
-        // Write to Firestore
-        db.collection(COLLECTIONS.ABSENCES).doc(newAbsence.id).set(newAbsence).catch(err => {
-            console.error('Error saving absence:', err);
+            // Optimistic cache update
+            _absences.push({ ...newAbsence });
+            savedRecords.push(newAbsence);
+
+            // Write to Firestore
+            db.collection(COLLECTIONS.ABSENCES).doc(newAbsence.id).set(newAbsence).catch(err => {
+                console.error('Error saving absence:', err);
+            });
         });
 
-        // Notify the employee
+        // Notify the employee with total days across all ranges
         const emp = Storage.getEmployee(empId);
         const typeLabel = ABSENCE_TYPES[type].label;
+        const totalDays = datesToSave.length;
         addNotification(
             empId,
-            `L'admin ti ha registrato ${datesToSave.length} giorno/i di ${typeLabel}`,
+            `L'admin ti ha registrato ${totalDays} giorno/i di ${typeLabel}`,
             'absence_added',
-            newAbsence.id
+            savedRecords[0]?.id
         );
 
         calendarSelectedDates = [];
-        App.showToast('Salvato', `Assenza registrata con successo (${datesToSave.length} giorni)`, 'success');
+        App.showToast('Salvato', `Assenza registrata con successo (${totalDays} giorni in ${dateRanges.length} periodo/i)`, 'success');
         
         // Reset only specific fields, keep employee and type selected
         const absNote = document.getElementById('abs-note');
