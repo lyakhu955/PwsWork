@@ -1885,6 +1885,18 @@ input, select, textarea, button {
     padding-left: var(--space-lg);
 }
 
+.today-workplace-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.today-workplace-name {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
 .today-workplace-link {
     display: inline-flex;
     align-items: center;
@@ -1895,6 +1907,7 @@ input, select, textarea, button {
     font-weight: 500;
     transition: color var(--transition-fast);
     padding: 2px 0;
+    width: fit-content;
 }
 
 .today-workplace-link:hover {
