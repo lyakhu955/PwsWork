@@ -3558,3 +3558,44 @@ input[type="time"]::-webkit-inner-spin-button {
 .page.active {
     display: flex;
 }
+
+/* ==================== DRAG AND DROP ==================== */
+/* Draggable elements during drag */
+.assignment-card,
+.month-assignment-dot,
+.month-list-squad-card {
+    cursor: grab;
+    transition: opacity var(--transition-fast);
+}
+
+.assignment-card:active,
+.month-assignment-dot:active,
+.month-list-squad-card:active {
+    cursor: grabbing;
+}
+
+/* Drop zones highlight */
+.week-day-body.drag-over,
+.month-cell.drag-over,
+.month-list-day.drag-over {
+    background: var(--accent-light, rgba(120, 180, 255, 0.1));
+    outline: 2px dashed var(--accent-color, #78b4ff);
+    outline-offset: -2px;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+/* Mobile drag cursor */
+@media (max-width: 768px) {
+    .assignment-card,
+    .month-assignment-dot,
+    .month-list-squad-card {
+        cursor: pointer;
+    }
+
+    .assignment-card:active,
+    .month-assignment-dot:active,
+    .month-list-squad-card:active {
+        cursor: pointer;
+    }
+}

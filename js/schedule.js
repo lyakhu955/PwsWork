@@ -11,6 +11,11 @@ const Schedule = (() => {
     let viewMode = 'week';
     let workplaceCounter = 0;
 
+    // Drag and Drop state
+    let draggedAssignmentId = null;
+    let draggedAssignmentDate = null;
+    let dropTarget = null;
+
     // Google Maps state
     let mapInstance = null;
     let mapMarker = null;
@@ -50,6 +55,213 @@ const Schedule = (() => {
         });
 
         updateEmployeeFilter();
+        setupDragAndDrop();
+    }
+
+    // ==================== DRAG AND DROP ====================
+    function setupDragAndDrop() {
+        // Clear previous listeners and setup new ones after render
+        const container = document.getElementById('schedule-container');
+        if (!container) return;
+
+        // For week view: bind to assignment cards
+        const assignmentCards = container.querySelectorAll('.assignment-card');
+        assignmentCards.forEach(card => {
+            card.setAttribute('draggable', 'true');
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+        });
+
+        // For month table view: bind to month-assignment-dot
+        const monthDots = container.querySelectorAll('.month-assignment-dot');
+        monthDots.forEach(dot => {
+            dot.setAttribute('draggable', 'true');
+            dot.addEventListener('dragstart', handleDragStart);
+            dot.addEventListener('dragend', handleDragEnd);
+        });
+
+        // For month list view: bind to month-list-squad-card
+        const monthListCards = container.querySelectorAll('.month-list-squad-card');
+        monthListCards.forEach(card => {
+            card.setAttribute('draggable', 'true');
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+        });
+
+        // Week view: drop zones on week-day-body
+        const weekDayBodies = container.querySelectorAll('.week-day-body');
+        weekDayBodies.forEach(body => {
+            body.addEventListener('dragover', handleDragOver);
+            body.addEventListener('drop', handleDropWeek);
+            body.addEventListener('dragleave', handleDragLeave);
+        });
+
+        // Month table view: drop zones on month cells
+        const monthCells = container.querySelectorAll('.month-cell');
+        monthCells.forEach(cell => {
+            cell.addEventListener('dragover', handleDragOver);
+            cell.addEventListener('drop', handleDropMonth);
+            cell.addEventListener('dragleave', handleDragLeave);
+        });
+
+        // Month list view: drop zones on month-list-day
+        const monthListDays = container.querySelectorAll('.month-list-day');
+        monthListDays.forEach(day => {
+            day.addEventListener('dragover', handleDragOver);
+            day.addEventListener('drop', handleDropMonthList);
+            day.addEventListener('dragleave', handleDragLeave);
+        });
+    }
+
+    function handleDragStart(e) {
+        const card = e.target.closest('.assignment-card, .month-assignment-dot, .month-list-squad-card');
+        if (!card) return;
+
+        // Extract assignment ID from dataset or onclick handler
+        let assignmentId = card.dataset.assignmentId;
+        if (!assignmentId) {
+            // Try to extract from onclick attribute
+            const onclick = card.getAttribute('onclick');
+            if (onclick) {
+                const match = onclick.match(/Schedule\.openModal\('([^']+)'\)/);
+                assignmentId = match ? match[1] : null;
+            }
+        }
+
+        if (!assignmentId) return;
+
+        draggedAssignmentId = assignmentId;
+        // Get current date from parent day column
+        const dayCol = card.closest('.week-day-col, .month-cell, .month-list-day');
+        if (dayCol) {
+            const dayNum = dayCol.querySelector('.day-date, .month-day-num, .month-list-day-num');
+            if (dayNum) {
+                draggedAssignmentDate = dayNum.textContent;
+            }
+        }
+
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('assignmentId', assignmentId);
+        card.style.opacity = '0.5';
+    }
+
+    function handleDragEnd(e) {
+        const card = e.target.closest('.assignment-card, .month-assignment-dot, .month-list-squad-card');
+        if (card) card.style.opacity = '1';
+
+        draggedAssignmentId = null;
+        draggedAssignmentDate = null;
+
+        // Remove highlight from all drop zones
+        const container = document.getElementById('schedule-container');
+        if (container) {
+            container.querySelectorAll('.week-day-body, .month-cell, .month-list-day').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+        }
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const dropZone = e.target.closest('.week-day-body, .month-cell, .month-list-day');
+        if (dropZone && !dropZone.classList.contains('drag-over')) {
+            dropZone.classList.add('drag-over');
+        }
+    }
+
+    function handleDragLeave(e) {
+        const dropZone = e.target.closest('.week-day-body, .month-cell, .month-list-day');
+        if (dropZone && e.target === e.currentTarget) {
+            dropZone.classList.remove('drag-over');
+        }
+    }
+
+    function handleDropWeek(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const dropZone = e.target.closest('.week-day-body');
+        if (!dropZone) return;
+
+        dropZone.classList.remove('drag-over');
+
+        // Extract target date from week column header
+        const weekDayCol = dropZone.closest('.week-day-col');
+        if (!weekDayCol) return;
+
+        const dayDateSpan = weekDayCol.querySelector('.day-date');
+        if (!dayDateSpan) return;
+
+        const targetDay = dayDateSpan.textContent;
+        const year = currentWeekStart.getFullYear();
+        const month = String(currentWeekStart.getMonth() + 1).padStart(2, '0');
+        const targetDateStr = `${year}-${month}-${String(targetDay).padStart(2, '0')}`;
+
+        moveAssignmentToDate(draggedAssignmentId, targetDateStr);
+    }
+
+    function handleDropMonth(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const dropZone = e.target.closest('.month-cell');
+        if (!dropZone) return;
+
+        dropZone.classList.remove('drag-over');
+
+        // Extract target date from month cell
+        const dayNumSpan = dropZone.querySelector('.month-day-num');
+        if (!dayNumSpan) return;
+
+        const targetDay = dayNumSpan.textContent.replace(' 🔴', '');
+        const year = currentWeekStart.getFullYear();
+        const month = String(currentWeekStart.getMonth() + 1).padStart(2, '0');
+        const targetDateStr = `${year}-${month}-${String(targetDay).padStart(2, '0')}`;
+
+        moveAssignmentToDate(draggedAssignmentId, targetDateStr);
+    }
+
+    function handleDropMonthList(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const dropZone = e.target.closest('.month-list-day');
+        if (!dropZone) return;
+
+        dropZone.classList.remove('drag-over');
+
+        // Extract target date from month list day
+        const dayNumSpan = dropZone.querySelector('.month-list-day-num');
+        if (!dayNumSpan) return;
+
+        const targetDay = dayNumSpan.textContent;
+        const year = currentWeekStart.getFullYear();
+        const month = String(currentWeekStart.getMonth() + 1).padStart(2, '0');
+        const targetDateStr = `${year}-${month}-${String(targetDay).padStart(2, '0')}`;
+
+        moveAssignmentToDate(draggedAssignmentId, targetDateStr);
+    }
+
+    function moveAssignmentToDate(assignmentId, newDate) {
+        if (!assignmentId || !newDate) return;
+
+        const asgn = Storage.getAssignment(assignmentId);
+        if (!asgn) return;
+
+        // Check if assignment already exists for that date
+        const oldDate = asgn.date;
+        if (oldDate === newDate) return;
+
+        // Update assignment date
+        asgn.date = newDate;
+        Storage.updateAssignment(assignmentId, asgn);
+
+        // Show feedback
+        App.showToast(`Squadra spostata al ${new Date(newDate + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}`);
+
+        // Re-render
+        render();
     }
 
     function getMonday(date) {
@@ -88,6 +300,7 @@ const Schedule = (() => {
         }
 
         consumePendingGroupOpen();
+        setupDragAndDrop();
     }
 
     function consumePendingGroupOpen() {
@@ -197,7 +410,7 @@ const Schedule = (() => {
                     const isMySquad = myEmployeeId && asgn.employeeIds.includes(myEmployeeId);
 
                     const cardClick = isAdmin ? `Schedule.openModal('${asgn.id}')` : `Schedule.openDetailModal('${asgn.id}')`;
-                    html += `<div class="assignment-card${isMySquad ? ' my-squad' : ''}" onclick="event.stopPropagation(); ${cardClick}">
+                    html += `<div class="assignment-card${isMySquad ? ' my-squad' : ''}" data-assignment-id="${asgn.id}" onclick="event.stopPropagation(); ${cardClick}">
                         <div class="assignment-team-label">${teamLabel}</div>
                         <div class="assignment-team">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -309,6 +522,7 @@ const Schedule = (() => {
                 const isMySquad = myEmpId && asgn.employeeIds.includes(myEmpId);
                 const dotClick = isAdmin ? `Schedule.openModal('${asgn.id}')` : `Schedule.openDetailModal('${asgn.id}')`;
                 html += `<div class="month-assignment-dot${isMySquad ? ' my-squad' : ''}" 
+                              data-assignment-id="${asgn.id}"
                               onclick="event.stopPropagation(); ${dotClick}"
                               title="${teamLabel}: ${teamCount} dipendente/i → ${wpCount} posto/i di lavoro">
                     <span class="month-team-name">${teamLabel}</span>
@@ -379,7 +593,7 @@ const Schedule = (() => {
                     const cardClick = isAdmin ? `Schedule.openModal('${asgn.id}')` : `Schedule.openDetailModal('${asgn.id}')`;
                     const isMySquad = myEmpId && asgn.employeeIds.includes(myEmpId);
 
-                    html += `<div class="month-list-squad-card${isMySquad ? ' my-squad' : ''}" onclick="${cardClick}">`;
+                    html += `<div class="month-list-squad-card${isMySquad ? ' my-squad' : ''}" data-assignment-id="${asgn.id}" onclick="${cardClick}">`;
                     html += `<div class="month-list-squad-name">${teamLabel}</div>`;
                     html += `<div class="month-list-squad-info">`;
                     html += `<div class="month-list-squad-row">
