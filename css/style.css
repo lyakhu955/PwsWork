@@ -1939,28 +1939,6 @@ input[type="time"]::-webkit-inner-spin-button {
     overflow-y: auto;
 }
 
-/* Map modal: flex column so buttons stay fixed at bottom */
-.modal-map {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    max-height: 90vh;
-}
-
-.modal-map-body {
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: var(--space-sm);
-}
-
-.modal-map-actions {
-    flex-shrink: 0;
-    border-top: 1px solid var(--border-color);
-    padding-top: var(--space-md);
-    margin-top: 0;
-    background: var(--bg-card);
-}
-
 /* ==================== DASHBOARD ASSIGNMENT CARDS ==================== */
 .today-assignment-card {
     padding: var(--space-md) var(--space-lg);

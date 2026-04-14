@@ -923,8 +923,6 @@ const Schedule = (() => {
     }
 
     // ==================== GOOGLE MAPS PICKER ====================
-    let mapInitialized = false;
-
     function openMapPicker(wpIndex) {
         activeWorkplaceIndex = wpIndex;
         selectedPlace = null;
@@ -933,24 +931,11 @@ const Schedule = (() => {
         mapModal.classList.add('active');
 
         document.getElementById('map-selected-info').style.display = 'none';
+        document.getElementById('map-search-input').value = '';
 
-        // Clear autocomplete input (handles both original input and PlaceAutocompleteElement)
-        const searchInput = document.getElementById('map-search-input');
-        if (searchInput) {
-            if (typeof searchInput.value !== 'undefined') searchInput.value = '';
-            else if (searchInput.clear) searchInput.clear();
-        }
-
-        // Initialize map only once; just re-center on subsequent opens
+        // Initialize map after modal is visible
         setTimeout(() => {
-            if (!mapInitialized) {
-                initMap();
-                mapInitialized = true;
-            } else if (mapInstance) {
-                mapInstance.setCenter({ lat: 41.9028, lng: 12.4964 });
-                mapInstance.setZoom(6);
-                if (mapMarker) mapMarker.position = null;
-            }
+            initMap();
         }, 300);
     }
 
@@ -963,68 +948,49 @@ const Schedule = (() => {
         mapInstance = new google.maps.Map(mapContainer, {
             center: defaultCenter,
             zoom: 6,
-            mapId: 'DEMO_MAP_ID',
+            styles: getMapStyles(),
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: false
         });
 
-        // AdvancedMarkerElement (replaces deprecated Marker)
-        mapMarker = new google.maps.marker.AdvancedMarkerElement({
+        mapMarker = new google.maps.Marker({
             map: mapInstance,
-            gmpDraggable: true
+            draggable: true
         });
 
-        // PlaceAutocompleteElement (replaces deprecated Autocomplete)
-        const searchContainer = document.getElementById('map-search-input').parentElement;
-        const oldInput = document.getElementById('map-search-input');
-
-        const placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
-            componentRestrictions: { country: 'it' }
+        // Autocomplete
+        const input = document.getElementById('map-search-input');
+        autocomplete = new google.maps.places.Autocomplete(input, {
+            componentRestrictions: { country: 'it' },
+            fields: ['formatted_address', 'geometry', 'name']
         });
-        placeAutocomplete.id = 'map-search-input';
-        placeAutocomplete.className = oldInput.className;
-        oldInput.replaceWith(placeAutocomplete);
-        autocomplete = placeAutocomplete;
 
-        placeAutocomplete.addEventListener('gmp-placeselect', async (e) => {
-            const place = e.placeSummary || e.place;
-            if (!place) return;
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
 
-            // Fetch full details if needed
-            let location, formattedAddress, placeName;
-            if (place.fetchFields) {
-                await place.fetchFields({ fields: ['location', 'formattedAddress', 'displayName'] });
-                location = place.location;
-                formattedAddress = place.formattedAddress || '';
-                placeName = place.displayName || '';
-            } else {
-                // Fallback for older place object shape
-                location = place.geometry?.location;
-                formattedAddress = place.formatted_address || '';
-                placeName = place.name || '';
-            }
-
-            if (!location) return;
-
-            const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
-            const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
-            const latLng = new google.maps.LatLng(lat, lng);
-
-            mapInstance.setCenter(latLng);
+            const loc = place.geometry.location;
+            mapInstance.setCenter(loc);
             mapInstance.setZoom(16);
-            mapMarker.position = latLng;
+            mapMarker.setPosition(loc);
 
-            selectedPlace = { name: placeName, address: formattedAddress, lat, lng };
+            selectedPlace = {
+                name: place.name || '',
+                address: place.formatted_address || '',
+                lat: loc.lat(),
+                lng: loc.lng()
+            };
+
             document.getElementById('map-selected-info').style.display = 'flex';
-            document.getElementById('map-selected-address').textContent = formattedAddress;
+            document.getElementById('map-selected-address').textContent = selectedPlace.address;
         });
 
         // Click on map to set position
         mapInstance.addListener('click', (e) => {
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
-            mapMarker.position = e.latLng;
+            mapMarker.setPosition(e.latLng);
 
             // Reverse geocode
             const geocoder = new google.maps.Geocoder();
@@ -1037,10 +1003,10 @@ const Schedule = (() => {
         });
 
         // Marker drag end
-        mapMarker.addListener('dragend', (e) => {
-            const pos = mapMarker.position;
-            const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
-            const lng = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
+        mapMarker.addListener('dragend', () => {
+            const pos = mapMarker.getPosition();
+            const lat = pos.lat();
+            const lng = pos.lng();
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({ location: { lat, lng } }, (results, status) => {
                 const addr = status === 'OK' && results[0] ? results[0].formatted_address : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
@@ -1052,8 +1018,6 @@ const Schedule = (() => {
     }
 
     function getMapStyles() {
-        if (true) return [];
-        // Kept for reference - dark styles now applied via mapId or styles option in initMap
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         if (!isDark) return [];
         return [
@@ -1081,16 +1045,8 @@ const Schedule = (() => {
             return;
         }
 
-        // Snapshot selectedPlace before any async/DOM operations
-        const place = {
-            name: selectedPlace.name || '',
-            address: selectedPlace.address || '',
-            lat: selectedPlace.lat || '',
-            lng: selectedPlace.lng || ''
-        };
-
         const item = document.querySelector(`.workplace-item[data-index="${activeWorkplaceIndex}"]`);
-        if (!item) { closeMapModal(); return; }
+        if (!item) return;
 
         const nameInput = item.querySelector('.wp-name');
         const addressInput = item.querySelector('.wp-address');
@@ -1103,15 +1059,16 @@ const Schedule = (() => {
             return;
         }
 
-        if (nameInput && !nameInput.value.trim() && place.name) {
-            nameInput.value = place.name;
+        // If name field is empty, fill with place name
+        if (nameInput && !nameInput.value.trim() && selectedPlace.name) {
+            nameInput.value = selectedPlace.name;
         }
-        addressInput.value = place.address;
-        if (latInput) latInput.value = place.lat;
-        if (lngInput) lngInput.value = place.lng;
+        addressInput.value = selectedPlace.address || '';
+        if (latInput) latInput.value = selectedPlace.lat || '';
+        if (lngInput) lngInput.value = selectedPlace.lng || '';
 
         closeMapModal();
-        App.showToast('Posizione salvata', place.address || 'Posizione selezionata', 'success');
+        App.showToast('Posizione salvata', selectedPlace.address || '', 'success');
     }
 
     // ==================== FORM SUBMIT ====================
