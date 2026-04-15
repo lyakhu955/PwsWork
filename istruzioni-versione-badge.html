@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Istruzioni Badge Versione</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f1117; color: #e2e8f0; padding: 24px; }
+  h1 { font-size: 1.4rem; margin-bottom: 6px; color: #a78bfa; }
+  .subtitle { font-size: 0.85rem; color: #94a3b8; margin-bottom: 32px; }
+  .step { background: #1e2130; border: 1px solid #2d3148; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+  .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .step-title { font-size: 1rem; font-weight: 700; color: #c4b5fd; }
+  .step-desc { font-size: 0.82rem; color: #94a3b8; margin-bottom: 12px; line-height: 1.6; }
+  .step-desc strong { color: #f1a94e; }
+  pre { background: #0d0f1a; border: 1px solid #2d3148; border-radius: 10px; padding: 16px; font-size: 0.78rem; line-height: 1.7; overflow-x: auto; white-space: pre-wrap; word-break: break-all; color: #a5f3fc; }
+  .copy-btn {
+    flex-shrink: 0;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .copy-btn:hover { background: #4f46e5; }
+  .copy-btn.copied { background: #10b981; }
+  .warning { background: #2d1f0e; border: 1px solid #f1a94e44; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 0.85rem; color: #f1a94e; line-height: 1.6; }
+  .warning strong { font-size: 1rem; }
+</style>
+</head>
+<body>
+
+<h1>🏷️ Badge Versione Automatica</h1>
+<p class="subtitle">Copia e incolla ogni sezione nel tuo sito. Segui i passi in ordine.</p>
+
+<div class="warning">
+  <strong>⚠️ Prima di iniziare:</strong><br>
+  Nel <strong>Passo 3 (Script)</strong> sostituisci <strong>OWNER/REPO</strong> con il nome del tuo repo GitHub.<br>
+  Es: <code style="background:#1e2130;padding:2px 6px;border-radius:4px">lyakhu955/MioSito</code>
+</div>
+
+<!-- STEP 1: HTML Badge -->
+<div class="step">
+  <div class="step-header">
+    <span class="step-title">Passo 1 — HTML: Badge versione</span>
+    <button class="copy-btn" onclick="copyCode(this, 'code1')">📋 Copia</button>
+  </div>
+  <p class="step-desc">Incolla questo <strong>a sinistra del pulsante tema</strong> nell'header/navbar del sito.</p>
+  <pre id="code1">&lt;span class="app-version" title="Messaggio dallo sviluppatore" onclick="document.getElementById('dev-modal').classList.add('active')" style="cursor:pointer"&gt;v1&lt;/span&gt;</pre>
+</div>
+
+<!-- STEP 2: HTML Modal -->
+<div class="step">
+  <div class="step-header">
+    <span class="step-title">Passo 2 — HTML: Modal easter egg</span>
+    <button class="copy-btn" onclick="copyCode(this, 'code2')">📋 Copia</button>
+  </div>
+  <p class="step-desc">Incolla questo <strong>nel &lt;body&gt; prima dei tag &lt;script&gt;</strong> in fondo alla pagina.</p>
+  <pre id="code2">&lt;!-- Developer Message Modal --&gt;
+&lt;div id="dev-modal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('active')"&gt;
+    &lt;div class="modal glass-card dev-modal-card"&gt;
+        &lt;div class="modal-header"&gt;
+            &lt;h3&gt;⚠️ Attenzione: Messaggio dallo Sviluppatore&lt;/h3&gt;
+            &lt;button class="modal-close" onclick="document.getElementById('dev-modal').classList.remove('active')"&gt;&amp;times;&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div class="dev-modal-body"&gt;
+            &lt;p&gt;Ciao, sono Leonid.&lt;/p&gt;
+            &lt;p&gt;Sì, lo so cosa ti starai chiedendo guardando il numero di versione di questo sito: &lt;em&gt;"Ma come ci è arrivato? Ha un team di 50 ingegneri che aggiornano il codice ogni 3 minuti?"&lt;/em&gt;&lt;/p&gt;
+            &lt;p&gt;La risposta è no. Fammi spiegare il mio segreto aziendale: &lt;strong&gt;la sera non ho assolutamente un cazzo da fare.&lt;/strong&gt; Quindi, invece di dormire o guardare serie TV come le persone normali, mi metto a creare cose. Poi le modifico. E poi le modifico ancora. E ancora, e ancora.&lt;/p&gt;
+            &lt;p&gt;Sono clinicamente fuori di testa? Molto probabile. Il mio processo creativo funziona esattamente così:&lt;/p&gt;
+            &lt;div class="dev-phases"&gt;
+                &lt;div class="dev-phase"&gt;
+                    &lt;span class="dev-phase-num"&gt;Fase 1&lt;/span&gt;
+                    &lt;span&gt;Finisco finalmente un progetto e mi sento in pace con l'universo.&lt;/span&gt;
+                &lt;/div&gt;
+                &lt;div class="dev-phase"&gt;
+                    &lt;span class="dev-phase-num"&gt;Fase 2&lt;/span&gt;
+                    &lt;span&gt;Il mio cervello mi sussurra: &lt;em&gt;"Ehi... ma se aggiungessimo questa cosa totalmente inutile ma bellissima?"&lt;/em&gt;&lt;/span&gt;
+                &lt;/div&gt;
+                &lt;div class="dev-phase"&gt;
+                    &lt;span class="dev-phase-num"&gt;Fase 3&lt;/span&gt;
+                    &lt;span&gt;Si riparte da capo in un loop infinito di follia.&lt;/span&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;p&gt;Grazie per l'attenzione! &lt;em&gt;(Sempre che tu sia arrivato a leggere fin qui e non abbia già chiuso la pagina temendo per la mia salute mentale)&lt;/em&gt;. 😉&lt;/p&gt;
+        &lt;/div&gt;
+        &lt;div class="modal-actions"&gt;
+            &lt;button class="btn btn-primary" onclick="document.getElementById('dev-modal').classList.remove('active')"&gt;Ho capito, sei matto 🤝&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</pre>
+</div>
+
+<!-- STEP 3: Script -->
+<div class="step">
+  <div class="step-header">
+    <span class="step-title">Passo 3 — Script: Auto-versione GitHub</span>
+    <button class="copy-btn" onclick="copyCode(this, 'code3')">📋 Copia</button>
+  </div>
+  <p class="step-desc">Incolla questo <strong>prima dell'ultimo script</strong> (es. prima di app.js). <strong>Sostituisci OWNER/REPO</strong> con il tuo repo GitHub es: lyakhu955/MioSito</p>
+  <pre id="code3">&lt;script&gt;
+(function() {
+    fetch('https://api.github.com/repos/OWNER/REPO/commits?per_page=1', {
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
+    })
+    .then(function(res) {
+        const link = res.headers.get('Link') || '';
+        const match = link.match(/page=(\d+)&gt;;\s*rel="last"/);
+        if (match) {
+            const count = parseInt(match[1], 10);
+            const badge = document.querySelector('.app-version');
+            if (badge) badge.textContent = 'v' + count;
+        }
+    })
+    .catch(function() {});
+})();
+&lt;/script&gt;</pre>
+</div>
+
+<!-- STEP 4: CSS -->
+<div class="step">
+  <div class="step-header">
+    <span class="step-title">Passo 4 — CSS: Stili badge e modal</span>
+    <button class="copy-btn" onclick="copyCode(this, 'code4')">📋 Copia</button>
+  </div>
+  <p class="step-desc">Incolla questo nel tuo <strong>foglio di stile CSS</strong>.</p>
+  <pre id="code4">.app-version {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    letter-spacing: 0.03em;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid currentColor;
+    user-select: none;
+    transition: opacity 0.2s;
+    cursor: pointer;
+}
+.app-version:hover { opacity: 0.9; }
+
+.dev-modal-card { max-width: 580px; width: 95%; }
+
+.dev-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.75;
+    color: var(--text-primary);
+}
+.dev-modal-body p { margin: 0; }
+
+.dev-phases {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(0,0,0,0.15);
+    border-left: 3px solid #6366f1;
+    border-radius: 0 10px 10px 0;
+    padding: 14px 16px;
+}
+.dev-phase { display: flex; gap: 12px; align-items: flex-start; }
+.dev-phase-num {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: #6366f1;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 2px;
+}</pre>
+</div>
+
+<script>
+function copyCode(btn, id) {
+    const el = document.getElementById(id);
+    // Get raw text, decode HTML entities
+    const textarea = document.createElement('textarea');
+    textarea.value = el.innerText;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    btn.textContent = '✅ Copiato!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+        btn.textContent = '📋 Copia';
+        btn.classList.remove('copied');
+    }, 2000);
+}
+</script>
+</body>
+</html>
