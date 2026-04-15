@@ -197,7 +197,14 @@ REGOLE DI IDENTIFICAZIONE CANTIERI/CLIENTI:
    - "CUF" = "Centrufficio"
    - "AQA" = "AQASOFT"  
    - Altre abbreviazioni vanno lasciate come sono
-8. PATTERN "N CUF" (numero + CUF): "3 CUF Zona MB" significa 3 cantieri Centrufficio nella zona Monza-Brianza. Le righe successive dettagliano ciascun cantiere (nome cliente, metratura, indirizzo). Ogni cantiere diventa un workplace separato nella stessa squadra con nome "Centrufficio - [nome cliente]"
+8. ⚠️ REGOLA CRITICA — PATTERN "N CUF" (numero + CUF):
+   Quando trovi "2 CUF", "3 CUF", "4 CUF" ecc., il NUMERO indica QUANTI cantieri Centrufficio ci sono.
+   Le righe SUCCESSIVE al "N CUF" descrivono i singoli cantieri (uno per riga: nome cliente, metratura, indirizzo).
+   DEVI creare ESATTAMENTE N workplaces separati nella stessa squadra.
+   Il nome di ogni workplace DEVE essere "Centrufficio - [nome cliente dalla riga]".
+   Esempio: "3 CUF Zona MB\nBianchi 26mq Via Roma 5 Monza\nVerdi 30mq Via Garibaldi Seregno\nNeri 18mq Viale Italia Lissone"
+   → 3 workplaces: "Centrufficio - Bianchi", "Centrufficio - Verdi", "Centrufficio - Neri"
+   Se scritto solo "CUF" senza numero davanti = 1 singolo cantiere Centrufficio
 9. "da [nome]" dopo i dipendenti = workplace. Es: "Leo da Orecchia" → wp name "Orecchia"; "Marco e Luca da Bianchi" → wp name "Bianchi"
 10. Se lo stesso blocco menziona PIÙ cantieri (righe successive con indirizzi/clienti diversi), crea PIÙ workplaces nella stessa squadra
 
@@ -240,6 +247,7 @@ REGOLE GENERALI:
 23. Se trovi righe con solo un indirizzo o cantiere senza dipendenti, probabilmente appartengono alla squadra/blocco precedente come workplace aggiuntivo
 24. Cerca di NON duplicare dipendenti tra squadre diverse (lo stesso operaio non può essere in 2 posti)
 25. Se il testo menziona veicoli (furgone, camion, mezzo) mettilo nelle info, non come task
+26. ⚠️ REMINDER CUF: quando c'è "N CUF" (es: "3 CUF"), DEVI creare esattamente N workplaces Centrufficio. NON creare un solo workplace generico. Ogni riga dopo "N CUF" è un cantiere separato
 
 ═══════════════════════════════════════
 FORMATO OUTPUT:
