@@ -364,6 +364,7 @@ REGOLE IMPORTANTI:
 
         let created = 0;
         let skipped = 0;
+        let unmatchedNames = [];
 
         _parsedAssignments.forEach((squad, idx) => {
             // Match employees
@@ -372,13 +373,10 @@ REGOLE IMPORTANTI:
                 const emp = _matchEmployeeByName(name);
                 if (emp && !employeeIds.includes(emp.id)) {
                     employeeIds.push(emp.id);
+                } else if (!emp) {
+                    unmatchedNames.push(name);
                 }
             });
-
-            if (employeeIds.length === 0) {
-                skipped++;
-                return;
-            }
 
             // Build workplaces
             const workplaces = (squad.workplaces || []).map(wp => ({
@@ -391,7 +389,7 @@ REGOLE IMPORTANTI:
                 timeEnd: wp.timeEnd || null
             }));
 
-            if (workplaces.length === 0) {
+            if (workplaces.length === 0 && employeeIds.length === 0) {
                 skipped++;
                 return;
             }
@@ -418,7 +416,10 @@ REGOLE IMPORTANTI:
             }
         }
         if (skipped > 0) {
-            App.showToast('Attenzione', `${skipped} squadre saltate (dipendenti non trovati)`, 'warning');
+            App.showToast('Attenzione', `${skipped} squadre saltate (vuote)`, 'warning');
+        }
+        if (unmatchedNames.length > 0) {
+            App.showToast('Info', `Dipendenti non trovati: ${unmatchedNames.join(', ')}`, 'warning');
         }
     }
 
