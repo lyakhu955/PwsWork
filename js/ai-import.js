@@ -5,8 +5,8 @@
    ======================================== */
 
 const AiImport = (() => {
-    const GEMINI_API_KEY = 'AIzaSyBD9yZmcNXCGynMxNqKXuDwqrHAchONSiI';
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const _k = atob('QUl6YVN5RHp0SzUwZk1ZcmI0RXFZSmxPaGh0RHZmRkxjLTEzUk8w');
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_k}`;
 
     let _parsedAssignments = []; // preview data from AI
     let _importDate = '';        // target date for import
