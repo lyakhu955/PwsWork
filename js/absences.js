@@ -34,6 +34,14 @@ const Absences = (() => {
     let _overviewYear = new Date().getFullYear();
     let _overviewShowAll = false;
 
+    // Detail modal calendar state per type
+    let _detailCalState = {
+        ferie: { month: new Date().getMonth(), year: new Date().getFullYear() },
+        malattia: { month: new Date().getMonth(), year: new Date().getFullYear() },
+        permesso: { month: new Date().getMonth(), year: new Date().getFullYear() }
+    };
+    let _detailModalData = null; // stored to re-render on nav
+
     // ==================== IN-MEMORY CACHE ====================
     let _absences = [];
     let _leaveRequests = [];
@@ -1301,35 +1309,122 @@ const Absences = (() => {
     });
 
     // ==================== ABSENCES DETAIL MODAL ====================
-    function openAbsencesDetailModal(employeeId, firstName, lastName) {
-        const modal = document.getElementById('absences-detail-modal');
-        if (!modal) return;
-
-        const absences = getAbsences();
-        let empAbsences = absences.filter(a => a.employeeId === employeeId);
-
-        // Filter by selected month if not showing all
+    function _buildDetailMiniCalendar(type, allDates, calState) {
         const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
             'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-        const monthLabel = _overviewShowAll ? '' : ` — ${monthNames[_overviewMonth]} ${_overviewYear}`;
+        const dayNames = ['Lu', 'Ma', 'Me', 'Gi', 'Ve', 'Sa', 'Do'];
+        const typeInfo = ABSENCE_TYPES[type];
+        const m = calState.month;
+        const y = calState.year;
 
-        if (!_overviewShowAll) {
-            empAbsences = empAbsences.map(a => {
-                const filteredDates = _filterDatesByMonth(a.dates);
-                return { ...a, dates: filteredDates };
-            }).filter(a => a.dates.length > 0);
+        // Dates set for quick lookup
+        const dateSet = new Set(allDates);
+
+        // Count days in this month
+        const daysInThisMonth = allDates.filter(d => {
+            const dt = new Date(d + 'T00:00:00');
+            return dt.getMonth() === m && dt.getFullYear() === y;
+        }).length;
+
+        let html = `<div class="abs-dcal-section">`;
+        html += `<div class="abs-dcal-header" style="border-color: ${typeInfo.color}">`;
+        html += `<span class="abs-dcal-type-label" style="color: ${typeInfo.color}">${typeInfo.icon} ${typeInfo.label}</span>`;
+        html += `<span class="abs-dcal-total">${allDates.length} giorn${allDates.length !== 1 ? 'i' : 'o'} totali</span>`;
+        html += `</div>`;
+
+        // Month nav
+        html += `<div class="abs-dcal-nav">`;
+        html += `<button class="abs-dcal-nav-btn" onclick="Absences.detailCalNav('${type}', -1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>`;
+        html += `<span class="abs-dcal-month-label">${monthNames[m]} ${y}</span>`;
+        html += `<button class="abs-dcal-nav-btn" onclick="Absences.detailCalNav('${type}', 1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>`;
+        if (daysInThisMonth > 0) {
+            html += `<span class="abs-dcal-month-count" style="background: ${typeInfo.colorLight}; color: ${typeInfo.color}">${daysInThisMonth} gg</span>`;
+        }
+        html += `</div>`;
+
+        // Day names
+        html += `<div class="abs-dcal-grid abs-dcal-daynames">`;
+        dayNames.forEach(dn => {
+            html += `<div class="abs-dcal-dayname">${dn}</div>`;
+        });
+        html += `</div>`;
+
+        // Calendar days
+        const firstDay = new Date(y, m, 1);
+        const lastDay = new Date(y, m + 1, 0);
+        let startDow = firstDay.getDay(); // 0=Sun
+        startDow = startDow === 0 ? 6 : startDow - 1; // convert to Mon=0
+
+        html += `<div class="abs-dcal-grid">`;
+
+        // Empty cells before first day
+        for (let i = 0; i < startDow; i++) {
+            html += `<div class="abs-dcal-cell abs-dcal-empty"></div>`;
         }
 
-        // Organizza per tipo
-        const byType = {
-            ferie: empAbsences.filter(a => a.type === 'ferie'),
-            malattia: empAbsences.filter(a => a.type === 'malattia'),
-            permesso: empAbsences.filter(a => a.type === 'permesso')
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+            const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const isHighlighted = dateSet.has(dateStr);
+            const dow = (startDow + d - 1) % 7; // 0=Mon ... 6=Sun
+            const isSunday = dow === 6;
+
+            let cellClass = 'abs-dcal-cell';
+            let cellStyle = '';
+            if (isHighlighted) {
+                cellClass += ' abs-dcal-highlighted';
+                cellStyle = `background: ${typeInfo.color}; color: #fff;`;
+            }
+            if (isSunday) cellClass += ' abs-dcal-sunday';
+
+            html += `<div class="${cellClass}" style="${cellStyle}">${d}</div>`;
+        }
+
+        html += `</div>`;
+        html += `</div>`;
+        return html;
+    }
+
+    function openAbsencesDetailModal(employeeId, firstName, lastName) {
+        // Store data for re-rendering on calendar nav
+        _detailModalData = { employeeId, firstName, lastName };
+
+        // Set calendars to overview month or current month
+        const startMonth = _overviewShowAll ? new Date().getMonth() : _overviewMonth;
+        const startYear = _overviewShowAll ? new Date().getFullYear() : _overviewYear;
+        _detailCalState.ferie = { month: startMonth, year: startYear };
+        _detailCalState.malattia = { month: startMonth, year: startYear };
+        _detailCalState.permesso = { month: startMonth, year: startYear };
+
+        _renderDetailModal();
+    }
+
+    function _renderDetailModal() {
+        const modal = document.getElementById('absences-detail-modal');
+        if (!modal || !_detailModalData) return;
+
+        const { employeeId, firstName, lastName } = _detailModalData;
+        const absences = getAbsences();
+        const empAbsences = absences.filter(a => a.employeeId === employeeId);
+
+        // Collect ALL dates per type (no month filter — the calendars handle month display)
+        const allDatesByType = {
+            ferie: [],
+            malattia: [],
+            permesso: []
         };
+        empAbsences.forEach(a => {
+            if (allDatesByType[a.type]) {
+                allDatesByType[a.type].push(...a.dates);
+            }
+        });
 
         let html = `
             <div class="modal-header">
-                <h3>Assenze — ${firstName} ${lastName}${monthLabel}</h3>
+                <h3>Assenze — ${firstName} ${lastName}</h3>
                 <button class="modal-close" onclick="Absences.closeAbsencesDetailModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -1337,80 +1432,43 @@ const Absences = (() => {
             <div class="modal-body">
         `;
 
-        // Ferie
-        if (byType.ferie.length > 0) {
-            html += `<div class="abs-detail-section">
-                <h4 style="color: ${ABSENCE_TYPES.ferie.color}; margin-bottom: 12px;">🏖️ Ferie</h4>
-                <div class="abs-detail-list">`;
-            byType.ferie.forEach(absence => {
-                const totalDays = absence.dates.length;
-                const dateRange = absence.dates.length > 0 
-                    ? `${new Date(absence.dates[0] + 'T00:00:00').toLocaleDateString('it-IT')} — ${new Date(absence.dates[absence.dates.length - 1] + 'T00:00:00').toLocaleDateString('it-IT')}`
-                    : '';
-                html += `
-                    <div class="abs-detail-item">
-                        <div class="abs-detail-info">
-                            <span class="abs-detail-dates">${dateRange}</span>
-                            <span class="abs-detail-count">${totalDays} giorno${totalDays > 1 ? 'i' : ''}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div></div>`;
+        let hasAny = false;
+
+        // Ferie calendar
+        if (allDatesByType.ferie.length > 0) {
+            hasAny = true;
+            html += _buildDetailMiniCalendar('ferie', allDatesByType.ferie, _detailCalState.ferie);
         }
 
-        // Malattia
-        if (byType.malattia.length > 0) {
-            html += `<div class="abs-detail-section">
-                <h4 style="color: ${ABSENCE_TYPES.malattia.color}; margin-bottom: 12px;">🤒 Malattia</h4>
-                <div class="abs-detail-list">`;
-            byType.malattia.forEach(absence => {
-                const totalDays = absence.dates.length;
-                const dateRange = absence.dates.length > 0 
-                    ? `${new Date(absence.dates[0] + 'T00:00:00').toLocaleDateString('it-IT')} — ${new Date(absence.dates[absence.dates.length - 1] + 'T00:00:00').toLocaleDateString('it-IT')}`
-                    : '';
-                html += `
-                    <div class="abs-detail-item">
-                        <div class="abs-detail-info">
-                            <span class="abs-detail-dates">${dateRange}</span>
-                            <span class="abs-detail-count">${totalDays} giorno${totalDays > 1 ? 'i' : ''}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div></div>`;
+        // Malattia calendar
+        if (allDatesByType.malattia.length > 0) {
+            hasAny = true;
+            html += _buildDetailMiniCalendar('malattia', allDatesByType.malattia, _detailCalState.malattia);
         }
 
-        // Permesso
-        if (byType.permesso.length > 0) {
-            html += `<div class="abs-detail-section">
-                <h4 style="color: ${ABSENCE_TYPES.permesso.color}; margin-bottom: 12px;">📋 Permessi</h4>
-                <div class="abs-detail-list">`;
-            byType.permesso.forEach(absence => {
-                const totalDays = absence.dates.length;
-                const dateRange = absence.dates.length > 0 
-                    ? `${new Date(absence.dates[0] + 'T00:00:00').toLocaleDateString('it-IT')} — ${new Date(absence.dates[absence.dates.length - 1] + 'T00:00:00').toLocaleDateString('it-IT')}`
-                    : '';
-                html += `
-                    <div class="abs-detail-item">
-                        <div class="abs-detail-info">
-                            <span class="abs-detail-dates">${dateRange}</span>
-                            <span class="abs-detail-count">${totalDays} giorno${totalDays > 1 ? 'i' : ''}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div></div>`;
+        // Permesso calendar
+        if (allDatesByType.permesso.length > 0) {
+            hasAny = true;
+            html += _buildDetailMiniCalendar('permesso', allDatesByType.permesso, _detailCalState.permesso);
         }
 
-        if (empAbsences.length === 0) {
+        if (!hasAny) {
             html += `<div class="abs-empty">Nessuna assenza registrata</div>`;
         }
 
         html += `</div>`;
-        
-        modal.innerHTML = html;
+
+        modal.querySelector('.modal').innerHTML = html;
         modal.classList.add('active');
+    }
+
+    function detailCalNav(type, delta) {
+        const state = _detailCalState[type];
+        if (!state) return;
+        state.month += delta;
+        if (state.month > 11) { state.month = 0; state.year++; }
+        else if (state.month < 0) { state.month = 11; state.year--; }
+        _renderDetailModal();
     }
 
     function closeAbsencesDetailModal() {
@@ -1439,6 +1497,7 @@ const Absences = (() => {
         resetAll,
         openAbsencesDetailModal,
         closeAbsencesDetailModal,
+        detailCalNav,
         overviewNavMonth,
         overviewToggleAll,
         ABSENCE_TYPES
