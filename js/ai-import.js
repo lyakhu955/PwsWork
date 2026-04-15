@@ -6,7 +6,7 @@
 
 const AiImport = (() => {
     const GEMINI_API_KEY = 'AIzaSyBD9yZmcNXCGynMxNqKXuDwqrHAchONSiI';
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     let _parsedAssignments = []; // preview data from AI
     let _importDate = '';        // target date for import
