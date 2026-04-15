@@ -85,15 +85,25 @@ const WhatsApp = (() => {
     }
 
     // ==================== BUILD MESSAGE ====================
-    function _buildMessage(dates) {
-        let lines = [];
-        let hasAny = false;
-        let dayCount = 0;
 
-        // Count days with assignments
-        dates.forEach(dateStr => {
-            if (Storage.getAssignmentsByDate(dateStr).length > 0) dayCount++;
-        });
+    // Splits an info string into individual task lines.
+    // If any line starts with '-', each '-' line is a separate task.
+    // Otherwise the whole string is one task.
+    function _splitInfoLines(info) {
+        if (!info || !info.trim()) return [];
+        const raw = info.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        const hasDash = raw.some(l => l.startsWith('-'));
+        if (hasDash) {
+            // Only keep lines that start with '-'; ignore continuation lines without '-'
+            return raw.filter(l => l.startsWith('-'));
+        }
+        // No dash: treat entire text as one task (join lines)
+        return [raw.join(' ')];
+    }
+
+    function _buildMessage(dates) {
+        const lines = [];
+        let hasAny = false;
 
         // Header
         lines.push('╔══════════════════════════════╗');
@@ -113,48 +123,36 @@ const WhatsApp = (() => {
             const month = MONTH_NAMES[dateObj.getMonth()].toUpperCase();
             const year = dateObj.getFullYear();
 
-            // Day header — prominent separator
             lines.push(`━━━ 📅 ${dayName} ${day} ${month} ${year} ━━━`);
             lines.push('');
 
             assignments.forEach((asgn, idx) => {
                 const teamName = (asgn.teamName || `Gregge ${idx + 1}`).toUpperCase();
 
-                // Get employee names
+                // Centred team name with sheep emoji
+                const label = `🐑 *${teamName}*`;
+                const pad = ' '.repeat(Math.max(0, Math.floor((34 - label.replace(/[*]/g, '').length) / 2)));
+                lines.push(`${pad}${label}`);
+
+                // Members joined by em dash, all uppercase
                 const members = (asgn.employeeIds || []).map(eid => {
                     const emp = Storage.getEmployee(eid);
-                    return emp ? `${emp.firstName} ${emp.lastName}` : null;
+                    return emp ? `${emp.firstName} ${emp.lastName}`.toUpperCase() : null;
                 }).filter(Boolean);
 
-                lines.push(`🟢 *${teamName}*`);
-
                 if (members.length > 0) {
-                    lines.push(`👷 ${members.join(', ')}`);
+                    lines.push(`👷 ${members.join('—')}`);
                 }
 
-                // Workplaces
+                // Workplaces — each gets 📍 → 🔨(s) → 🗺️ → ┄┄┄
                 if (asgn.workplaces && asgn.workplaces.length > 0) {
                     asgn.workplaces.forEach(wp => {
-                        const name = wp.name || '';
+                        const name = (wp.name || '').toUpperCase();
                         const address = wp.address || '';
-                        const desc = wp.info || '';
+                        const infoLines = _splitInfoLines(wp.info || '');
 
-                        // Build Google Maps navigation link
-                        let mapsLink = '';
-                        if (wp.lat && wp.lng) {
-                            mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${wp.lat},${wp.lng}`;
-                        } else if (address) {
-                            mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-                        } else if (name) {
-                            mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
-                        }
-
-                        // Workplace description/type of work
-                        if (desc) {
-                            lines.push(`🔨 ${desc}`);
-                        }
-
-                        if (name && address && name !== address) {
+                        // 📍 line
+                        if (name && address && name !== address.toUpperCase()) {
                             lines.push(`📍 ${name} — ${address}`);
                         } else if (name) {
                             lines.push(`📍 ${name}`);
@@ -162,27 +160,32 @@ const WhatsApp = (() => {
                             lines.push(`📍 ${address}`);
                         }
 
-                        if (mapsLink) {
-                            lines.push(`🗺️ ${mapsLink}`);
-                        }
-                    });
-                }
+                        // 🔨 lines (one per task)
+                        infoLines.forEach(task => {
+                            lines.push(`🔨 ${task}`);
+                        });
 
-                // Spacer between groups
-                lines.push('');
+                        // 🗺️ maps link
+                        if (wp.lat && wp.lng) {
+                            lines.push(`🗺️ https://www.google.com/maps/dir/?api=1&destination=${wp.lat},${wp.lng}`);
+                        } else if (address) {
+                            lines.push(`🗺️ https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`);
+                        } else if (name) {
+                            lines.push(`🗺️ https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`);
+                        }
+
+                        // Divider after every workplace
+                        lines.push('┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄');
+                    });
+                } else {
+                    lines.push('┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄');
+                }
             });
 
-            // Only add extra separator between days (not after last day)
-            if (dayCount > 1) {
-                lines.push('┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄');
-                lines.push('');
-            }
+            lines.push('');
         });
 
         if (!hasAny) return '';
-
-        lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        lines.push('📲 _Inviato da PwsWork_');
 
         return lines.join('\n');
     }
