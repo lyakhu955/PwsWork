@@ -29,6 +29,11 @@ const Absences = (() => {
     let calendarMonth = new Date().getMonth();
     let calendarYear = new Date().getFullYear();
 
+    // Overview month filter (null = tutti)
+    let _overviewMonth = new Date().getMonth();
+    let _overviewYear = new Date().getFullYear();
+    let _overviewShowAll = false;
+
     // ==================== IN-MEMORY CACHE ====================
     let _absences = [];
     let _leaveRequests = [];
@@ -496,19 +501,51 @@ const Absences = (() => {
     }
 
     // ==================== ADMIN: OVERVIEW TAB ====================
+    function _filterDatesByMonth(dates) {
+        if (_overviewShowAll) return dates;
+        return dates.filter(d => {
+            const dt = new Date(d + 'T00:00:00');
+            return dt.getMonth() === _overviewMonth && dt.getFullYear() === _overviewYear;
+        });
+    }
+
     function renderOverviewTab() {
         const content = document.getElementById('absences-tab-content');
         const employees = Storage.getEmployees();
         const absences = getAbsences();
 
+        const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+            'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+
         let html = '<div class="abs-overview-section">';
-        html += '<h4 class="abs-section-title">📊 Riepilogo Assenze per Dipendente</h4>';
+
+        // --- Month navigation bar ---
+        html += `<div class="abs-overview-month-nav">`;
+        html += `<button class="abs-month-btn" onclick="Absences.overviewNavMonth(-1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>`;
+        html += `<span class="abs-month-label">${_overviewShowAll ? '📊 Tutti i mesi' : `📅 ${monthNames[_overviewMonth]} ${_overviewYear}`}</span>`;
+        html += `<button class="abs-month-btn" onclick="Absences.overviewNavMonth(1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>`;
+        html += `<button class="abs-month-all-btn ${_overviewShowAll ? 'active' : ''}" onclick="Absences.overviewToggleAll()">
+            ${_overviewShowAll ? '📅 Mese' : '📊 Tutti'}
+        </button>`;
+        html += `</div>`;
+
+        html += '<h4 class="abs-section-title">Riepilogo Assenze per Dipendente</h4>';
+
+        // Compute totals across all employees for the header
+        let grandFerie = 0, grandMalattia = 0, grandPermesso = 0;
 
         employees.forEach(emp => {
             const empAbsences = absences.filter(a => a.employeeId === emp.id);
-            const ferieCount = empAbsences.filter(a => a.type === 'ferie').reduce((sum, a) => sum + a.dates.length, 0);
-            const malattiaCount = empAbsences.filter(a => a.type === 'malattia').reduce((sum, a) => sum + a.dates.length, 0);
-            const permessoCount = empAbsences.filter(a => a.type === 'permesso').reduce((sum, a) => sum + a.dates.length, 0);
+            const ferieCount = empAbsences.filter(a => a.type === 'ferie').reduce((sum, a) => sum + _filterDatesByMonth(a.dates).length, 0);
+            const malattiaCount = empAbsences.filter(a => a.type === 'malattia').reduce((sum, a) => sum + _filterDatesByMonth(a.dates).length, 0);
+            const permessoCount = empAbsences.filter(a => a.type === 'permesso').reduce((sum, a) => sum + _filterDatesByMonth(a.dates).length, 0);
+            grandFerie += ferieCount;
+            grandMalattia += malattiaCount;
+            grandPermesso += permessoCount;
             const total = ferieCount + malattiaCount + permessoCount;
             const hasAbsences = total > 0 ? 'has-absences' : '';
 
@@ -518,7 +555,7 @@ const Absences = (() => {
                         <div class="abs-overview-avatar">${emp.firstName[0]}${emp.lastName[0]}</div>
                         <div>
                             <strong>${emp.firstName} ${emp.lastName}</strong>
-                            <span class="abs-overview-total">${total} giorni totali</span>
+                            <span class="abs-overview-total">${total} giorni${_overviewShowAll ? ' totali' : ''}</span>
                         </div>
                     </div>
                     <div class="abs-overview-counts">
@@ -539,8 +576,43 @@ const Absences = (() => {
             `;
         });
 
+        // Grand total summary bar
+        const grandTotal = grandFerie + grandMalattia + grandPermesso;
+        html += `
+            <div class="abs-overview-grand-total glass-card">
+                <strong>Totale:</strong>
+                <span style="color:${ABSENCE_TYPES.ferie.color}">🏖️ ${grandFerie}</span>
+                <span style="color:${ABSENCE_TYPES.malattia.color}">🤒 ${grandMalattia}</span>
+                <span style="color:${ABSENCE_TYPES.permesso.color}">📋 ${grandPermesso}</span>
+                <span class="abs-grand-total-num">${grandTotal} gg</span>
+            </div>
+        `;
+
         html += '</div>';
         content.innerHTML = html;
+    }
+
+    function overviewNavMonth(delta) {
+        if (_overviewShowAll) {
+            // Switch back to month mode at current month
+            _overviewShowAll = false;
+            _overviewMonth = new Date().getMonth();
+            _overviewYear = new Date().getFullYear();
+        }
+        _overviewMonth += delta;
+        if (_overviewMonth > 11) {
+            _overviewMonth = 0;
+            _overviewYear++;
+        } else if (_overviewMonth < 0) {
+            _overviewMonth = 11;
+            _overviewYear--;
+        }
+        renderOverviewTab();
+    }
+
+    function overviewToggleAll() {
+        _overviewShowAll = !_overviewShowAll;
+        renderOverviewTab();
     }
 
     // ==================== EMPLOYEE: MY CALENDAR TAB ====================
@@ -1234,7 +1306,19 @@ const Absences = (() => {
         if (!modal) return;
 
         const absences = getAbsences();
-        const empAbsences = absences.filter(a => a.employeeId === employeeId);
+        let empAbsences = absences.filter(a => a.employeeId === employeeId);
+
+        // Filter by selected month if not showing all
+        const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+            'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+        const monthLabel = _overviewShowAll ? '' : ` — ${monthNames[_overviewMonth]} ${_overviewYear}`;
+
+        if (!_overviewShowAll) {
+            empAbsences = empAbsences.map(a => {
+                const filteredDates = _filterDatesByMonth(a.dates);
+                return { ...a, dates: filteredDates };
+            }).filter(a => a.dates.length > 0);
+        }
 
         // Organizza per tipo
         const byType = {
@@ -1245,7 +1329,7 @@ const Absences = (() => {
 
         let html = `
             <div class="modal-header">
-                <h3>Assenze — ${firstName} ${lastName}</h3>
+                <h3>Assenze — ${firstName} ${lastName}${monthLabel}</h3>
                 <button class="modal-close" onclick="Absences.closeAbsencesDetailModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -1355,6 +1439,8 @@ const Absences = (() => {
         resetAll,
         openAbsencesDetailModal,
         closeAbsencesDetailModal,
+        overviewNavMonth,
+        overviewToggleAll,
         ABSENCE_TYPES
     };
 })();
