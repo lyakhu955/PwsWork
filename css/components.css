@@ -1096,55 +1096,215 @@
     box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
 }
 
-/* ==================== DEVELOPER MODAL ==================== */
-.dev-modal-card {
-    max-width: 580px;
+/* ==================== DEVELOPER TERMINAL MODAL ==================== */
+.dev-terminal {
     width: 95%;
+    max-width: 620px;
+    background: #0a0e14;
+    border: 1px solid #1a1f2e;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0, 255, 65, 0.08), 0 20px 60px rgba(0,0,0,0.6);
+    animation: devTerminalOpen 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
 }
 
-.dev-modal-body {
+@keyframes devTerminalOpen {
+    0% { transform: scale(0.8) translateY(30px); opacity: 0; filter: blur(6px); }
+    100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+}
+
+/* Terminal top bar (macOS style) */
+.dev-terminal-bar {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
-    max-height: 60vh;
+    align-items: center;
+    background: #151a25;
+    padding: 10px 14px;
+    border-bottom: 1px solid #1a1f2e;
+}
+
+.dev-terminal-dots {
+    display: flex;
+    gap: 7px;
+}
+
+.dev-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+}
+.dev-dot.red { background: #ff5f57; }
+.dev-dot.yellow { background: #ffbd2e; }
+.dev-dot.green { background: #28c840; }
+
+.dev-terminal-title {
+    flex: 1;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    color: #5a6278;
+    letter-spacing: 0.04em;
+}
+
+.dev-terminal-close {
+    background: none;
+    border: none;
+    color: #5a6278;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.2s;
+}
+.dev-terminal-close:hover { color: #ff5f57; }
+
+/* Terminal body */
+.dev-terminal-body {
+    padding: 18px 20px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.82rem;
+    line-height: 1.85;
+    color: #00ff41;
+    max-height: 55vh;
     overflow-y: auto;
-    padding-right: 4px;
-    line-height: 1.75;
-    color: var(--text-primary);
+    position: relative;
 }
 
-.dev-modal-body p {
-    margin: 0;
+/* Scanline overlay */
+.dev-scanline {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 65, 0.02) 2px,
+        rgba(0, 255, 65, 0.02) 4px
+    );
+    z-index: 1;
+    animation: devScanMove 8s linear infinite;
 }
 
-.dev-phases {
+@keyframes devScanMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100px; }
+}
+
+/* Blinking cursor */
+.dev-cursor {
+    animation: devBlink 0.7s step-end infinite;
+    color: #00ff41;
+}
+
+@keyframes devBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Typewriter content lines */
+.dev-line {
+    opacity: 0;
+    animation: devLineAppear 0.08s forwards;
+}
+
+@keyframes devLineAppear {
+    to { opacity: 1; }
+}
+
+.dev-line-cmd { color: #5eead4; }
+.dev-line-warn { color: #fbbf24; }
+.dev-line-error { color: #f87171; }
+.dev-line-success { color: #4ade80; }
+.dev-line-comment { color: #5a6278; font-style: italic; }
+.dev-line-text { color: #c9d1d9; }
+.dev-line-bold { color: #fff; font-weight: 700; }
+.dev-line-ascii { color: #6366f1; }
+.dev-line-dim { color: #3a4050; }
+
+/* Phases / log entries */
+.dev-log-entry {
     display: flex;
-    flex-direction: column;
     gap: 10px;
-    background: var(--bg-secondary, rgba(0,0,0,0.15));
-    border-left: 3px solid var(--primary, #6366f1);
-    border-radius: 0 10px 10px 0;
-    padding: 14px 16px;
-    margin: 4px 0;
+    margin: 2px 0;
 }
 
-.dev-phase {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-}
-
-.dev-phase-num {
-    flex-shrink: 0;
+.dev-log-tag {
     font-size: 0.72rem;
     font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    background: var(--primary, #6366f1);
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 20px;
-    margin-top: 2px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.dev-log-tag.ok { background: #065f46; color: #4ade80; }
+.dev-log-tag.warn { background: #713f12; color: #fbbf24; }
+.dev-log-tag.fail { background: #7f1d1d; color: #f87171; }
+
+/* Footer stats bar */
+.dev-terminal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #151a25;
+    border-top: 1px solid #1a1f2e;
+    padding: 8px 14px;
+}
+
+.dev-stats {
+    display: flex;
+    gap: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: #5a6278;
+}
+
+.dev-stats strong {
+    color: #00ff41;
+}
+
+.dev-exit-btn {
+    background: none;
+    border: 1px solid #1a1f2e;
+    color: #f87171;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    padding: 4px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.dev-exit-btn:hover {
+    border-color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+}
+
+/* Crash animation */
+@keyframes devCrash {
+    0% { transform: scale(1); filter: blur(0); }
+    30% { transform: scale(1.02) skewX(-2deg); filter: blur(1px) hue-rotate(90deg); }
+    60% { transform: scale(0.98) skewX(3deg); filter: blur(2px) hue-rotate(180deg); }
+    100% { transform: scale(0) rotate(5deg); opacity: 0; filter: blur(10px); }
+}
+
+.dev-terminal.crashing {
+    animation: devCrash 0.6s ease-in forwards;
+}
+
+/* Glitch on title */
+@keyframes devGlitch {
+    0%, 100% { text-shadow: none; }
+    20% { text-shadow: -2px 0 #f87171, 2px 0 #4ade80; }
+    40% { text-shadow: 2px 0 #f87171, -2px 0 #6366f1; }
+    60% { text-shadow: -1px 0 #fbbf24, 1px 0 #f87171; }
+}
+
+.dev-glitch {
+    animation: devGlitch 0.3s linear 3;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .dev-terminal-body { font-size: 0.72rem; padding: 14px; max-height: 50vh; }
+    .dev-stats { gap: 8px; font-size: 0.6rem; flex-wrap: wrap; }
+    .dev-stats span:nth-child(4) { display: none; }
 }
 
 @media (max-width: 600px) {
