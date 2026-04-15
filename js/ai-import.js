@@ -82,6 +82,7 @@ REGOLE DI PARSING:
 9. "da" + nome azienda = posto di lavoro (es: "Leo da Orecchia" → dipendente Leo, workplace "Orecchia")
 10. Ignora frasi generiche come "Programma per domani:", "Grazie a tutti", saluti, ecc.
 11. Il nome della squadra (teamName) deve essere "Gregge 1", "Gregge 2", ecc. numerato progressivamente
+12. "CUF" è l'abbreviazione di "Centrufficio". Se c'è scritto "2 CUF", "3 CUF", "4 CUF" ecc., il numero indica QUANTI cantieri Centrufficio sono da fare. Quindi "3 CUF Zona MB" significa che ci sono 3 cantieri Centrufficio nella zona MB, e le righe successive descrivono ciascuno dei 3 cantieri (nome cliente, metratura, indirizzo). Ogni cantiere diventa un workplace separato nella stessa squadra.
 
 FORMATO OUTPUT JSON (array di oggetti):
 [
