@@ -913,28 +913,88 @@
     gap: 20px;
 }
 
-.wa-date-row {
+/* Date header row */
+.wa-date-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
 }
 
-.wa-date-row label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    white-space: nowrap;
+.wa-dates-label {
+    font-size: 0.95rem;
+    color: var(--text-primary);
 }
 
-.wa-date-row .form-input {
-    flex: 1;
-    min-width: 140px;
+/* Multi-day calendar */
+.wa-calendar-container {
+    background: var(--bg-secondary, rgba(0,0,0,0.15));
+    border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    border-radius: 12px;
+    padding: 14px;
 }
 
-.wa-date-sep {
-    font-size: 0.85rem;
+.wa-calendar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.wa-calendar-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.wa-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.wa-cal-header {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
     color: var(--text-secondary);
+    padding: 4px 0;
+    text-transform: uppercase;
+}
+
+.wa-cal-empty {
+    /* grid placeholder cell */
+    pointer-events: none;
+}
+
+.wa-cal-day {
+    text-align: center;
+    padding: 7px 4px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    color: var(--text-primary);
+    user-select: none;
+}
+
+.wa-cal-day:hover {
+    background: var(--primary-light, rgba(99,102,241,0.2));
+}
+
+.wa-cal-day.selected {
+    background: var(--primary, #6366f1);
+    color: #fff;
+    font-weight: 700;
+}
+
+.wa-calendar-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 10px;
+    opacity: 0.7;
 }
 
 .wa-preview-label {

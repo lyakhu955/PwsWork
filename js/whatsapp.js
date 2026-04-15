@@ -10,31 +10,31 @@ const WhatsApp = (() => {
     const MONTH_NAMES = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                          'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
+    // Selected dates (array of 'YYYY-MM-DD' strings)
+    let _selectedDates = [];
+    // Calendar state
+    let _calYear = 0;
+    let _calMonth = 0;
+    let _calVisible = false;
+
     // ==================== OPEN MODAL ====================
     function openModal(presetDate = null) {
         const modal = document.getElementById('whatsapp-modal');
         if (!modal) return;
 
-        // Reset
-        _resetModal();
+        // Default: tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const defaultDate = presetDate || Storage.toLocalDateStr(tomorrow);
 
-        // Set default date range: today → +6 days
-        const today = new Date();
-        const todayStr = Storage.toLocalDateStr(today);
-        const endDate = new Date(today);
-        endDate.setDate(endDate.getDate() + 6);
-        const endStr = Storage.toLocalDateStr(endDate);
+        _selectedDates = [defaultDate];
+        _calVisible = false;
 
-        document.getElementById('wa-date-from').value = todayStr;
-        document.getElementById('wa-date-to').value = endStr;
-
-        // If presetDate given (from dashboard button), set single day
-        if (presetDate) {
-            document.getElementById('wa-date-from').value = presetDate;
-            document.getElementById('wa-date-to').value = presetDate;
-        }
+        const calContainer = document.getElementById('wa-calendar-container');
+        if (calContainer) calContainer.style.display = 'none';
 
         modal.classList.add('active');
+        _updateDatesLabel();
         _generatePreview();
     }
 
@@ -43,41 +43,106 @@ const WhatsApp = (() => {
         if (modal) modal.classList.remove('active');
     }
 
-    function _resetModal() {
-        const preview = document.getElementById('wa-preview-text');
-        if (preview) preview.textContent = '';
-        const copyBtn = document.getElementById('wa-copy-btn');
-        if (copyBtn) copyBtn.disabled = true;
-        const waBtn = document.getElementById('wa-open-btn');
-        if (waBtn) waBtn.disabled = true;
+    // ==================== DATES LABEL ====================
+    function _updateDatesLabel() {
+        const el = document.getElementById('wa-selected-dates-label');
+        if (!el) return;
+        if (_selectedDates.length === 0) {
+            el.innerHTML = '📅 <strong>Nessun giorno selezionato</strong>';
+        } else if (_selectedDates.length === 1) {
+            const d = new Date(_selectedDates[0] + 'T00:00:00');
+            el.innerHTML = `📅 <strong>${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}</strong>`;
+        } else {
+            const sorted = [..._selectedDates].sort();
+            el.innerHTML = `📅 <strong>${_selectedDates.length} giorni selezionati</strong> <span style="font-size:0.8em;opacity:0.7">(${sorted.map(s => { const d = new Date(s+'T00:00:00'); return d.getDate()+' '+MONTH_NAMES[d.getMonth()].substring(0,3); }).join(', ')})</span>`;
+        }
+    }
+
+    // ==================== CALENDAR ====================
+    function toggleCalendar() {
+        _calVisible = !_calVisible;
+        const container = document.getElementById('wa-calendar-container');
+        if (!container) return;
+        container.style.display = _calVisible ? 'block' : 'none';
+        if (_calVisible) {
+            // Show current month (or month of first selected date)
+            const base = _selectedDates.length > 0 ? new Date(_selectedDates[0] + 'T00:00:00') : new Date();
+            _calYear = base.getFullYear();
+            _calMonth = base.getMonth();
+            _renderCalendar();
+        }
+    }
+
+    function calendarPrev() {
+        _calMonth--;
+        if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+        _renderCalendar();
+    }
+
+    function calendarNext() {
+        _calMonth++;
+        if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+        _renderCalendar();
+    }
+
+    function _renderCalendar() {
+        const titleEl = document.getElementById('wa-calendar-title');
+        const gridEl = document.getElementById('wa-calendar-grid');
+        if (!titleEl || !gridEl) return;
+
+        titleEl.textContent = `${MONTH_NAMES[_calMonth]} ${_calYear}`;
+
+        // Day headers
+        const dayHeaders = ['Lu', 'Ma', 'Me', 'Gi', 'Ve', 'Sa', 'Do'];
+        let html = dayHeaders.map(d => `<div class="wa-cal-header">${d}</div>`).join('');
+
+        // First day of month (Monday-based)
+        const firstDay = new Date(_calYear, _calMonth, 1);
+        let startDow = firstDay.getDay(); // 0=Sun
+        startDow = startDow === 0 ? 6 : startDow - 1; // convert to Mon=0
+
+        // Empty cells before first day
+        for (let i = 0; i < startDow; i++) {
+            html += '<div class="wa-cal-empty"></div>';
+        }
+
+        // Days in month
+        const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${_calYear}-${String(_calMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isSelected = _selectedDates.includes(dateStr);
+            html += `<div class="wa-cal-day${isSelected ? ' selected' : ''}" onclick="WhatsApp.toggleDay('${dateStr}')">${d}</div>`;
+        }
+
+        gridEl.innerHTML = html;
+    }
+
+    function toggleDay(dateStr) {
+        const idx = _selectedDates.indexOf(dateStr);
+        if (idx >= 0) {
+            _selectedDates.splice(idx, 1);
+        } else {
+            _selectedDates.push(dateStr);
+            _selectedDates.sort();
+        }
+        _renderCalendar();
+        _updateDatesLabel();
+        _generatePreview();
     }
 
     // ==================== GENERATE PREVIEW ====================
     function _generatePreview() {
-        const fromVal = document.getElementById('wa-date-from').value;
-        const toVal = document.getElementById('wa-date-to').value;
-
-        if (!fromVal || !toVal) return;
-
-        const from = new Date(fromVal + 'T00:00:00');
-        const to = new Date(toVal + 'T00:00:00');
-
-        if (from > to) {
-            document.getElementById('wa-preview-text').textContent = '⚠️ La data di inizio deve essere prima della data di fine.';
+        if (_selectedDates.length === 0) {
+            const preview = document.getElementById('wa-preview-text');
+            if (preview) preview.textContent = 'Seleziona almeno un giorno.';
+            document.getElementById('wa-copy-btn').disabled = true;
+            document.getElementById('wa-open-btn').disabled = true;
             return;
         }
 
-        // Collect all dates in range
-        const dates = [];
-        const cur = new Date(from);
-        while (cur <= to) {
-            dates.push(Storage.toLocalDateStr(cur));
-            cur.setDate(cur.getDate() + 1);
-        }
-
-        const text = _buildMessage(dates);
+        const text = _buildMessage([..._selectedDates].sort());
         const preview = document.getElementById('wa-preview-text');
-        if (preview) preview.textContent = text || 'Nessuna assegnazione nel periodo selezionato.';
+        if (preview) preview.textContent = text || 'Nessuna assegnazione nei giorni selezionati.';
 
         const hasContent = text.trim().length > 0;
         document.getElementById('wa-copy-btn').disabled = !hasContent;
@@ -260,6 +325,10 @@ const WhatsApp = (() => {
         openModal,
         closeModal,
         generatePreview: _generatePreview,
+        toggleCalendar,
+        calendarPrev,
+        calendarNext,
+        toggleDay,
         copyText,
         openWhatsApp,
         openForDate
