@@ -1189,34 +1189,66 @@
 .ai-preview-employees {
     margin-bottom: 12px;
     font-size: 0.88rem;
+}
+
+.ai-emp-list {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     gap: 6px;
+    margin-top: 8px;
 }
 
-.ai-emp-matched {
-    display: inline-flex;
+.ai-emp-row {
+    display: flex;
     align-items: center;
-    gap: 3px;
-    padding: 2px 10px;
-    border-radius: 20px;
-    background: rgba(16, 185, 129, 0.12);
-    color: #10b981;
-    font-weight: 600;
-    font-size: 0.82rem;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    transition: background 0.2s;
 }
 
-.ai-emp-unmatched {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 10px;
-    border-radius: 20px;
-    background: rgba(245, 158, 11, 0.12);
-    color: #f59e0b;
-    font-weight: 600;
+.ai-emp-row.ai-emp-matched {
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.ai-emp-row.ai-emp-unmatched {
+    background: rgba(245, 158, 11, 0.08);
+}
+
+.ai-emp-original {
     font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 90px;
+}
+
+.ai-emp-arrow {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.ai-emp-select {
+    flex: 1;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-family: inherit;
+    cursor: pointer;
+    max-width: 220px;
+    appearance: auto;
+}
+
+.ai-emp-row.ai-emp-matched .ai-emp-select {
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.ai-emp-row.ai-emp-unmatched .ai-emp-select {
+    border-color: rgba(245, 158, 11, 0.5);
 }
 
 .ai-preview-workplaces {
@@ -1283,9 +1315,18 @@
         flex-direction: column;
     }
 
-    .ai-preview-employees {
-        flex-direction: column;
-        align-items: flex-start;
+    .ai-emp-row {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .ai-emp-select {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .ai-emp-arrow {
+        display: none;
     }
 }
 
