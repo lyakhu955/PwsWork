@@ -135,21 +135,38 @@ REGOLE IMPORTANTI:
 
         try {
             const systemPrompt = _buildSystemPrompt();
-            
-            const response = await fetch(GEMINI_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: systemPrompt }] },
-                    contents: [{ parts: [{ text: text }] }],
-                    generationConfig: {
-                        temperature: 0.1,
-                        responseMimeType: "application/json"
-                    }
-                })
+            const requestBody = JSON.stringify({
+                system_instruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ parts: [{ text: text }] }],
+                generationConfig: {
+                    temperature: 0.1,
+                    responseMimeType: "application/json"
+                }
             });
 
+            // Retry logic for 429 rate limits
+            let response = null;
+            const maxRetries = 4;
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                response = await fetch(GEMINI_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: requestBody
+                });
+
+                if (response.status === 429 && attempt < maxRetries - 1) {
+                    const waitSec = Math.pow(2, attempt + 1); // 2, 4, 8, 16s
+                    btn.innerHTML = `<span class="ai-loading-spinner"></span> Limite API — riprovo tra ${waitSec}s...`;
+                    await new Promise(r => setTimeout(r, waitSec * 1000));
+                    continue;
+                }
+                break;
+            }
+
             if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error('Troppe richieste — aspetta 1 minuto e riprova');
+                }
                 throw new Error(`Errore API: ${response.status}`);
             }
 
