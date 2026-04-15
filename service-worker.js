@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pwswork-v40';
+const CACHE_NAME = 'pwswork-v41';
 
 const APP_SHELL = [
   './',
