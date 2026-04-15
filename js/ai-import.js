@@ -395,14 +395,17 @@ REGOLE IMPORTANTI:
             }
 
             const assignment = {
+                id: 'asgn_' + Date.now() + '_' + idx,
                 date: _importDate,
                 teamName: squad.teamName || `Gregge ${idx + 1}`,
                 employeeIds,
                 workplaces,
-                notes: ''
+                notes: '',
+                createdAt: new Date().toISOString()
             };
 
-            Storage.addAssignment(assignment);
+            // Save directly to avoid ID collision from Date.now()
+            Storage._pushAssignment(assignment);
             created++;
         });
 

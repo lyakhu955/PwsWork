@@ -293,6 +293,16 @@ const Storage = (() => {
         return assignment;
     }
 
+    /* Accepts a pre-built assignment object (id + createdAt already set).
+       Used by AI-import to avoid Date.now() collisions in synchronous loops. */
+    function _pushAssignment(assignment) {
+        _assignments.push({ ...assignment });
+        db.collection(COLLECTIONS.ASSIGNMENTS).doc(assignment.id).set(assignment).catch(err => {
+            console.error('Error adding assignment:', err);
+        });
+        return assignment;
+    }
+
     function updateAssignment(id, data) {
         const index = _assignments.findIndex(a => a.id === id);
         if (index !== -1) {
@@ -376,7 +386,7 @@ const Storage = (() => {
         addEmployee, updateEmployee, deleteEmployee,
         getAssignments, getAssignment, getAssignmentsByDate,
         getAssignmentsByEmployee, getAssignmentsByDateRange,
-        addAssignment, updateAssignment, deleteAssignment,
+        addAssignment, _pushAssignment, updateAssignment, deleteAssignment,
         getCurrentUser, setCurrentUser, clearCurrentUser,
         getTheme, setTheme,
         getSidebarCollapsed, setSidebarCollapsed,
