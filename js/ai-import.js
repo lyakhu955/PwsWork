@@ -6,7 +6,8 @@
 
 const AiImport = (() => {
     const _k = atob('QUl6YVN5RHp0SzUwZk1ZcmI0RXFZSmxPaGh0RHZmRkxjLTEzUk8w');
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_k}`;
+    const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+    const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
     let _parsedAssignments = []; // preview data from AI
     let _importDate = '';        // target date for import
@@ -144,20 +145,43 @@ REGOLE IMPORTANTI:
                 }
             });
 
-            // Retry logic for 429 rate limits
+            // Retry logic with model fallback for 429/503 errors
             let response = null;
-            const maxRetries = 4;
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                response = await fetch(GEMINI_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: requestBody
-                });
+            const maxRetries = 3;
+            for (let modelIdx = 0; modelIdx < GEMINI_MODELS.length; modelIdx++) {
+                const model = GEMINI_MODELS[modelIdx];
+                const url = `${GEMINI_BASE}${model}:generateContent?key=${_k}`;
+                let success = false;
 
-                if (response.status === 429 && attempt < maxRetries - 1) {
-                    const waitSec = Math.pow(2, attempt + 1); // 2, 4, 8, 16s
-                    btn.innerHTML = `<span class="ai-loading-spinner"></span> Limite API — riprovo tra ${waitSec}s...`;
-                    await new Promise(r => setTimeout(r, waitSec * 1000));
+                for (let attempt = 0; attempt < maxRetries; attempt++) {
+                    btn.innerHTML = `<span class="ai-loading-spinner"></span> Analisi in corso...${modelIdx > 0 ? ' (modello alternativo)' : ''}`;
+                    
+                    response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: requestBody
+                    });
+
+                    if ((response.status === 429 || response.status === 503) && attempt < maxRetries - 1) {
+                        const waitSec = Math.pow(2, attempt + 1); // 2, 4, 8s
+                        btn.innerHTML = `<span class="ai-loading-spinner"></span> ${response.status === 503 ? 'Server occupato' : 'Limite API'} — riprovo tra ${waitSec}s...`;
+                        await new Promise(r => setTimeout(r, waitSec * 1000));
+                        continue;
+                    }
+
+                    if (response.ok) {
+                        success = true;
+                        break;
+                    }
+                    break; // non-retryable error, try next model
+                }
+
+                if (success) break;
+
+                // If this model failed with 429/503, try next model
+                if ((response.status === 429 || response.status === 503) && modelIdx < GEMINI_MODELS.length - 1) {
+                    btn.innerHTML = `<span class="ai-loading-spinner"></span> Provo modello alternativo...`;
+                    await new Promise(r => setTimeout(r, 1000));
                     continue;
                 }
                 break;
