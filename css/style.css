@@ -3972,3 +3972,77 @@ input[type="time"]::-webkit-inner-spin-button {
  font-size: 12px;
  font-weight: bold;
 }
+
+/* Multi-Day Wizard Styles */
+.wizard-step-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.wizard-step-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.wizard-selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px 5px;
+}
+
+.wizard-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.wizard-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary-color);
+}
+
+.wizard-item.selected {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-rgb), 0.05);
+}
+
+.wizard-item-info {
+    flex: 1;
+}
+
+.wizard-item-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.wizard-item-addr {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Fix Wizard Checkmark Visibility */
+.wizard-item.selected .checkmark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white !important;
+}
+
+.wizard-item:not(.selected) .checkmark {
+    color: transparent !important;
+}

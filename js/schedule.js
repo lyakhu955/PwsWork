@@ -904,14 +904,6 @@ const Schedule = (() => {
                     <span>Allegati <span class="attachments-count">${data?.attachments?.length || 0}</span></span>
                 </button>
             </div>
-
-            <div class="workplace-multi-copy-option">
-                <label class="checkbox-container">
-                    <input type="checkbox" class="wp-copy-multi" checked>
-                    <span class="checkmark"></span>
-                    Copia in altri giorni
-                </label>
-            </div>
         `;
 
         list.appendChild(item);
@@ -1119,11 +1111,13 @@ const Schedule = (() => {
         const multiBtn = document.getElementById('assignment-multi-date-btn');
         const multiPanel = document.getElementById('assignment-multi-date-panel');
         
-        if (mode === 'single') {
-            singleBtn.classList.add('active');
-            multiBtn.classList.remove('active');
-            multiPanel.style.display = 'none';
-        } else {
+        if (mode === 'multi') {
+            // Se stiamo attivando il multi-date, apriamo prima il wizard di selezione posti
+            if (!multiBtn.classList.contains('active')) {
+                openMultiDayWizard();
+                return; // Non attiviamo ancora il pannello calendario
+            }
+            
             multiBtn.classList.add('active');
             singleBtn.classList.remove('active');
             multiPanel.style.display = 'block';
@@ -1136,6 +1130,10 @@ const Schedule = (() => {
             _calMonth = base.getMonth();
             renderCalendar();
             renderMultiDates();
+        } else {
+            singleBtn.classList.add('active');
+            multiBtn.classList.remove('active');
+            multiPanel.style.display = 'none';
         }
     }
 
@@ -1359,7 +1357,7 @@ const Schedule = (() => {
                 attachments = window._currentModalWorkplaces[idx].attachments || attachments;
             }
 
-            const copyMulti = item.querySelector('.wp-copy-multi')?.checked ?? true;
+            const copyMulti = _selectedWorkplacesForMulti.includes(item.dataset.index);
 
             if (name || address) {
                 workplaces.push({ 
@@ -1891,6 +1889,85 @@ const Schedule = (() => {
         }
     }
 
+    let _selectedWorkplacesForMulti = [];
+
+    function openMultiDayWizard() {
+        const workplaceItems = document.querySelectorAll('.workplace-item');
+        const container = document.getElementById('multi-day-workplace-selection');
+        if (!container) return;
+
+        let html = '';
+        _selectedWorkplacesForMulti = [];
+
+        workplaceItems.forEach((item, idx) => {
+            const name = item.querySelector('.wp-name')?.value.trim() || 'Posto senza nome';
+            const address = item.querySelector('.wp-address')?.value.trim() || '';
+            const id = item.dataset.index;
+            
+            // Per default tutti selezionati
+            _selectedWorkplacesForMulti.push(id);
+
+            html += `
+                <div class="wizard-item selected" data-id="${id}" onclick="Schedule.toggleWizardWorkplace(this, '${id}')">
+                    <div class="checkbox-container">
+                        <div class="checkmark">✓</div>
+                    </div>
+                    <div class="wizard-item-info">
+                        <div class="wizard-item-name">${name}</div>
+                        <div class="wizard-item-addr">${address}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (workplaceItems.length === 0) {
+            html = '<div class="empty-state">Nessun posto di lavoro aggiunto</div>';
+        }
+
+        container.innerHTML = html;
+        document.getElementById('multi-day-wizard-modal').classList.add('active');
+    }
+
+    function toggleWizardWorkplace(el, id) {
+        const idx = _selectedWorkplacesForMulti.indexOf(id);
+        if (idx >= 0) {
+            _selectedWorkplacesForMulti.splice(idx, 1);
+            el.classList.remove('selected');
+        } else {
+            _selectedWorkplacesForMulti.push(id);
+            el.classList.add('selected');
+        }
+    }
+
+    function closeMultiDayWizard() {
+        document.getElementById('multi-day-wizard-modal').classList.remove('active');
+    }
+
+    function goToMultiDayCalendar() {
+        if (_selectedWorkplacesForMulti.length === 0) {
+            App.showToast('Attenzione', 'Seleziona almeno un posto di lavoro da copiare', 'warning');
+            return;
+        }
+
+        closeMultiDayWizard();
+        
+        // Attiviamo effettivamente il multi-date nel form principale
+        const singleBtn = document.getElementById('assignment-single-date-btn');
+        const multiBtn = document.getElementById('assignment-multi-date-btn');
+        const multiPanel = document.getElementById('assignment-multi-date-panel');
+        const dateInput = document.getElementById('assignment-date');
+
+        singleBtn.classList.remove('active');
+        multiBtn.classList.add('active');
+        multiPanel.style.display = 'block';
+        dateInput.required = false;
+        
+        renderCalendar();
+        renderMultiDates();
+        
+        App.showToast('Step 2', 'Ora seleziona i giorni sul calendario', 'info');
+    }
+
     return {
         init,
         render,
@@ -1918,6 +1995,9 @@ const Schedule = (() => {
         openAttachmentsModal,
         closeAttachmentsModal,
         deleteAttachment,
-        refreshActiveModals
+        refreshActiveModals,
+        closeMultiDayWizard,
+        goToMultiDayCalendar,
+        toggleWizardWorkplace
     };
 })();

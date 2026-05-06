@@ -832,6 +832,32 @@
         </div>
     </div>
 
+    <!-- Multi-Day Wizard Modal -->
+    <div id="multi-day-wizard-modal" class="modal-overlay">
+        <div class="modal glass-card modal-sm" style="max-width: 450px; width: 95%;">
+            <div class="modal-header">
+                <h3 class="modal-title">Copia in più giorni</h3>
+                <button class="modal-close" onclick="Schedule.closeMultiDayWizard()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="wizard-step-info">
+                    <span class="wizard-step-badge">Passaggio 1 di 2</span>
+                    <p>Quali posti di lavoro vuoi copiare negli altri giorni?</p>
+                </div>
+                <div id="multi-day-workplace-selection" class="wizard-selection-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="Schedule.closeMultiDayWizard()">Annulla</button>
+                <button type="button" class="btn btn-primary" onclick="Schedule.goToMultiDayCalendar()">
+                    Avanti
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- WhatsApp Share Modal -->
     <div id="whatsapp-modal" class="modal-overlay">
         <div class="modal glass-card" style="max-width: 560px; width: 95%;">
