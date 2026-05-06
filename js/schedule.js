@@ -1416,23 +1416,28 @@ const Schedule = (() => {
         console.log('[WIZARD] handleSubmit - employeeIds:', employeeIds);
 
         if (editingAssignmentId) {
+            // 1. Aggiorna la squadra esistente normalmente
             baseData.date = document.getElementById('assignment-date').value;
             Storage.updateAssignment(editingAssignmentId, baseData);
             
-            if (isMulti && multiDates.length > 1) {
-                // If it's multi-date, we updated the main one. We must duplicate the assignment for the extra dates.
-                const extraDates = multiDates.filter(d => d !== baseData.date);
-                if (extraDates.length > 0) {
-                    const dataForExtraDates = {
+            // 2. Se il wizard era attivo, crea NUOVE squadre per le date selezionate
+            if (isMulti && multiDates.length > 0) {
+                const datesToCreate = multiDates.filter(d => d !== baseData.date); // evita doppioni con la data originale
+                if (datesToCreate.length > 0) {
+                    const dataForNewDates = {
                         ...baseData,
                         workplaces: baseData.workplaces.filter(wp => wp.copyMulti)
                     };
-                    if (dataForExtraDates.workplaces.length > 0) {
-                        Storage.addAssignmentsForDates(dataForExtraDates, extraDates);
+                    if (dataForNewDates.workplaces.length > 0) {
+                        console.log('[WIZARD] Creo', datesToCreate.length, 'nuove squadre per le date:', datesToCreate);
+                        Storage.addAssignmentsForDates(dataForNewDates, datesToCreate);
                     }
                 }
+                App.showToast('Successo', `Squadra aggiornata e copiata in ${multiDates.length} giorn${multiDates.length === 1 ? 'o' : 'i'}`, 'success');
+            } else {
+                App.showToast('Successo', 'Squadra aggiornata', 'success');
             }
-            App.showToast('Successo', 'Squadra aggiornata', 'success');
+
         } else {
             // New assignment - check multi-date
             if (isMulti && multiDates.length > 0) {
