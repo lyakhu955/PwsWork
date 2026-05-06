@@ -1107,6 +1107,7 @@ const Schedule = (() => {
     let _calMonth = 0;
 
     function setDateMode(mode) {
+        console.log('[WIZARD] setDateMode chiamato con mode:', mode);
         const singleBtn = document.getElementById('assignment-single-date-btn');
         const multiBtn = document.getElementById('assignment-multi-date-btn');
         const multiPanel = document.getElementById('assignment-multi-date-panel');
@@ -1114,10 +1115,12 @@ const Schedule = (() => {
         if (mode === 'multi') {
             // Se stiamo attivando il multi-date, apriamo prima il wizard di selezione posti
             if (!multiBtn.classList.contains('active')) {
+                console.log('[WIZARD] Bottone non ancora attivo → apro wizard selezione posti');
                 openMultiDayWizard();
                 return; // Non attiviamo ancora il pannello calendario
             }
             
+            console.log('[WIZARD] Bottone già attivo → mostro calendario direttamente');
             multiBtn.classList.add('active');
             singleBtn.classList.remove('active');
             multiPanel.style.display = 'block';
@@ -1131,6 +1134,7 @@ const Schedule = (() => {
             renderCalendar();
             renderMultiDates();
         } else {
+            console.log('[WIZARD] Modalità single → nascondo calendario');
             singleBtn.classList.add('active');
             multiBtn.classList.remove('active');
             multiPanel.style.display = 'none';
@@ -1179,8 +1183,15 @@ const Schedule = (() => {
     }
 
     function toggleMultiDate(dateStr) {
+        console.log('[WIZARD] toggleMultiDate chiamato con dateStr:', dateStr);
+        console.log('[WIZARD] multiDates attuale:', [...multiDates]);
+        
         const mainDate = document.getElementById('assignment-date').value;
-        if (dateStr === mainDate) {
+        console.log('[WIZARD] mainDate dal campo input:', mainDate, '(lunghezza:', mainDate.length + ')');
+        
+        // Solo blocca se mainDate è valorizzata E corrisponde alla data cliccata
+        if (mainDate && dateStr === mainDate) {
+            console.log('[WIZARD] BLOCCATO - data cliccata coincide con mainDate');
             App.showToast('Attenzione', 'La data principale non può essere rimossa', 'warning');
             return;
         }
@@ -1188,9 +1199,11 @@ const Schedule = (() => {
         const idx = multiDates.indexOf(dateStr);
         if (idx >= 0) {
             multiDates.splice(idx, 1);
+            console.log('[WIZARD] Data RIMOSSA. multiDates ora:', [...multiDates]);
         } else {
             multiDates.push(dateStr);
             multiDates.sort();
+            console.log('[WIZARD] Data AGGIUNTA. multiDates ora:', [...multiDates]);
         }
         renderCalendar();
         renderMultiDates();
@@ -2010,6 +2023,9 @@ const Schedule = (() => {
     }
 
     function goToMultiDayCalendar() {
+        console.log('[WIZARD] goToMultiDayCalendar chiamato');
+        console.log('[WIZARD] _selectedWorkplacesForMulti:', [..._selectedWorkplacesForMulti]);
+        
         if (_selectedWorkplacesForMulti.length === 0) {
             App.showToast('Attenzione', 'Seleziona almeno un posto di lavoro da copiare', 'warning');
             return;
@@ -2017,7 +2033,6 @@ const Schedule = (() => {
 
         closeMultiDayWizard();
         
-        // Attiviamo effettivamente il multi-date nel form principale
         const singleBtn = document.getElementById('assignment-single-date-btn');
         const multiBtn = document.getElementById('assignment-multi-date-btn');
         const multiPanel = document.getElementById('assignment-multi-date-panel');
@@ -2032,6 +2047,7 @@ const Schedule = (() => {
         const today = new Date();
         _calYear = today.getFullYear();
         _calMonth = today.getMonth();
+        console.log('[WIZARD] Calendario inizializzato a:', _calYear, _calMonth + 1);
 
         // Resetta le date selezionate
         multiDates = [];
