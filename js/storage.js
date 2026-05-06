@@ -270,7 +270,9 @@ const Storage = (() => {
     }
 
     function getEmployeeByUsername(username) {
-        return _employees.find(e => e.username === username) || null;
+        if (!username) return null;
+        const lowerUsername = String(username).toLowerCase();
+        return _employees.find(e => (e.username || '').toLowerCase() === lowerUsername) || null;
     }
 
     function addEmployee(employee) {

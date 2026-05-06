@@ -43,8 +43,14 @@ const Auth = (() => {
         const normalizedUsername = String(username || '').trim();
 
         // 1. Check if boss admin
-        const isBossUsername = await CryptoUtil.verifySecret(normalizedUsername, BOSS.usernameHash);
-        const isBossPassword = await CryptoUtil.verifySecret(password, BOSS.passwordHash);
+        let isBossUsername = await CryptoUtil.verifySecret(normalizedUsername, BOSS.usernameHash);
+        if (!isBossUsername) isBossUsername = await CryptoUtil.verifySecret(normalizedUsername.toLowerCase(), BOSS.usernameHash);
+        if (!isBossUsername) isBossUsername = await CryptoUtil.verifySecret(normalizedUsername.charAt(0).toUpperCase() + normalizedUsername.slice(1).toLowerCase(), BOSS.usernameHash);
+
+        let isBossPassword = await CryptoUtil.verifySecret(password, BOSS.passwordHash);
+        if (!isBossPassword) isBossPassword = await CryptoUtil.verifySecret(password.toLowerCase(), BOSS.passwordHash);
+        if (!isBossPassword) isBossPassword = await CryptoUtil.verifySecret(password.charAt(0).toUpperCase() + password.slice(1).toLowerCase(), BOSS.passwordHash);
+
         if (isBossUsername && isBossPassword) {
             currentUser = {
                 id: 'boss_admin',
@@ -73,11 +79,19 @@ const Auth = (() => {
 
         if (employee.passwordHash) {
             passwordOk = await CryptoUtil.verifySecret(password, employee.passwordHash);
+            if (!passwordOk) {
+                passwordOk = await CryptoUtil.verifySecret(password.toLowerCase(), employee.passwordHash);
+            }
+            if (!passwordOk) {
+                passwordOk = await CryptoUtil.verifySecret(password.charAt(0).toUpperCase() + password.slice(1).toLowerCase(), employee.passwordHash);
+            }
         } else if (employee.password) {
             // Legacy plaintext fallback (automatic migration)
-            passwordOk = employee.password === password;
+            const legacyPwLower = employee.password.toLowerCase();
+            const inputPwLower = password.toLowerCase();
+            passwordOk = legacyPwLower === inputPwLower;
             if (passwordOk) {
-                const passwordHash = await CryptoUtil.hashSecret(password);
+                const passwordHash = await CryptoUtil.hashSecret(employee.password); // Preserve original casing in hash
                 Storage.updateEmployee(employee.id, {
                     passwordHash,
                     password: ''
