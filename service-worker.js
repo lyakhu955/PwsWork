@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pwswork-v52';
+const CACHE_NAME = 'pwswork-v53';
 
 const APP_SHELL = [
   './',
@@ -26,8 +26,9 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Force the new service worker to take over immediately
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
 });
 
@@ -35,31 +36,36 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
       keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-    )).then(() => self.clients.claim())
+    )).then(() => self.clients.claim()) // Take control of all open pages immediately
   );
 });
 
+// Network-First Strategy (Aggiornamento in tempo reale)
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
   if (request.method !== 'GET') return;
-
-  if (url.origin !== self.location.origin) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(request)
-        .then((networkResponse) => {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-          return networkResponse;
-        })
-        .catch(() => caches.match('./index.html'));
-    })
+    fetch(request)
+      .then((networkResponse) => {
+        // Se la rete risponde correttamente, aggiorniamo la cache con l'ultima versione
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+        });
+        return networkResponse;
+      })
+      .catch(() => {
+        // Se siamo offline o la rete fallisce, peschiamo dalla cache
+        return caches.match(request).then((cached) => {
+          if (cached) return cached;
+          if (request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });
