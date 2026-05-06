@@ -160,6 +160,20 @@ const App = (() => {
         if (Storage.getSidebarCollapsed() && window.innerWidth > 768) {
             sidebar.classList.add('collapsed');
         }
+
+        // ======= DEEP LINK: ?date=YYYY-MM-DD =======
+        const urlParams = new URLSearchParams(window.location.search);
+        const deepDate = urlParams.get('date');
+        if (deepDate && /^\d{4}-\d{2}-\d{2}$/.test(deepDate)) {
+            // Navigate to schedule and open that day's detail modal
+            navigateTo('schedule');
+            setTimeout(() => {
+                Schedule.openDetailModalByDate(deepDate);
+                // Clean URL without reloading
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, '', cleanUrl);
+            }, 400);
+        }
     }
 
     function navigateTo(page) {

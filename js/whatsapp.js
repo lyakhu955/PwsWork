@@ -320,9 +320,118 @@ const WhatsApp = (() => {
         openModal(dateStr);
     }
 
+    // ==================== SWITCH TAB ====================
+    function switchTab(tab) {
+        document.getElementById('wa-tab-msg').classList.toggle('active', tab === 'msg');
+        document.getElementById('wa-tab-link').classList.toggle('active', tab === 'link');
+        document.getElementById('wa-panel-msg').style.display = tab === 'msg' ? '' : 'none';
+        document.getElementById('wa-panel-link').style.display = tab === 'link' ? '' : 'none';
+
+        // Pre-fill link date with first selected message date
+        if (tab === 'link') {
+            const linkDateInput = document.getElementById('wa-link-date');
+            if (linkDateInput && !linkDateInput.value) {
+                linkDateInput.value = _selectedDates[0] || Storage.toLocalDateStr(new Date());
+            }
+            _updateLinkPreview();
+        }
+    }
+
+    // ==================== LINK TAB ====================
+    function _getBaseUrl() {
+        return window.location.origin + window.location.pathname.replace(/\/$/, '');
+    }
+
+    function _updateLinkPreview() {
+        const dateInput = document.getElementById('wa-link-date');
+        const previewBox = document.getElementById('wa-link-preview');
+        const copyBtn = document.getElementById('wa-copy-link-btn');
+        const sendBtn = document.getElementById('wa-send-link-btn');
+        if (!dateInput || !previewBox) return;
+
+        const date = dateInput.value;
+        if (!date) {
+            previewBox.textContent = 'Seleziona una data...';
+            if (copyBtn) copyBtn.disabled = true;
+            if (sendBtn) sendBtn.disabled = true;
+            return;
+        }
+
+        const url = `${_getBaseUrl()}?date=${date}`;
+        previewBox.textContent = url;
+        if (copyBtn) copyBtn.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
+    }
+
+    function copyLink() {
+        const previewBox = document.getElementById('wa-link-preview');
+        const url = previewBox?.textContent?.trim();
+        if (!url || url === 'Seleziona una data...') return;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => _showLinkCopiedFeedback()).catch(() => _fallbackCopyLink(url));
+        } else {
+            _fallbackCopyLink(url);
+        }
+    }
+
+    function _fallbackCopyLink(url) {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        _showLinkCopiedFeedback();
+    }
+
+    function _showLinkCopiedFeedback() {
+        const btn = document.getElementById('wa-copy-link-btn');
+        if (!btn) return;
+        const original = btn.innerHTML;
+        btn.innerHTML = '✅ Copiato!';
+        btn.style.background = 'var(--success, #10b981)';
+        setTimeout(() => {
+            btn.innerHTML = original;
+            btn.style.background = '';
+        }, 2000);
+    }
+
+    function openWhatsAppLink() {
+        const previewBox = document.getElementById('wa-link-preview');
+        const url = previewBox?.textContent?.trim();
+        if (!url || url === 'Seleziona una data...') return;
+
+        const dateInput = document.getElementById('wa-link-date');
+        const date = dateInput?.value || '';
+        let text = `📅 Programma lavori del ${date ? new Date(date + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}\n🔗 ${url}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // Bind date input change
+    function _bindLinkDateInput() {
+        const input = document.getElementById('wa-link-date');
+        if (input) {
+            input.addEventListener('change', _updateLinkPreview);
+        }
+    }
+
+    // ==================== OPEN MODAL (updated) ====================
+    const _origOpenModal = openModal;
+
+    // Re-export openModal to also bind link date input
+    const openModalFull = function(presetDate = null) {
+        _origOpenModal(presetDate);
+        // Reset to first tab
+        switchTab('msg');
+        setTimeout(_bindLinkDateInput, 50);
+    };
+
     // ==================== PUBLIC ====================
     return {
-        openModal,
+        openModal: openModalFull,
         closeModal,
         generatePreview: _generatePreview,
         toggleCalendar,
@@ -331,6 +440,9 @@ const WhatsApp = (() => {
         toggleDay,
         copyText,
         openWhatsApp,
-        openForDate
+        openForDate,
+        switchTab,
+        copyLink,
+        openWhatsAppLink
     };
 })();
