@@ -168,7 +168,7 @@ const App = (() => {
             // Navigate to schedule and open that day's detail modal
             navigateTo('schedule');
             setTimeout(() => {
-                Schedule.openDetailModalByDate(deepDate);
+                Schedule.openDetailModalByDate(deepDate, true);
                 // Clean URL without reloading
                 const cleanUrl = window.location.pathname;
                 window.history.replaceState({}, '', cleanUrl);

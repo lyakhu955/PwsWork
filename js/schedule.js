@@ -1517,10 +1517,10 @@ const Schedule = (() => {
         renderDetailModal(asgn.date, [asgn]);
     }
 
-    function openDetailModalByDate(dateStr) {
+    function openDetailModalByDate(dateStr, autoFilter = false) {
         let assignments = Storage.getAssignmentsByDate(dateStr);
         if (assignments.length === 0) return;
-        renderDetailModal(dateStr, assignments);
+        renderDetailModal(dateStr, assignments, autoFilter);
     }
 
     // Apri un gruppo dal link della dashboard
@@ -1532,16 +1532,16 @@ const Schedule = (() => {
         openDetailModal(assignmentId);
     }
 
-    function renderDetailModal(dateStr, assignments) {
+    function renderDetailModal(dateStr, assignments, autoFilter = false) {
         const modal = document.getElementById('detail-modal');
         const title = document.getElementById('detail-modal-title');
         const body = document.getElementById('detail-modal-body');
 
         title.textContent = Storage.formatDateLong(dateStr);
 
-        // Filter assignments for non-admins to show only their own groups
+        // Filter assignments for non-admins to show only their own groups ONLY if autoFilter is true (from link)
         let displayAssignments = assignments;
-        if (!Auth.isAdmin()) {
+        if (autoFilter && !Auth.isAdmin()) {
             const currentUser = Storage.getCurrentUser();
             const myEmployeeId = currentUser?.employeeId || currentUser?.id || null;
             if (myEmployeeId) {
