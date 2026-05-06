@@ -467,8 +467,10 @@ const WhatsApp = (() => {
         if (!_linkSelectedDate) return;
         const url = `${_getBaseUrl()}?date=${_linkSelectedDate}`;
         const d = new Date(_linkSelectedDate + 'T00:00:00');
-        const dateLabel = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
-        const text = `📅 Programma lavori del ${dateLabel}\n🔗 ${url}`;
+        const dateLabel = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+        
+        const text = `🗓️ *PROGRAMMA LAVORI*\n━━━━━━━━━━━━━━━━\n📅 *${dateLabel}*\n━━━━━━━━━━━━━━━━\n\n👷‍♂️ Clicca il link qui sotto per vedere la tua squadra e i posti di lavoro assegnati:\n🔗 ${url}\n\n📍 _PwsWork - Gestione Team_`;
+        
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
