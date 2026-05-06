@@ -469,7 +469,8 @@ const WhatsApp = (() => {
         const d = new Date(_linkSelectedDate + 'T00:00:00');
         const dateLabel = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
         
-        const text = `🗓️ *PROGRAMMA LAVORI*\n━━━━━━━━━━━━━━━━\n📅 *${dateLabel}*\n━━━━━━━━━━━━━━━━\n\n👷‍♂️ Clicca il link qui sotto per vedere la tua squadra e i posti di lavoro assegnati:\n🔗 ${url}\n\n📍 _PwsWork - Gestione Team_`;
+        // Using more compatible emojis and simpler dividers to avoid "broken" characters
+        const text = `*PROGRAMMA LAVORI*\n--------------------------------\n📅 *${dateLabel}*\n--------------------------------\n\n👷 Clicca il link qui sotto per vedere la tua squadra e i posti di lavoro assegnati:\n\n🔗 ${url}\n\n📍 _PwsWork - Gestione Team_`;
         
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
@@ -488,8 +489,8 @@ const WhatsApp = (() => {
     // Re-export openModal to also bind link date input
     const openModalFull = function(presetDate = null) {
         _origOpenModal(presetDate);
-        // Reset to first tab
-        switchTab('msg');
+        // Default to "Link diretto" tab
+        switchTab('link');
         setTimeout(_bindLinkDateInput, 50);
     };
 
