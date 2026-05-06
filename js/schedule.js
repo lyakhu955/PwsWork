@@ -1098,7 +1098,7 @@ const Schedule = (() => {
         if (lngInput) lngInput.value = selectedPlace.lng || '';
 
         closeMapModal();
-        App.showToast('Posizione salvata', savedAddress || savedName || 'Posizione selezionata', 'success');
+        // silent - position saved
     }
 
     // ==================== MULTI-DATE MODE ====================
@@ -1310,7 +1310,7 @@ const Schedule = (() => {
             pasteBtn.style.display = 'inline-flex';
         }
         
-        App.showToast('Copiata', 'Squadra copiata negli appunti', 'success');
+        // silent copy
     }
 
     function pasteAssignment() {
@@ -1332,7 +1332,7 @@ const Schedule = (() => {
             addWorkplaceField(wp);
         });
 
-        App.showToast('Incollata', 'Dati squadra incollati', 'success');
+        // silent paste
     }
 
     // ==================== FORM SUBMIT ====================
@@ -1441,9 +1441,8 @@ const Schedule = (() => {
                         Storage.addAssignmentsForDates(dataForNewDates, datesToCreate);
                     }
                 }
-                App.showToast('Successo', `Squadra aggiornata e copiata in ${multiDates.length} giorn${multiDates.length === 1 ? 'o' : 'i'}`, 'success');
             } else {
-                App.showToast('Successo', 'Squadra aggiornata', 'success');
+                // nothing
             }
 
         } else {
@@ -1466,11 +1465,10 @@ const Schedule = (() => {
                         Storage.addAssignmentsForDates(dataForExtraDates, extraDates);
                     }
                 }
-                App.showToast('Successo', `Squadra creata per ${multiDates.length} giorn${multiDates.length === 1 ? 'o' : 'i'}`, 'success');
+                // silent
             } else if (!isMulti) {
                 baseData.date = document.getElementById('assignment-date').value;
                 Storage.addAssignment(baseData);
-                App.showToast('Successo', 'Squadra creata', 'success');
             } else {
                 App.showToast('Attenzione', 'Seleziona almeno un giorno sul calendario', 'warning');
                 return;
@@ -1493,7 +1491,6 @@ const Schedule = (() => {
                 closeModal();
                 render();
                 Dashboard.render();
-                App.showToast('Eliminato', 'Squadra eliminata', 'success');
             }
         );
     }
@@ -1847,7 +1844,7 @@ const Schedule = (() => {
             }
         }
         
-        App.showToast('Completato', 'File caricati con successo', 'success');
+        // silent upload complete
         e.target.value = ''; // Reset input
     }
 
@@ -1884,7 +1881,7 @@ const Schedule = (() => {
                         Storage.updateAssignment(currentAttachmentsAssignmentId, asgn);
                     }
                 }
-                App.showToast('Eliminato', 'Allegato eliminato', 'success');
+                // silent delete
             }
         );
     }
@@ -2082,7 +2079,7 @@ const Schedule = (() => {
         renderCalendar();
         renderMultiDates();
         
-        App.showToast('Step 2', 'Seleziona i giorni sul calendario, poi salva', 'info');
+        // silent - calendar opened
     }
 
     return {
