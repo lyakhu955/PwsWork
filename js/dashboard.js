@@ -12,6 +12,7 @@ const Dashboard = (() => {
     function render() {
         renderTodaySchedule();
         renderTomorrowSchedule();
+        renderMyAbsences();
         updateAdminVisibility();
     }
 
@@ -161,6 +162,109 @@ const Dashboard = (() => {
             html += `</div>`;
         });
 
+        container.innerHTML = html;
+    }
+
+    function renderMyAbsences() {
+        const container = document.getElementById('dashboard-absences');
+        if (!container) return;
+
+        const user = Auth.getCurrentUser();
+        const empId = user?.employeeId || user?.id;
+        if (!empId) {
+            container.innerHTML = '<div class="empty-state"><p>Effettua il login per vedere le tue assenze</p></div>';
+            return;
+        }
+
+        // Get absences from Absences module cache
+        const allAbsences = typeof Absences !== 'undefined' ? Absences.getAbsences() : [];
+        const myAbsences = allAbsences.filter(a => a.employeeId === empId);
+        
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        // Filter absences that have at least one day in the current month
+        const monthAbsences = myAbsences.filter(a => {
+            return a.dates.some(d => {
+                const dt = new Date(d + 'T00:00:00');
+                return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
+            });
+        });
+
+        if (monthAbsences.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/><path d="M9 9h6v6H9z"/></svg>
+                    <p>Nessuna assenza programmata questo mese</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Count totals for the current month
+        let totals = { ferie: 0, malattia: 0, permesso: 0 };
+        monthAbsences.forEach(a => {
+            const monthDates = a.dates.filter(d => {
+                const dt = new Date(d + 'T00:00:00');
+                return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
+            });
+            if (totals[a.type] !== undefined) {
+                totals[a.type] += monthDates.length;
+            }
+        });
+
+        const monthName = new Intl.DateTimeFormat('it-IT', { month: 'long' }).format(now);
+
+        let html = `
+            <div class="dash-abs-summary">
+                <div class="dash-abs-month-label">Riepilogo ${monthName.toUpperCase()}</div>
+                <div class="dash-abs-grid">
+                    <div class="dash-abs-item">
+                        <span class="dash-abs-val">${totals.ferie}</span>
+                        <span class="dash-abs-label">Ferie</span>
+                    </div>
+                    <div class="dash-abs-item">
+                        <span class="dash-abs-val">${totals.malattia}</span>
+                        <span class="dash-abs-label">Malattia</span>
+                    </div>
+                    <div class="dash-abs-item">
+                        <span class="dash-abs-val">${totals.permesso}</span>
+                        <span class="dash-abs-label">Permessi</span>
+                    </div>
+                </div>
+            </div>
+            <div class="dash-abs-list">
+        `;
+
+        // List specific segments
+        monthAbsences.sort((a, b) => new Date(a.dates[0]) - new Date(b.dates[0])).forEach(a => {
+            const monthDates = a.dates.filter(d => {
+                const dt = new Date(d + 'T00:00:00');
+                return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
+            });
+            
+            const datesFormatted = monthDates.map(d => Storage.formatDateIT(d)).join(', ');
+            
+            const typeInfo = {
+                ferie: { label: 'Ferie', icon: '🏖️', color: 'var(--info)' },
+                malattia: { label: 'Malattia', icon: '🤒', color: 'var(--danger)' },
+                permesso: { label: 'Permesso', icon: '📋', color: 'var(--accent-primary)' }
+            };
+            const t = typeInfo[a.type] || { label: a.type, icon: '📅', color: 'var(--text-secondary)' };
+
+            html += `
+                <div class="dash-abs-row">
+                    <div class="dash-abs-icon" style="background: ${t.color}">${t.icon}</div>
+                    <div class="dash-abs-info">
+                        <div class="dash-abs-type">${t.label}</div>
+                        <div class="dash-abs-dates">${datesFormatted}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
         container.innerHTML = html;
     }
 

@@ -254,6 +254,22 @@
                             </div>
                         </div>
 
+                        <!-- My Absences -->
+                        <div id="dashboard-absences-section" class="dashboard-section glass-card collapsed">
+                            <div class="section-header accordion-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                <h3>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/><path d="M9 9h6v6H9z"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/></svg>
+                                    Le mie Assenze
+                                </h3>
+                                <button class="accordion-toggle" title="Comprimi/Espandi">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                </button>
+                            </div>
+                            <div id="dashboard-absences" class="dashboard-absences accordion-content">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
                         <!-- Quick Actions (Admin) -->
                         <div class="dashboard-section glass-card admin-only" style="display:none;">
                             <div class="section-header">
