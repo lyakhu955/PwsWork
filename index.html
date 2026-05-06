@@ -834,29 +834,39 @@
 
     <!-- Multi-Day Wizard Modal -->
     <div id="multi-day-wizard-modal" class="modal-overlay">
-        <div class="modal glass-card modal-sm" style="max-width: 450px; width: 95%;">
-            <div class="modal-header">
-                <h3 class="modal-title">Copia in più giorni</h3>
-                <button class="modal-close" onclick="Schedule.closeMultiDayWizard()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="wizard-step-info">
-                    <span class="wizard-step-badge">Passaggio 1 di 2</span>
-                    <p>Quali posti di lavoro vuoi copiare negli altri giorni?</p>
+        <div class="modal glass-card" style="max-width: 420px; width: 95%; border-radius: 18px; overflow: hidden;">
+            <!-- Header -->
+            <div style="padding: 20px 22px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                    <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(139,92,246,0.15);border-radius:20px;margin-bottom:6px;">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="#a78bfa"><circle cx="12" cy="12" r="10"/></svg>
+                        <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;color:#a78bfa;text-transform:uppercase;">Passaggio 1 di 2</span>
+                    </div>
+                    <h3 style="margin:0;font-size:1.05rem;font-weight:700;color:#f0f0f0;">Scegli i posti da copiare</h3>
                 </div>
-                <div id="multi-day-workplace-selection" class="wizard-selection-list">
-                    <!-- Populated by JS -->
-                </div>
+                <button class="modal-close" onclick="Schedule.closeMultiDayWizard()" style="flex-shrink:0;">&times;</button>
             </div>
-            <div class="modal-actions">
+            <!-- Subtitle -->
+            <div style="padding: 12px 22px 0;">
+                <p style="margin:0;font-size:0.83rem;color:#8896a9;line-height:1.5;">
+                    Tocca i posti di lavoro che vuoi replicare negli altri giorni. Quelli non selezionati rimarranno solo nel giorno principale.
+                </p>
+            </div>
+            <!-- List -->
+            <div id="multi-day-workplace-selection" style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;padding:14px 22px;">
+                <!-- Populated by JS -->
+            </div>
+            <!-- Footer -->
+            <div style="padding: 14px 22px 20px; border-top: 1px solid rgba(255,255,255,0.07); display:flex; gap:10px; justify-content:flex-end;">
                 <button type="button" class="btn btn-outline" onclick="Schedule.closeMultiDayWizard()">Annulla</button>
                 <button type="button" class="btn btn-primary" onclick="Schedule.goToMultiDayCalendar()">
                     Avanti
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
             </div>
         </div>
     </div>
+
 
     <!-- WhatsApp Share Modal -->
     <div id="whatsapp-modal" class="modal-overlay">

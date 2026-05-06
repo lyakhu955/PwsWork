@@ -1896,36 +1896,96 @@ const Schedule = (() => {
         const container = document.getElementById('multi-day-workplace-selection');
         if (!container) return;
 
+        // Start with NONE selected - user picks what they want
         _selectedWorkplacesForMulti = [];
 
-        // Clear and rebuild
         container.innerHTML = '';
 
         if (workplaceItems.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="text-align:center;padding:30px;color:var(--text-secondary);">Nessun posto di lavoro aggiunto</div>';
+            container.innerHTML = '<p style="text-align:center;padding:24px;color:#a0aec0;font-size:0.9rem;">Nessun posto di lavoro aggiunto</p>';
+            document.getElementById('multi-day-wizard-modal').classList.add('active');
+            return;
         }
 
         workplaceItems.forEach((item) => {
             const name = item.querySelector('.wp-name')?.value.trim() || 'Posto senza nome';
             const address = item.querySelector('.wp-address')?.value.trim() || '';
             const id = item.dataset.index;
-            
-            // Per default tutti selezionati
-            _selectedWorkplacesForMulti.push(id);
 
             const card = document.createElement('div');
-            card.className = 'wiz-card wiz-card--selected';
             card.dataset.id = id;
-            card.innerHTML = `
-                <div class="wiz-card__check">
-                    <svg class="wiz-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-                <div class="wiz-card__body">
-                    <div class="wiz-card__name">${name}</div>
-                    ${address ? `<div class="wiz-card__addr">${address}</div>` : ''}
-                </div>
+            card.dataset.selected = 'false';
+            // Style inline for cache-proof rendering
+            Object.assign(card.style, {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '14px 16px',
+                borderRadius: '12px',
+                border: '2px solid rgba(255,255,255,0.09)',
+                background: 'rgba(255,255,255,0.03)',
+                cursor: 'pointer',
+                transition: 'border-color 0.18s, background 0.18s',
+                userSelect: 'none',
+                marginBottom: '0'
+            });
+
+            // Check circle (left)
+            const checkEl = document.createElement('div');
+            checkEl.className = 'wiz-check-circle';
+            Object.assign(checkEl.style, {
+                flexShrink: '0',
+                width: '26px',
+                height: '26px',
+                borderRadius: '50%',
+                border: '2px solid rgba(255,255,255,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                transition: 'all 0.18s',
+                pointerEvents: 'none'
+            });
+            checkEl.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" style="opacity:0;transition:opacity 0.18s;pointer-events:none;"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+            // Text body
+            const bodyEl = document.createElement('div');
+            Object.assign(bodyEl.style, {
+                flex: '1',
+                minWidth: '0',
+                pointerEvents: 'none'
+            });
+            bodyEl.innerHTML = `
+                <div style="font-weight:600;font-size:0.95rem;color:#f0f0f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</div>
+                ${address ? `<div style="font-size:0.78rem;color:#8896a9;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${address}</div>` : ''}
             `;
-            card.addEventListener('click', () => Schedule.toggleWizardWorkplace(card, id));
+
+            card.appendChild(checkEl);
+            card.appendChild(bodyEl);
+
+            card.addEventListener('click', () => {
+                const isSelected = card.dataset.selected === 'true';
+                if (isSelected) {
+                    // Deselect
+                    card.dataset.selected = 'false';
+                    card.style.borderColor = 'rgba(255,255,255,0.09)';
+                    card.style.background = 'rgba(255,255,255,0.03)';
+                    checkEl.style.background = 'transparent';
+                    checkEl.style.borderColor = 'rgba(255,255,255,0.2)';
+                    checkEl.querySelector('svg').style.opacity = '0';
+                    _selectedWorkplacesForMulti = _selectedWorkplacesForMulti.filter(s => s !== id);
+                } else {
+                    // Select
+                    card.dataset.selected = 'true';
+                    card.style.borderColor = '#8b5cf6';
+                    card.style.background = 'rgba(139,92,246,0.12)';
+                    checkEl.style.background = '#8b5cf6';
+                    checkEl.style.borderColor = '#8b5cf6';
+                    checkEl.querySelector('svg').style.opacity = '1';
+                    _selectedWorkplacesForMulti.push(id);
+                }
+            });
+
             container.appendChild(card);
         });
 
