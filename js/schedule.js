@@ -1539,33 +1539,44 @@ const Schedule = (() => {
 
         title.textContent = Storage.formatDateLong(dateStr);
 
-        // Filter assignments for non-admins to show only their own groups ONLY if autoFilter is true (from link)
-        let displayAssignments = assignments;
-        if (autoFilter && !Auth.isAdmin()) {
-            const currentUser = Storage.getCurrentUser();
-            const myEmployeeId = currentUser?.employeeId || currentUser?.id || null;
-            if (myEmployeeId) {
-                displayAssignments = assignments.filter(asgn => asgn.employeeIds.includes(myEmployeeId));
-            }
+        // Sort assignments: if user is part of a team, move it to the top
+        let displayAssignments = [...assignments];
+        const currentUser = Storage.getCurrentUser();
+        const myEmployeeId = currentUser?.employeeId || currentUser?.id || null;
+
+        if (myEmployeeId && !Auth.isAdmin()) {
+            displayAssignments.sort((a, b) => {
+                const aIsMine = a.employeeIds.includes(myEmployeeId);
+                const bIsMine = b.employeeIds.includes(myEmployeeId);
+                if (aIsMine && !bIsMine) return -1;
+                if (!aIsMine && bIsMine) return 1;
+                return 0;
+            });
         }
 
         if (displayAssignments.length === 0) {
-            body.innerHTML = '<div class="empty-state" style="padding: 40px 20px; text-align: center; color: var(--text-secondary); font-style: italic;">Nessun lavoro assegnato a te per questo giorno.</div>';
+            body.innerHTML = '<div class="empty-state" style="padding: 40px 20px; text-align: center; color: var(--text-secondary); font-style: italic;">Nessun lavoro programmato per questo giorno.</div>';
             modal.classList.add('active');
             return;
         }
 
         let html = '';
         displayAssignments.forEach((asgn, idx) => {
+            const isMySquad = myEmployeeId && asgn.employeeIds.includes(myEmployeeId);
+
             const teamMembers = asgn.employeeIds.map(eid => {
                 const emp = Storage.getEmployee(eid);
                 return emp ? { name: emp.firstName + ' ' + emp.lastName, position: emp.position || '', phone: emp.phone || '' } : null;
             }).filter(Boolean);
 
             var teamLabel = asgn.teamName || ('Gregge ' + (idx + 1));
-            html += '<div class="detail-assignment' + (assignments.length > 1 ? ' detail-multi' : '') + '">';
+            html += '<div class="detail-assignment' + (displayAssignments.length > 1 ? ' detail-multi' : '') + (isMySquad ? ' detail-mine' : '') + '">';
 
-            html += '<div class="detail-assignment-num">' + teamLabel + '</div>';
+            html += '<div class="detail-assignment-num">' + teamLabel;
+            if (isMySquad) {
+                html += ' <span class="badge-my-squad">LA TUA SQUADRA</span>';
+            }
+            html += '</div>';
 
             // Squadra
             html += '<div class="detail-section">';

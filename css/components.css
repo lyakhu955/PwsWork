@@ -1724,3 +1724,22 @@
     }
 }
 
+/* My Squad Badge in Detail Modal */
+.badge-my-squad {
+    background: linear-gradient(135deg, #8b5cf6, #d946ef);
+    color: white;
+    font-size: 0.62rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 800;
+    margin-left: 10px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.detail-assignment.detail-mine {
+    background: rgba(139, 92, 246, 0.03) !important;
+    border: 1px solid rgba(139, 92, 246, 0.2) !important;
+    border-left: 4px solid #8b5cf6 !important;
+}
