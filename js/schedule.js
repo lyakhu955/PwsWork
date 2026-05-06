@@ -1408,6 +1408,13 @@ const Schedule = (() => {
         const multiBtn = document.getElementById('assignment-multi-date-btn');
         const isMulti = multiBtn && multiBtn.classList.contains('active') && multiDates.length > 0;
 
+        console.log('[WIZARD] handleSubmit - isMulti:', isMulti);
+        console.log('[WIZARD] handleSubmit - multiBtn active:', multiBtn?.classList.contains('active'));
+        console.log('[WIZARD] handleSubmit - multiDates:', [...multiDates]);
+        console.log('[WIZARD] handleSubmit - editingAssignmentId:', editingAssignmentId);
+        console.log('[WIZARD] handleSubmit - workplaces:', workplaces.map(w => w.name));
+        console.log('[WIZARD] handleSubmit - employeeIds:', employeeIds);
+
         if (editingAssignmentId) {
             baseData.date = document.getElementById('assignment-date').value;
             Storage.updateAssignment(editingAssignmentId, baseData);
