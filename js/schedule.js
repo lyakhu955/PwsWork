@@ -1896,10 +1896,16 @@ const Schedule = (() => {
         const container = document.getElementById('multi-day-workplace-selection');
         if (!container) return;
 
-        let html = '';
         _selectedWorkplacesForMulti = [];
 
-        workplaceItems.forEach((item, idx) => {
+        // Clear and rebuild
+        container.innerHTML = '';
+
+        if (workplaceItems.length === 0) {
+            container.innerHTML = '<div class="empty-state" style="text-align:center;padding:30px;color:var(--text-secondary);">Nessun posto di lavoro aggiunto</div>';
+        }
+
+        workplaceItems.forEach((item) => {
             const name = item.querySelector('.wp-name')?.value.trim() || 'Posto senza nome';
             const address = item.querySelector('.wp-address')?.value.trim() || '';
             const id = item.dataset.index;
@@ -1907,24 +1913,22 @@ const Schedule = (() => {
             // Per default tutti selezionati
             _selectedWorkplacesForMulti.push(id);
 
-            html += `
-                <div class="wizard-item selected" data-id="${id}" onclick="Schedule.toggleWizardWorkplace(this, '${id}')">
-                    <div class="checkbox-container">
-                        <div class="checkmark">✓</div>
-                    </div>
-                    <div class="wizard-item-info">
-                        <div class="wizard-item-name">${name}</div>
-                        <div class="wizard-item-addr">${address}</div>
-                    </div>
+            const card = document.createElement('div');
+            card.className = 'wiz-card wiz-card--selected';
+            card.dataset.id = id;
+            card.innerHTML = `
+                <div class="wiz-card__check">
+                    <svg class="wiz-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="wiz-card__body">
+                    <div class="wiz-card__name">${name}</div>
+                    ${address ? `<div class="wiz-card__addr">${address}</div>` : ''}
                 </div>
             `;
+            card.addEventListener('click', () => Schedule.toggleWizardWorkplace(card, id));
+            container.appendChild(card);
         });
 
-        if (workplaceItems.length === 0) {
-            html = '<div class="empty-state">Nessun posto di lavoro aggiunto</div>';
-        }
-
-        container.innerHTML = html;
         document.getElementById('multi-day-wizard-modal').classList.add('active');
     }
 
@@ -1932,10 +1936,10 @@ const Schedule = (() => {
         const idx = _selectedWorkplacesForMulti.indexOf(id);
         if (idx >= 0) {
             _selectedWorkplacesForMulti.splice(idx, 1);
-            el.classList.remove('selected');
+            el.classList.remove('wiz-card--selected');
         } else {
             _selectedWorkplacesForMulti.push(id);
-            el.classList.add('selected');
+            el.classList.add('wiz-card--selected');
         }
     }
 
