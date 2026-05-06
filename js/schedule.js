@@ -1616,15 +1616,17 @@ const Schedule = (() => {
             title.textContent = 'Allegati: ' + wpName;
             uploadArea.style.display = 'none';
             // Get from passed list
-            if (typeof currentList === 'string') {
+            if (typeof currentList === 'string' && currentList !== '') {
                 try {
                     currentAttachmentsList = JSON.parse(decodeURIComponent(currentList));
-                } catch(e) {
+                } catch (e) {
+                    console.error("Error parsing attachments list", e);
                     currentAttachmentsList = [];
                 }
             } else {
-                currentAttachmentsList = currentList || [];
+                currentAttachmentsList = Array.isArray(currentList) ? currentList : [];
             }
+        }
 
         renderAttachmentsList();
 
