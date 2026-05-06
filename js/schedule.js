@@ -1539,9 +1539,24 @@ const Schedule = (() => {
 
         title.textContent = Storage.formatDateLong(dateStr);
 
-        let html = '';
+        // Filter assignments for non-admins to show only their own groups
+        let displayAssignments = assignments;
+        if (!Auth.isAdmin()) {
+            const currentUser = Storage.getCurrentUser();
+            const myEmployeeId = currentUser?.employeeId || currentUser?.id || null;
+            if (myEmployeeId) {
+                displayAssignments = assignments.filter(asgn => asgn.employeeIds.includes(myEmployeeId));
+            }
+        }
 
-        assignments.forEach((asgn, idx) => {
+        if (displayAssignments.length === 0) {
+            body.innerHTML = '<div class="empty-state" style="padding: 40px 20px; text-align: center; color: var(--text-secondary); font-style: italic;">Nessun lavoro assegnato a te per questo giorno.</div>';
+            modal.classList.add('active');
+            return;
+        }
+
+        let html = '';
+        displayAssignments.forEach((asgn, idx) => {
             const teamMembers = asgn.employeeIds.map(eid => {
                 const emp = Storage.getEmployee(eid);
                 return emp ? { name: emp.firstName + ' ' + emp.lastName, position: emp.position || '', phone: emp.phone || '' } : null;
