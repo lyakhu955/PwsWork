@@ -316,7 +316,7 @@ const Schedule = (() => {
 
     function updateWeekLabel() {
         const label = document.getElementById('current-week-label');
-        if (!label) return;
+        if (!label || !currentWeekStart) return;
 
         if (viewMode === 'month') {
             label.textContent = currentWeekStart.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });

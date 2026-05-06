@@ -1479,6 +1479,8 @@ const Absences = (() => {
     return {
         init,
         render,
+        getAbsences,
+        getLeaveRequests,
         switchTab,
         goToTab,
         calNavMonth,
