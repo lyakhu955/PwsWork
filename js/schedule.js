@@ -1415,16 +1415,15 @@ const Schedule = (() => {
             App.showToast('Successo', 'Squadra aggiornata', 'success');
         } else {
             // New assignment - check multi-date
-            if (isMulti) {
-                // Per la data principale usiamo tutti i posti, per le altre solo quelli selezionati
-                const mainDate = document.getElementById('assignment-date').value;
-                const extraDates = multiDates.filter(d => d !== mainDate);
+            if (isMulti && multiDates.length > 0) {
+                // La data principale è la prima data nel calendario selezionato
+                const mainDate = multiDates[0];
+                const extraDates = multiDates.slice(1);
                 
-                // Crea assegnazione principale
-                const mainAsgn = { ...baseData, date: mainDate };
-                Storage.addAssignment(mainAsgn);
+                // Crea assegnazione principale con TUTTI i posti di lavoro
+                Storage.addAssignment({ ...baseData, date: mainDate });
 
-                // Crea assegnazioni per le altre date (filtrate)
+                // Crea assegnazioni per le altre date solo con i posti selezionati nel wizard
                 if (extraDates.length > 0) {
                     const dataForExtraDates = {
                         ...baseData,
@@ -1434,11 +1433,14 @@ const Schedule = (() => {
                         Storage.addAssignmentsForDates(dataForExtraDates, extraDates);
                     }
                 }
-                App.showToast('Successo', `Create ${multiDates.length} assegnazioni`, 'success');
-            } else {
+                App.showToast('Successo', `Squadra creata per ${multiDates.length} giorn${multiDates.length === 1 ? 'o' : 'i'}`, 'success');
+            } else if (!isMulti) {
                 baseData.date = document.getElementById('assignment-date').value;
                 Storage.addAssignment(baseData);
                 App.showToast('Successo', 'Squadra creata', 'success');
+            } else {
+                App.showToast('Attenzione', 'Seleziona almeno un giorno sul calendario', 'warning');
+                return;
             }
         }
 
@@ -2025,11 +2027,19 @@ const Schedule = (() => {
         multiBtn.classList.add('active');
         multiPanel.style.display = 'block';
         dateInput.required = false;
+
+        // Inizializza il calendario al mese corrente
+        const today = new Date();
+        _calYear = today.getFullYear();
+        _calMonth = today.getMonth();
+
+        // Resetta le date selezionate
+        multiDates = [];
         
         renderCalendar();
         renderMultiDates();
         
-        App.showToast('Step 2', 'Ora seleziona i giorni sul calendario', 'info');
+        App.showToast('Step 2', 'Seleziona i giorni sul calendario, poi salva', 'info');
     }
 
     return {
