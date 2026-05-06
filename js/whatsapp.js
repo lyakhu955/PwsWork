@@ -304,15 +304,19 @@ const WhatsApp = (() => {
         App.showToast('Copiato!', 'Testo copiato negli appunti. Vai su WhatsApp e incolla!', 'success');
     }
 
+    function _getWhatsAppUrl(text) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const baseUrl = isMobile ? 'https://api.whatsapp.com/send' : 'https://web.whatsapp.com/send';
+        return `${baseUrl}?text=${encodeURIComponent(text)}`;
+    }
+
     // ==================== OPEN WHATSAPP ====================
     function openWhatsApp() {
         const preview = document.getElementById('wa-preview-text');
         if (!preview || !preview.textContent.trim()) return;
 
-        const text = encodeURIComponent(preview.textContent);
-        // Opens WhatsApp with prefilled text (user selects contact/group)
-        const url = `https://wa.me/?text=${text}`;
-        window.open(url, '_blank');
+        const text = preview.textContent;
+        window.open(_getWhatsAppUrl(text), '_blank');
     }
 
     // ==================== QUICK OPEN FOR A SPECIFIC DATE ====================
@@ -469,10 +473,10 @@ const WhatsApp = (() => {
         const d = new Date(_linkSelectedDate + 'T00:00:00');
         const dateLabel = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
         
-        // Using more compatible emojis and simpler dividers to avoid "broken" characters
-        const text = `*PROGRAMMA LAVORI*\n--------------------------------\n📅 *${dateLabel}*\n--------------------------------\n\n👷 Clicca il link qui sotto per vedere la tua squadra e i posti di lavoro assegnati:\n\n🔗 ${url}\n\n📍 _PwsWork - Gestione Team_`;
+        // Removed emojis and heavy unicode to avoid "broken" characters
+        const text = `*PROGRAMMA LAVORI*\n--------------------------------\n*${dateLabel}*\n--------------------------------\n\nClicca il link qui sotto per vedere la tua squadra e i posti di lavoro assegnati:\n\n${url}\n\n_PwsWork - Gestione Team_`;
         
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        window.open(_getWhatsAppUrl(text), '_blank');
     }
 
     // Bind date input change
