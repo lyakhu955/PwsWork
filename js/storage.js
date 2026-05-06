@@ -31,8 +31,9 @@ const Storage = (() => {
             name: att.name || 'Allegato',
             type: att.type || 'application/octet-stream',
             kind: att.kind || (String(att.type || '').includes('pdf') ? 'pdf' : 'image'),
-            storagePath: att.storagePath || '',
-            downloadURL: att.downloadURL || '',
+            storagePath: att.path || att.storagePath || '',
+            url: att.url || att.downloadURL || '',
+            downloadURL: att.url || att.downloadURL || '',
             uploadedAt: att.uploadedAt || new Date().toISOString(),
             uploadedBy: att.uploadedBy || ''
         };

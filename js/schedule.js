@@ -1664,13 +1664,16 @@ const Schedule = (() => {
             html += '<div class="attachment-item">';
             
             if (isImage) {
-                html += '<img src="' + att.url + '" class="attachment-thumbnail" onclick="window.open(\'' + att.url + '\', \'_blank\')" title="Apri immagine" alt="Allegato">';
+                const url = att.url || att.downloadURL;
+                html += '<img src="' + url + '" class="attachment-thumbnail" onclick="window.open(\'' + url + '\', \'_blank\')" title="Apri immagine" alt="Allegato">';
             } else if (isPdf) {
-                html += '<div class="attachment-file-icon" onclick="window.open(\'' + att.url + '\', \'_blank\')" title="Apri PDF">';
+                const url = att.url || att.downloadURL;
+                html += '<div class="attachment-file-icon" onclick="window.open(\'' + url + '\', \'_blank\')" title="Apri PDF">';
                 html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
                 html += '</div>';
             } else {
-                html += '<div class="attachment-file-icon" onclick="window.open(\'' + att.url + '\', \'_blank\')">';
+                const url = att.url || att.downloadURL;
+                html += '<div class="attachment-file-icon" onclick="window.open(\'' + url + '\', \'_blank\')">';
                 html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
                 html += '</div>';
             }
@@ -1681,7 +1684,8 @@ const Schedule = (() => {
             html += '</div>';
 
             html += '<div class="attachment-actions">';
-            html += '<a href="' + att.url + '" target="_blank" class="btn btn-sm btn-outline btn-icon" title="Scarica / Apri"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>';
+            const url = att.url || att.downloadURL;
+            html += '<a href="' + url + '" target="_blank" class="btn btn-sm btn-outline btn-icon" title="Scarica / Apri"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>';
             if (isEditingAttachments) {
                 html += '<button type="button" class="btn btn-sm btn-danger btn-icon" onclick="Schedule.deleteAttachment(' + idx + ')" title="Elimina"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
             }
@@ -1773,9 +1777,10 @@ const Schedule = (() => {
             'Sei sicuro di voler eliminare questo allegato?',
             async () => {
                 const att = currentAttachmentsList[idx];
-                if (att.path) {
+                const path = att.path || att.storagePath;
+                if (path) {
                     try {
-                        await storage.ref().child(att.path).delete();
+                        await storage.ref().child(path).delete();
                     } catch (e) {
                         console.error("Error deleting from storage", e);
                         // continue to delete from list even if storage fails (e.g. already deleted)
