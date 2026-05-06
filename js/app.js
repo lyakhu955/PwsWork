@@ -151,6 +151,7 @@ const App = (() => {
         Schedule.init();
         Profile.init();
         Absences.init();
+        initSwipeGestures();
 
         // Navigate to dashboard
         navigateTo('dashboard');
@@ -243,6 +244,44 @@ const App = (() => {
         const overlay = document.getElementById('sidebar-overlay');
         sidebar.classList.remove('mobile-open');
         if (overlay) overlay.classList.remove('active');
+    }
+
+    // ==================== SWIPE GESTURES ====================
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    function initSwipeGestures() {
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+            
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            // Horizontal swipe, and check if it's not a vertical scroll (Math.abs(diffX) > Math.abs(diffY))
+            // Minimum distance of 60px
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 60) {
+                const sidebar = document.getElementById('sidebar');
+                const isMobileOpen = sidebar.classList.contains('mobile-open');
+
+                if (diffX > 0) {
+                    // Swipe Right: Open sidebar if it's closed and we start from left edge
+                    if (!isMobileOpen && touchStartX < 50) {
+                        toggleMobileSidebar();
+                    }
+                } else {
+                    // Swipe Left: Close sidebar if it's open
+                    if (isMobileOpen) {
+                        closeMobileSidebar();
+                    }
+                }
+            }
+        }, { passive: true });
     }
 
     // ==================== UI UPDATES ====================
