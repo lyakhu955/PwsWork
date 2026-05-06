@@ -1743,3 +1743,53 @@
     border: 1px solid rgba(139, 92, 246, 0.2) !important;
     border-left: 4px solid #8b5cf6 !important;
 }
+
+/* Filter Tabs (Neumorphic) */
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding: 6px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    box-shadow: var(--neu-inset-sm);
+    width: fit-content;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.filter-tab {
+    padding: 8px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    color: var(--text-primary);
+}
+
+.filter-tab.active {
+    background: var(--bg-primary);
+    color: var(--accent-primary);
+    box-shadow: var(--neu-raised-sm);
+}
+
+@media (max-width: 600px) {
+    .filter-tabs {
+        width: 100%;
+        gap: 4px;
+    }
+    .filter-tab {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        flex: 1;
+        text-align: center;
+    }
+}

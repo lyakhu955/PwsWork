@@ -5,6 +5,7 @@
 
 const Employees = (() => {
     let editingId = null;
+    let currentFilter = 'all';
 
     function init() {
         render();
@@ -31,6 +32,17 @@ const Employees = (() => {
                 render(e.target.value);
             });
         }
+
+        // Filter tabs
+        const tabs = document.querySelectorAll('.employees-filters .filter-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFilter = tab.dataset.filter;
+                render(document.getElementById('employee-search').value);
+            });
+        });
     }
 
     function render(searchTerm = '') {
@@ -40,14 +52,28 @@ const Employees = (() => {
         let employees = Storage.getEmployees();
         const isAdmin = Auth.isAdmin();
 
+        // Filter by category
+        if (currentFilter !== 'all') {
+            employees = employees.filter(emp => {
+                const pos = (emp.position || '').toLowerCase();
+                const isPellicolatore = pos.includes('pellicolatore');
+                const isAdminRole = emp.role === 'admin';
+                
+                if (currentFilter === 'pellicolatori') return isPellicolatore;
+                if (currentFilter === 'admin') return isAdminRole;
+                if (currentFilter === 'office') return !isPellicolatore && !isAdminRole;
+                return true;
+            });
+        }
+
         // Filter by search
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             employees = employees.filter(emp =>
                 emp.firstName.toLowerCase().includes(term) ||
                 emp.lastName.toLowerCase().includes(term) ||
-                emp.position.toLowerCase().includes(term) ||
-                emp.email.toLowerCase().includes(term)
+                (emp.position && emp.position.toLowerCase().includes(term)) ||
+                (emp.email && emp.email.toLowerCase().includes(term))
             );
         }
 
