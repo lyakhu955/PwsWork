@@ -454,6 +454,40 @@ const App = (() => {
         Absences.updateNotificationBadge();
     }
 
+    async function clearAppCache() {
+        showConfirm('Aggiorna App', "Questa operazione svuoterà la cache, disconnetterà l'utente e ricaricherà l'ultima versione dell'applicazione. Procedere?", async () => {
+            try {
+                // Clear Service Worker Caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (const name of cacheNames) {
+                        await caches.delete(name);
+                    }
+                }
+                
+                // Clear Local Storage Data (except theme to keep ui clean)
+                const theme = localStorage.getItem('theme');
+                localStorage.clear();
+                if (theme) localStorage.setItem('theme', theme);
+                sessionStorage.clear();
+                
+                // Unregister Service Workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+
+                // Hard reload
+                window.location.reload(true);
+            } catch (error) {
+                console.error("Errore durante la pulizia della cache:", error);
+                showToast('Errore', 'Si è verificato un errore durante la pulizia della cache', 'error');
+            }
+        });
+    }
+
     // ==================== START APP ====================
     document.addEventListener('DOMContentLoaded', init);
 
@@ -463,6 +497,7 @@ const App = (() => {
         showConfirm,
         updateUserDisplay,
         updateAdminVisibility,
-        refreshCurrentPage
+        refreshCurrentPage,
+        clearAppCache
     };
 })();
