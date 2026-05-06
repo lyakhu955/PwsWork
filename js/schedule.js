@@ -1739,6 +1739,15 @@ const Schedule = (() => {
 
                 renderAttachmentsList();
 
+                // Auto-save to Firestore se la squadra esiste già
+                if (currentAttachmentsAssignmentId && currentAttachmentsAssignmentId !== 'new') {
+                    const asgn = Storage.getAssignment(currentAttachmentsAssignmentId);
+                    if (asgn && asgn.workplaces && asgn.workplaces[currentAttachmentsWorkplaceIndex]) {
+                        asgn.workplaces[currentAttachmentsWorkplaceIndex].attachments = currentAttachmentsList;
+                        Storage.updateAssignment(currentAttachmentsAssignmentId, asgn);
+                    }
+                }
+
             } catch (error) {
                 console.error("Upload error:", error);
                 App.showToast('Errore', 'Errore nel caricamento: ' + error.message, 'error');
@@ -1772,6 +1781,15 @@ const Schedule = (() => {
                 }
 
                 renderAttachmentsList();
+                
+                // Auto-save to Firestore se la squadra esiste già
+                if (currentAttachmentsAssignmentId && currentAttachmentsAssignmentId !== 'new') {
+                    const asgn = Storage.getAssignment(currentAttachmentsAssignmentId);
+                    if (asgn && asgn.workplaces && asgn.workplaces[currentAttachmentsWorkplaceIndex]) {
+                        asgn.workplaces[currentAttachmentsWorkplaceIndex].attachments = currentAttachmentsList;
+                        Storage.updateAssignment(currentAttachmentsAssignmentId, asgn);
+                    }
+                }
                 App.showToast('Eliminato', 'Allegato eliminato', 'success');
             }
         );
