@@ -264,14 +264,15 @@ const App = (() => {
             const diffY = touchEndY - touchStartY;
 
             // Horizontal swipe, and check if it's not a vertical scroll (Math.abs(diffX) > Math.abs(diffY))
-            // Minimum distance of 60px
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 60) {
+            // Minimum distance of 80px for a more intentional gesture
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 80) {
                 const sidebar = document.getElementById('sidebar');
                 const isMobileOpen = sidebar.classList.contains('mobile-open');
 
                 if (diffX > 0) {
-                    // Swipe Right: Open sidebar if it's closed and we start from left edge
-                    if (!isMobileOpen && touchStartX < 50) {
+                    // Swipe Right: Open sidebar if it's closed and we start from left area (up to 100px)
+                    // Increased to 100px to not be too close to the edge (conflict with "back" gesture)
+                    if (!isMobileOpen && touchStartX < 100) {
                         toggleMobileSidebar();
                     }
                 } else {
