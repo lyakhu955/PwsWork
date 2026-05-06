@@ -451,6 +451,9 @@ const App = (() => {
             case 'hours': Hours.render(); break;
             case 'profile': Profile.render(); break;
         }
+        if (typeof Schedule !== 'undefined' && Schedule.refreshActiveModals) {
+            Schedule.refreshActiveModals();
+        }
         Absences.updateNotificationBadge();
     }
 

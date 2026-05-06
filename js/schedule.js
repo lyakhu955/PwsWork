@@ -1579,6 +1579,10 @@ const Schedule = (() => {
 
         body.innerHTML = html;
         modal.classList.add('active');
+        
+        // Track for real-time refresh
+        window._detailModalActive = true;
+        window._currentDetailDate = dateStr;
     }
 
     function closeDetailModal() {
@@ -1637,6 +1641,9 @@ const Schedule = (() => {
         }
 
         modal.classList.add('active');
+        
+        // Track for real-time refresh
+        window._attachmentsModalActive = true;
     }
 
     function closeAttachmentsModal() {
@@ -1645,6 +1652,7 @@ const Schedule = (() => {
         currentAttachmentsAssignmentId = null;
         currentAttachmentsWorkplaceIndex = null;
         currentAttachmentsList = [];
+        window._attachmentsModalActive = false;
     }
 
     function renderAttachmentsList() {
@@ -1809,6 +1817,41 @@ const Schedule = (() => {
         );
     }
 
+    function refreshActiveModals() {
+        // 1. Refresh Attachments Modal
+        if (window._attachmentsModalActive && currentAttachmentsAssignmentId && currentAttachmentsAssignmentId !== 'new') {
+            const asgn = Storage.getAssignment(currentAttachmentsAssignmentId);
+            if (asgn && asgn.workplaces && asgn.workplaces[currentAttachmentsWorkplaceIndex]) {
+                const freshList = asgn.workplaces[currentAttachmentsWorkplaceIndex].attachments || [];
+                // Check if changed to avoid unnecessary re-renders
+                if (JSON.stringify(freshList) !== JSON.stringify(currentAttachmentsList)) {
+                    currentAttachmentsList = [...freshList];
+                    renderAttachmentsList();
+                }
+            }
+        }
+
+        // 2. Refresh Detail Modal (Vista Lavoratore)
+        if (window._detailModalActive && window._currentDetailDate) {
+            const assignments = Storage.getAssignmentsByDate(window._currentDetailDate);
+            if (assignments.length > 0) {
+                renderDetailModal(window._currentDetailDate, assignments);
+            } else {
+                closeDetailModal();
+            }
+        }
+
+        // 3. Refresh Main Modal (Vista Admin) if editing
+        if (editingAssignmentId && editingAssignmentId !== 'new') {
+            const asgn = Storage.getAssignment(editingAssignmentId);
+            if (!asgn) {
+                // If the assignment we are editing was deleted by someone else
+                closeModal();
+                App.showToast('Attenzione', 'La squadra che stavi modificando è stata eliminata', 'warning');
+            }
+        }
+    }
+
     return {
         init,
         render,
@@ -1835,6 +1878,7 @@ const Schedule = (() => {
         pasteAssignment,
         openAttachmentsModal,
         closeAttachmentsModal,
-        deleteAttachment
+        deleteAttachment,
+        refreshActiveModals
     };
 })();
