@@ -989,6 +989,37 @@
     font-weight: 700;
 }
 
+/* Giorno originale della squadra nel wizard multi-data */
+.wa-cal-day--origin {
+    position: relative;
+    background: rgba(251, 146, 60, 0.15);
+    border: 2px solid rgba(251, 146, 60, 0.6);
+    color: #fb923c;
+    font-weight: 700;
+    border-radius: 8px;
+}
+
+.wa-cal-day--origin:hover {
+    background: rgba(251, 146, 60, 0.25);
+}
+
+/* Se l'originale viene anche selezionato, mantieni il viola ma aggiungi un trattino arancio */
+.wa-cal-day--origin.selected {
+    background: var(--primary, #6366f1);
+    color: #fff;
+    border: 2px solid #fb923c;
+}
+
+/* Puntino sotto il numero del giorno originale */
+.cal-origin-dot {
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #fb923c;
+    margin: 1px auto 0;
+}
+
 .wa-calendar-hint {
     font-size: 0.75rem;
     color: var(--text-secondary);

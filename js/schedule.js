@@ -1105,6 +1105,7 @@ const Schedule = (() => {
     let multiDates = [];
     let _calYear = 0;
     let _calMonth = 0;
+    let _wizardOriginalDate = null; // Data originale della squadra nel wizard
 
     function setDateMode(mode) {
         console.log('[WIZARD] setDateMode chiamato con mode:', mode);
@@ -1176,7 +1177,14 @@ const Schedule = (() => {
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = `${_calYear}-${String(_calMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const isSelected = multiDates.includes(dateStr);
-            html += `<div class="wa-cal-day${isSelected ? ' selected' : ''}" onclick="Schedule.toggleMultiDate('${dateStr}')">${d}</div>`;
+            const isOrigin = _wizardOriginalDate && dateStr === _wizardOriginalDate;
+
+            let classes = 'wa-cal-day';
+            if (isOrigin)   classes += ' wa-cal-day--origin';
+            if (isSelected) classes += ' selected';
+
+            const label = isOrigin ? `${d}<span class="cal-origin-dot"></span>` : `${d}`;
+            html += `<div class="${classes}" onclick="Schedule.toggleMultiDate('${dateStr}')" title="${isOrigin ? 'Giorno attuale del lavoro' : ''}">${label}</div>`;
         }
 
         gridEl.innerHTML = html;
@@ -2059,9 +2067,16 @@ const Schedule = (() => {
         const today = new Date();
         _calYear = today.getFullYear();
         _calMonth = today.getMonth();
-        console.log('[WIZARD] Calendario inizializzato a:', _calYear, _calMonth + 1);
 
-        // Resetta le date selezionate
+        // Salva la data originale della squadra per evidenziarla nel calendario
+        _wizardOriginalDate = document.getElementById('assignment-date').value || null;
+        if (_wizardOriginalDate) {
+            // Naviga al mese della data originale se è diverso da oggi
+            const origDate = new Date(_wizardOriginalDate + 'T00:00:00');
+            _calYear = origDate.getFullYear();
+            _calMonth = origDate.getMonth();
+        }
+        console.log('[WIZARD] Data originale:', _wizardOriginalDate, '| Calendario mese:', _calYear, _calMonth + 1);
         multiDates = [];
         
         renderCalendar();
