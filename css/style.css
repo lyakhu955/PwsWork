@@ -3918,3 +3918,57 @@ input[type="time"]::-webkit-inner-spin-button {
 .attachment-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
 .attachment-size { font-size: 0.8rem; color: var(--text-secondary); }
 .attachment-actions { display: flex; align-items: center; gap: 8px; }
+
+/* Workplace Multi-Copy Option */
+.workplace-multi-copy-option {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-color);
+    display: none; /* Hidden by default, shown when multi-date is active */
+}
+
+.assignment-modal[data-multi-date=" true\] .workplace-multi-copy-option {
+ display: block;
+}
+
+.checkbox-container {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ cursor: pointer;
+ font-size: 0.9rem;
+ color: var(--text-secondary);
+ transition: color 0.2s;
+}
+
+.checkbox-container:hover {
+ color: var(--text-primary);
+}
+
+.checkbox-container input {
+ display: none;
+}
+
+.checkbox-container .checkmark {
+ width: 18px;
+ height: 18px;
+ border: 2px solid var(--border-color);
+ border-radius: 4px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ transition: all 0.2s;
+ flex-shrink: 0;
+}
+
+.checkbox-container input:checked + .checkmark {
+ background-color: var(--primary-color);
+ border-color: var(--primary-color);
+}
+
+.checkbox-container input:checked + .checkmark::after {
+ content: \?\;
+ color: white;
+ font-size: 12px;
+ font-weight: bold;
+}

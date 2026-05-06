@@ -904,6 +904,14 @@ const Schedule = (() => {
                     <span>Allegati <span class="attachments-count">${data?.attachments?.length || 0}</span></span>
                 </button>
             </div>
+
+            <div class="workplace-multi-copy-option">
+                <label class="checkbox-container">
+                    <input type="checkbox" class="wp-copy-multi" checked>
+                    <span class="checkmark"></span>
+                    Copia in altri giorni
+                </label>
+            </div>
         `;
 
         list.appendChild(item);
@@ -1201,6 +1209,11 @@ const Schedule = (() => {
 
         if (!list) return;
 
+        const modal = document.getElementById('assignment-modal');
+        if (modal) {
+            modal.dataset.multiDate = (multiDates.length > 0).toString();
+        }
+
         // Ensure main date is included in multiDates but displayed specially or not removable if it's the only one
         let allDates = [...multiDates];
         if (mainDate && !allDates.includes(mainDate)) {
@@ -1346,6 +1359,8 @@ const Schedule = (() => {
                 attachments = window._currentModalWorkplaces[idx].attachments || attachments;
             }
 
+            const copyMulti = item.querySelector('.wp-copy-multi')?.checked ?? true;
+
             if (name || address) {
                 workplaces.push({ 
                     name: name || address, 
@@ -1355,7 +1370,8 @@ const Schedule = (() => {
                     info,
                     timeStart,
                     timeEnd,
-                    attachments: [...attachments]
+                    attachments: [...attachments],
+                    copyMulti: copyMulti
                 });
             }
         });
@@ -1389,14 +1405,37 @@ const Schedule = (() => {
                 // If it's multi-date, we updated the main one. We must duplicate the assignment for the extra dates.
                 const extraDates = multiDates.filter(d => d !== baseData.date);
                 if (extraDates.length > 0) {
-                    Storage.addAssignmentsForDates(baseData, extraDates);
+                    const dataForExtraDates = {
+                        ...baseData,
+                        workplaces: baseData.workplaces.filter(wp => wp.copyMulti)
+                    };
+                    if (dataForExtraDates.workplaces.length > 0) {
+                        Storage.addAssignmentsForDates(dataForExtraDates, extraDates);
+                    }
                 }
             }
             App.showToast('Successo', 'Squadra aggiornata', 'success');
         } else {
             // New assignment - check multi-date
             if (isMulti) {
-                Storage.addAssignmentsForDates(baseData, multiDates);
+                // Per la data principale usiamo tutti i posti, per le altre solo quelli selezionati
+                const mainDate = document.getElementById('assignment-date').value;
+                const extraDates = multiDates.filter(d => d !== mainDate);
+                
+                // Crea assegnazione principale
+                const mainAsgn = { ...baseData, date: mainDate };
+                Storage.addAssignment(mainAsgn);
+
+                // Crea assegnazioni per le altre date (filtrate)
+                if (extraDates.length > 0) {
+                    const dataForExtraDates = {
+                        ...baseData,
+                        workplaces: baseData.workplaces.filter(wp => wp.copyMulti)
+                    };
+                    if (dataForExtraDates.workplaces.length > 0) {
+                        Storage.addAssignmentsForDates(dataForExtraDates, extraDates);
+                    }
+                }
                 App.showToast('Successo', `Create ${multiDates.length} assegnazioni`, 'success');
             } else {
                 baseData.date = document.getElementById('assignment-date').value;
