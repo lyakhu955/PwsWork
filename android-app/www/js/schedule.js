@@ -640,13 +640,6 @@ const Schedule = (() => {
         form.reset();
         workplacesList.innerHTML = '';
         populateEmployeeCheckboxes();
-        
-        // Reset multiDates
-        multiDates = [];
-        setDateMode('single');
-        document.getElementById('assignment-multi-date-list').innerHTML = '';
-        document.getElementById('assignment-multi-dates-data').value = '[]';
-        window._currentModalWorkplaces = {};
 
         if (assignmentId) {
             const asgn = Storage.getAssignment(assignmentId);
@@ -810,15 +803,6 @@ const Schedule = (() => {
                 html += '<span>' + wp.info.replace(/\n/g, '<br>') + '</span>';
                 html += '</div>';
             }
-            
-            // Attachments button for Worker view
-            html += '<div class="workplace-attachments-bar" style="margin-top: 8px;">';
-            html += '<button type="button" class="btn btn-sm btn-attachments ' + (wp.attachments && wp.attachments.length ? 'has-attachments' : 'empty-attachments') + '" onclick="Schedule.openAttachmentsModal(\'' + assignmentId + '\', null, false, \'' + wp.name.replace(/'/g, "\\'") + '\', ' + encodeURIComponent(JSON.stringify(wp.attachments || [])) + ')">';
-            html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>';
-            html += '<span>Allegati <span class="attachments-count">' + (wp.attachments ? wp.attachments.length : 0) + '</span></span>';
-            html += '</button>';
-            html += '</div>';
-
             html += '</div>';
         });
 
@@ -897,21 +881,9 @@ const Schedule = (() => {
                 </div>
             </div>
             <textarea class="form-input wp-info" placeholder="Informazioni aggiuntive (cosa fare, contatti, materiale...)" rows="3">${data?.info || ''}</textarea>
-            
-            <div class="workplace-attachments-bar">
-                <button type="button" class="btn btn-sm btn-attachments ${data?.attachments?.length ? 'has-attachments' : 'empty-attachments'}" onclick="Schedule.openAttachmentsModal('${editingAssignmentId || 'new'}', ${idx}, true)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                    <span>Allegati <span class="attachments-count">${data?.attachments?.length || 0}</span></span>
-                </button>
-            </div>
         `;
 
         list.appendChild(item);
-
-        // Store initial attachments in memory to manage them before saving
-        if (typeof window._currentModalWorkplaces !== 'undefined') {
-            window._currentModalWorkplaces[idx] = { attachments: data?.attachments || [] };
-        }
 
         // Add time input validation and formatting
         const timeStartInput = item.querySelector('.wp-time-start');
@@ -1101,208 +1073,6 @@ const Schedule = (() => {
         App.showToast('Posizione salvata', savedAddress || savedName || 'Posizione selezionata', 'success');
     }
 
-    // ==================== MULTI-DATE MODE ====================
-    let multiDates = [];
-    let _calYear = 0;
-    let _calMonth = 0;
-
-    function setDateMode(mode) {
-        const singleBtn = document.getElementById('assignment-single-date-btn');
-        const multiBtn = document.getElementById('assignment-multi-date-btn');
-        const multiPanel = document.getElementById('assignment-multi-date-panel');
-        
-        if (mode === 'single') {
-            singleBtn.classList.add('active');
-            multiBtn.classList.remove('active');
-            multiPanel.style.display = 'none';
-        } else {
-            multiBtn.classList.add('active');
-            singleBtn.classList.remove('active');
-            multiPanel.style.display = 'block';
-            if (multiDates.length === 0) {
-                const mainDate = document.getElementById('assignment-date').value || Storage.toLocalDateStr(new Date());
-                multiDates = [mainDate];
-            }
-            const base = new Date(multiDates[0] + 'T00:00:00');
-            _calYear = base.getFullYear();
-            _calMonth = base.getMonth();
-            renderCalendar();
-            renderMultiDates();
-        }
-    }
-
-    function calendarPrev() {
-        _calMonth--;
-        if (_calMonth < 0) { _calMonth = 11; _calYear--; }
-        renderCalendar();
-    }
-
-    function calendarNext() {
-        _calMonth++;
-        if (_calMonth > 11) { _calMonth = 0; _calYear++; }
-        renderCalendar();
-    }
-
-    function renderCalendar() {
-        const titleEl = document.getElementById('sched-calendar-title');
-        const gridEl = document.getElementById('sched-calendar-grid');
-        if (!titleEl || !gridEl) return;
-
-        const MONTH_NAMES = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-        titleEl.textContent = `${MONTH_NAMES[_calMonth]} ${_calYear}`;
-
-        const dayHeaders = ['Lu', 'Ma', 'Me', 'Gi', 'Ve', 'Sa', 'Do'];
-        let html = dayHeaders.map(d => `<div class="wa-cal-header">${d}</div>`).join('');
-
-        const firstDay = new Date(_calYear, _calMonth, 1);
-        let startDow = firstDay.getDay(); // 0=Sun
-        startDow = startDow === 0 ? 6 : startDow - 1; // Mon=0
-
-        for (let i = 0; i < startDow; i++) {
-            html += '<div class="wa-cal-empty"></div>';
-        }
-
-        const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = `${_calYear}-${String(_calMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const isSelected = multiDates.includes(dateStr);
-            html += `<div class="wa-cal-day${isSelected ? ' selected' : ''}" onclick="Schedule.toggleMultiDate('${dateStr}')">${d}</div>`;
-        }
-
-        gridEl.innerHTML = html;
-    }
-
-    function toggleMultiDate(dateStr) {
-        const mainDate = document.getElementById('assignment-date').value;
-        if (dateStr === mainDate) {
-            App.showToast('Attenzione', 'La data principale non può essere rimossa', 'warning');
-            return;
-        }
-
-        const idx = multiDates.indexOf(dateStr);
-        if (idx >= 0) {
-            multiDates.splice(idx, 1);
-        } else {
-            multiDates.push(dateStr);
-            multiDates.sort();
-        }
-        renderCalendar();
-        renderMultiDates();
-    }
-
-    function removeMultiDate(dateStr) {
-        toggleMultiDate(dateStr);
-    }
-
-    function renderMultiDates() {
-        const list = document.getElementById('assignment-multi-date-list');
-        const hiddenData = document.getElementById('assignment-multi-dates-data');
-        const mainDate = document.getElementById('assignment-date').value;
-
-        if (!list) return;
-
-        // Ensure main date is included in multiDates but displayed specially or not removable if it's the only one
-        let allDates = [...multiDates];
-        if (mainDate && !allDates.includes(mainDate)) {
-            allDates.push(mainDate);
-            allDates.sort();
-        }
-
-        list.innerHTML = allDates.map(d => {
-            const isMain = d === mainDate;
-            const dateObj = new Date(d + 'T00:00:00');
-            const formatted = dateObj.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
-            return `
-                <div class="multi-date-chip">
-                    <span>${formatted}</span>
-                    ${!isMain ? `<button type="button" onclick="Schedule.removeMultiDate('${d}')">✕</button>` : ''}
-                </div>
-            `;
-        }).join('');
-
-        hiddenData.value = JSON.stringify(allDates);
-    }
-
-    // ==================== COPY / PASTE ASSIGNMENT ====================
-    let copiedAssignment = null;
-
-    function copyCurrentAssignment() {
-        // Collect current data from form
-        const checkboxes = document.querySelectorAll('#employee-multiselect input[type="checkbox"]:checked');
-        const employeeIds = Array.from(checkboxes).map(cb => cb.value);
-
-        const workplaceItems = document.querySelectorAll('.workplace-item');
-        const workplaces = [];
-        workplaceItems.forEach(item => {
-            const name = item.querySelector('.wp-name')?.value.trim();
-            const address = item.querySelector('.wp-address')?.value.trim();
-            const lat = parseFloat(item.querySelector('.wp-lat')?.value) || null;
-            const lng = parseFloat(item.querySelector('.wp-lng')?.value) || null;
-            const info = item.querySelector('.wp-info')?.value.trim() || '';
-            const timeStart = item.querySelector('.wp-time-start')?.value.trim() || null;
-            const timeEnd = item.querySelector('.wp-time-end')?.value.trim() || null;
-            
-            // Preserve attachments if editing an existing assignment
-            const idx = item.dataset.index;
-            let attachments = [];
-            if (editingAssignmentId) {
-                const asgn = Storage.getAssignment(editingAssignmentId);
-                if (asgn && asgn.workplaces && asgn.workplaces[idx]) {
-                    attachments = asgn.workplaces[idx].attachments || [];
-                }
-            }
-
-            if (name || address) {
-                workplaces.push({ name: name || address, address: address || '', lat, lng, info, timeStart, timeEnd, attachments: [...attachments] });
-            }
-        });
-
-        const teamName = document.getElementById('assignment-team-name').value.trim();
-        const notes = document.getElementById('assignment-notes').value.trim();
-
-        copiedAssignment = {
-            teamName,
-            employeeIds,
-            workplaces,
-            notes
-        };
-
-        const statusLabel = document.getElementById('assignment-copy-status');
-        if (statusLabel) {
-            statusLabel.textContent = `Copiata: ${teamName || 'Squadra'} (${employeeIds.length} dipendenti)`;
-            statusLabel.style.color = 'var(--primary)';
-        }
-
-        const pasteBtn = document.getElementById('assignment-paste-btn');
-        if (pasteBtn) {
-            pasteBtn.style.display = 'inline-flex';
-        }
-        
-        App.showToast('Copiata', 'Squadra copiata negli appunti', 'success');
-    }
-
-    function pasteAssignment() {
-        if (!copiedAssignment) return;
-
-        document.getElementById('assignment-team-name').value = copiedAssignment.teamName || '';
-        document.getElementById('assignment-notes').value = copiedAssignment.notes || '';
-
-        // Check employees
-        document.querySelectorAll('#employee-multiselect input[type="checkbox"]').forEach(cb => {
-            cb.checked = copiedAssignment.employeeIds.includes(cb.value);
-        });
-
-        // Add workplaces
-        const list = document.getElementById('workplaces-list');
-        list.innerHTML = '';
-        workplaceCounter = 0;
-        copiedAssignment.workplaces.forEach(wp => {
-            addWorkplaceField(wp);
-        });
-
-        App.showToast('Incollata', 'Dati squadra incollati', 'success');
-    }
-
     // ==================== FORM SUBMIT ====================
     function handleSubmit(e) {
         e.preventDefault();
@@ -1328,24 +1098,6 @@ const Schedule = (() => {
             const timeStart = item.querySelector('.wp-time-start')?.value.trim() || null;
             const timeEnd = item.querySelector('.wp-time-end')?.value.trim() || null;
 
-            // Preserve attachments
-            const idx = item.dataset.index;
-            let attachments = [];
-            // We will fetch attachments from a global array or data attribute later. For now, fetch from existing assignment if editing.
-            if (editingAssignmentId) {
-                const asgn = Storage.getAssignment(editingAssignmentId);
-                if (asgn && asgn.workplaces && asgn.workplaces[idx]) {
-                    attachments = asgn.workplaces[idx].attachments || [];
-                }
-            } else if (copiedAssignment && copiedAssignment.workplaces && copiedAssignment.workplaces[idx]) {
-                attachments = copiedAssignment.workplaces[idx].attachments || [];
-            }
-            
-            // Allow override from memory if we implement real-time attachments in modal
-            if (window._currentModalWorkplaces && window._currentModalWorkplaces[idx]) {
-                attachments = window._currentModalWorkplaces[idx].attachments || attachments;
-            }
-
             if (name || address) {
                 workplaces.push({ 
                     name: name || address, 
@@ -1354,8 +1106,7 @@ const Schedule = (() => {
                     lng, 
                     info,
                     timeStart,
-                    timeEnd,
-                    attachments: [...attachments]
+                    timeEnd
                 });
             }
         });
@@ -1371,38 +1122,25 @@ const Schedule = (() => {
             return;
         }
 
-        const baseData = {
+        const data = {
+            date: document.getElementById('assignment-date').value,
             teamName,
             employeeIds,
             workplaces,
             notes: document.getElementById('assignment-notes').value.trim()
         };
 
-        const multiBtn = document.getElementById('assignment-multi-date-btn');
-        const isMulti = multiBtn && multiBtn.classList.contains('active') && multiDates.length > 0;
+        if (!data.date) {
+            App.showToast('Errore', 'Seleziona una data', 'error');
+            return;
+        }
 
         if (editingAssignmentId) {
-            baseData.date = document.getElementById('assignment-date').value;
-            Storage.updateAssignment(editingAssignmentId, baseData);
-            
-            if (isMulti && multiDates.length > 1) {
-                // If it's multi-date, we updated the main one. We must duplicate the assignment for the extra dates.
-                const extraDates = multiDates.filter(d => d !== baseData.date);
-                if (extraDates.length > 0) {
-                    Storage.addAssignmentsForDates(baseData, extraDates);
-                }
-            }
+            Storage.updateAssignment(editingAssignmentId, data);
             App.showToast('Successo', 'Squadra aggiornata', 'success');
         } else {
-            // New assignment - check multi-date
-            if (isMulti) {
-                Storage.addAssignmentsForDates(baseData, multiDates);
-                App.showToast('Successo', `Create ${multiDates.length} assegnazioni`, 'success');
-            } else {
-                baseData.date = document.getElementById('assignment-date').value;
-                Storage.addAssignment(baseData);
-                App.showToast('Successo', 'Squadra creata', 'success');
-            }
+            Storage.addAssignment(data);
+            App.showToast('Successo', 'Squadra creata', 'success');
         }
 
         closeModal();
@@ -1550,15 +1288,6 @@ const Schedule = (() => {
                     html += '<span>' + wp.info.replace(/\n/g, '<br>') + '</span>';
                     html += '</div>';
                 }
-                
-                // Attachments button for Worker view
-                html += '<div class="workplace-attachments-bar" style="margin-top: 8px;">';
-                html += '<button type="button" class="btn btn-sm btn-attachments ' + (wp.attachments && wp.attachments.length ? 'has-attachments' : 'empty-attachments') + '" onclick="Schedule.openAttachmentsModal(\'' + asgn.id + '\', null, false, \'' + wp.name.replace(/'/g, "\\'") + '\', ' + encodeURIComponent(JSON.stringify(wp.attachments || [])) + ')">';
-                html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>';
-                html += '<span>Allegati <span class="attachments-count">' + (wp.attachments ? wp.attachments.length : 0) + '</span></span>';
-                html += '</button>';
-                html += '</div>';
-
                 html += '</div>';
             });
 
@@ -1585,198 +1314,6 @@ const Schedule = (() => {
         document.getElementById('detail-modal').classList.remove('active');
     }
 
-    // ==================== ATTACHMENTS ====================
-    let currentAttachmentsAssignmentId = null;
-    let currentAttachmentsWorkplaceIndex = null;
-    let isEditingAttachments = false;
-    let currentAttachmentsList = [];
-
-    function openAttachmentsModal(assignmentId, workplaceIndex, isEditing, wpName = '', currentList = null) {
-        currentAttachmentsAssignmentId = assignmentId;
-        currentAttachmentsWorkplaceIndex = workplaceIndex;
-        isEditingAttachments = isEditing;
-
-        const modal = document.getElementById('attachments-modal');
-        const title = document.getElementById('attachments-modal-title');
-        const uploadArea = document.getElementById('attachments-upload-area');
-        const fileInput = document.getElementById('attachments-file-input');
-
-        if (fileInput) fileInput.value = '';
-
-        if (isEditing) {
-            title.textContent = 'Gestione Allegati';
-            uploadArea.style.display = 'flex';
-            // Get from memory
-            if (window._currentModalWorkplaces && window._currentModalWorkplaces[workplaceIndex]) {
-                currentAttachmentsList = window._currentModalWorkplaces[workplaceIndex].attachments || [];
-            } else {
-                currentAttachmentsList = [];
-            }
-        } else {
-            title.textContent = 'Allegati: ' + wpName;
-            uploadArea.style.display = 'none';
-            // Get from passed list
-            currentAttachmentsList = currentList || [];
-        }
-
-        renderAttachmentsList();
-
-        // Setup file input listener if editing
-        if (isEditing && fileInput && !fileInput.dataset.listenerAttached) {
-            fileInput.dataset.listenerAttached = 'true';
-            fileInput.addEventListener('change', handleFileUpload);
-        }
-
-        modal.classList.add('active');
-    }
-
-    function closeAttachmentsModal() {
-        const modal = document.getElementById('attachments-modal');
-        modal.classList.remove('active');
-        currentAttachmentsAssignmentId = null;
-        currentAttachmentsWorkplaceIndex = null;
-        currentAttachmentsList = [];
-    }
-
-    function renderAttachmentsList() {
-        const listEl = document.getElementById('attachments-list');
-        if (!listEl) return;
-
-        if (currentAttachmentsList.length === 0) {
-            listEl.innerHTML = '<div class="empty-state">Nessun allegato presente</div>';
-            return;
-        }
-
-        let html = '';
-        currentAttachmentsList.forEach((att, idx) => {
-            const isImage = att.type && att.type.startsWith('image/');
-            const isPdf = att.type === 'application/pdf';
-
-            html += '<div class="attachment-item">';
-            
-            if (isImage) {
-                html += '<img src="' + att.url + '" class="attachment-thumbnail" onclick="window.open(\'' + att.url + '\', \'_blank\')" title="Apri immagine" alt="Allegato">';
-            } else if (isPdf) {
-                html += '<div class="attachment-file-icon" onclick="window.open(\'' + att.url + '\', \'_blank\')" title="Apri PDF">';
-                html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
-                html += '</div>';
-            } else {
-                html += '<div class="attachment-file-icon" onclick="window.open(\'' + att.url + '\', \'_blank\')">';
-                html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
-                html += '</div>';
-            }
-
-            html += '<div class="attachment-details">';
-            html += '<div class="attachment-name">' + (att.name || 'File allegato') + '</div>';
-            html += '<div class="attachment-size">' + (att.size ? (att.size / 1024).toFixed(1) + ' KB' : '') + '</div>';
-            html += '</div>';
-
-            html += '<div class="attachment-actions">';
-            html += '<a href="' + att.url + '" target="_blank" class="btn btn-sm btn-outline btn-icon" title="Scarica / Apri"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>';
-            if (isEditingAttachments) {
-                html += '<button type="button" class="btn btn-sm btn-danger btn-icon" onclick="Schedule.deleteAttachment(' + idx + ')" title="Elimina"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
-            }
-            html += '</div>';
-
-            html += '</div>';
-        });
-
-        listEl.innerHTML = html;
-        
-        // Aggiorna il pulsante nel modale di modifica
-        if (isEditingAttachments) {
-            updateWorkplaceAttachmentButton(currentAttachmentsWorkplaceIndex, currentAttachmentsList.length);
-        }
-    }
-
-    function updateWorkplaceAttachmentButton(idx, count) {
-        const item = document.querySelector('.workplace-item[data-index="' + idx + '"]');
-        if (item) {
-            const btn = item.querySelector('.btn-attachments');
-            const countSpan = item.querySelector('.attachments-count');
-            if (btn && countSpan) {
-                countSpan.textContent = count;
-                if (count > 0) {
-                    btn.classList.add('has-attachments');
-                    btn.classList.remove('empty-attachments');
-                } else {
-                    btn.classList.remove('has-attachments');
-                    btn.classList.add('empty-attachments');
-                }
-            }
-        }
-    }
-
-    async function handleFileUpload(e) {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        App.showToast('Caricamento', 'Caricamento di ' + files.length + ' file...', 'info');
-        
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const filePath = 'workplaces/' + Date.now() + '_' + file.name;
-            const fileRef = storage.ref().child(filePath);
-
-            try {
-                const snapshot = await fileRef.put(file);
-                const downloadURL = await snapshot.ref.getDownloadURL();
-                
-                const attachmentData = {
-                    name: file.name,
-                    url: downloadURL,
-                    path: filePath,
-                    type: file.type,
-                    size: file.size
-                };
-
-                currentAttachmentsList.push(attachmentData);
-
-                // Update memory state
-                if (window._currentModalWorkplaces && window._currentModalWorkplaces[currentAttachmentsWorkplaceIndex]) {
-                    window._currentModalWorkplaces[currentAttachmentsWorkplaceIndex].attachments = currentAttachmentsList;
-                }
-
-                renderAttachmentsList();
-
-            } catch (error) {
-                console.error("Upload error:", error);
-                App.showToast('Errore', 'Errore nel caricamento: ' + error.message, 'error');
-            }
-        }
-        
-        App.showToast('Completato', 'File caricati con successo', 'success');
-        e.target.value = ''; // Reset input
-    }
-
-    function deleteAttachment(idx) {
-        App.showConfirm(
-            'Elimina Allegato',
-            'Sei sicuro di voler eliminare questo allegato?',
-            async () => {
-                const att = currentAttachmentsList[idx];
-                if (att.path) {
-                    try {
-                        await storage.ref().child(att.path).delete();
-                    } catch (e) {
-                        console.error("Error deleting from storage", e);
-                        // continue to delete from list even if storage fails (e.g. already deleted)
-                    }
-                }
-                
-                currentAttachmentsList.splice(idx, 1);
-                
-                // Update memory state
-                if (window._currentModalWorkplaces && window._currentModalWorkplaces[currentAttachmentsWorkplaceIndex]) {
-                    window._currentModalWorkplaces[currentAttachmentsWorkplaceIndex].attachments = currentAttachmentsList;
-                }
-
-                renderAttachmentsList();
-                App.showToast('Eliminato', 'Allegato eliminato', 'success');
-            }
-        );
-    }
-
     return {
         init,
         render,
@@ -1793,16 +1330,6 @@ const Schedule = (() => {
         confirmMapSelection,
         toggleAssignmentViewMode,
         deleteAssignment,
-        updateEmployeeFilter,
-        setDateMode,
-        calendarPrev,
-        calendarNext,
-        toggleMultiDate,
-        removeMultiDate,
-        copyCurrentAssignment,
-        pasteAssignment,
-        openAttachmentsModal,
-        closeAttachmentsModal,
-        deleteAttachment
+        updateEmployeeFilter
     };
 })();

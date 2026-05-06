@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PwsWork - Neumorphism Design Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --bg-light: #22223a;
+            --bg-dark: #12121e;
+            --shadow-light: rgba(40, 40, 70, 0.7);
+            --shadow-dark: rgba(5, 5, 12, 0.8);
+            --accent: #7c3aed;
+            --accent-light: #a78bfa;
+            --text: #e0e0f0;
+            --text-dim: #8888a8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== NEUMORPHIC UTILITIES ===== */
+        .neu-raised {
+            background: var(--bg);
+            border-radius: 20px;
+            box-shadow: 
+                8px 8px 16px var(--shadow-dark),
+                -8px -8px 16px var(--shadow-light);
+        }
+
+        .neu-inset {
+            background: var(--bg);
+            border-radius: 16px;
+            box-shadow: 
+                inset 4px 4px 8px var(--shadow-dark),
+                inset -4px -4px 8px var(--shadow-light);
+        }
+
+        .neu-flat {
+            background: var(--bg);
+            border-radius: 16px;
+            box-shadow: 
+                6px 6px 12px var(--shadow-dark),
+                -6px -6px 12px var(--shadow-light);
+        }
+
+        /* ===== HEADER ===== */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+        }
+        .back-link {
+            color: var(--accent-light);
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .style-badge {
+            background: rgba(124,58,237,0.15);
+            color: var(--accent-light);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* ===== LAYOUT ===== */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .sidebar-brand .logo-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            background: var(--bg);
+            box-shadow: 
+                4px 4px 8px var(--shadow-dark),
+                -4px -4px 8px var(--shadow-light);
+            color: var(--accent);
+        }
+
+        .sidebar-brand h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .sidebar-brand h2 span { color: var(--accent-light); }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            color: var(--text);
+            box-shadow: 
+                inset 3px 3px 6px var(--shadow-dark),
+                inset -3px -3px 6px var(--shadow-light);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .page-header p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* ===== STAT CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            padding: 24px;
+        }
+
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            box-shadow: 
+                inset 3px 3px 6px var(--shadow-dark),
+                inset -3px -3px 6px var(--shadow-light);
+        }
+
+        .stat-card .stat-icon svg {
+            width: 22px;
+            height: 22px;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .stat-card .stat-icon.purple svg { stroke: var(--accent-light); }
+        .stat-card .stat-icon.green svg { stroke: var(--success); }
+        .stat-card .stat-icon.yellow svg { stroke: var(--warning); }
+        .stat-card .stat-icon.red svg { stroke: var(--danger); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== TABLE ===== */
+        .table-container {
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 12px 16px;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-radius: 12px;
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            font-size: 0.9rem;
+            background: var(--bg);
+            box-shadow: 
+                3px 3px 6px var(--shadow-dark),
+                -3px -3px 6px var(--shadow-light);
+        }
+
+        tbody td:first-child { border-radius: 12px 0 0 12px; }
+        tbody td:last-child { border-radius: 0 12px 12px 0; }
+
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            box-shadow: 
+                inset 2px 2px 4px var(--shadow-dark),
+                inset -2px -2px 4px var(--shadow-light);
+        }
+
+        .avatar.a1 { color: var(--accent-light); }
+        .avatar.a2 { color: var(--success); }
+        .avatar.a3 { color: var(--warning); }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            color: var(--success);
+            box-shadow: 
+                inset 2px 2px 4px var(--shadow-dark),
+                inset -2px -2px 4px var(--shadow-light);
+        }
+
+        .status-absent {
+            color: var(--danger);
+            box-shadow: 
+                inset 2px 2px 4px var(--shadow-dark),
+                inset -2px -2px 4px var(--shadow-light);
+        }
+
+        /* ===== BUTTONS ===== */
+        .buttons-section {
+            margin-bottom: 32px;
+        }
+        .buttons-section h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .btn-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .btn-neu {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg);
+            color: var(--text);
+            box-shadow: 
+                6px 6px 12px var(--shadow-dark),
+                -6px -6px 12px var(--shadow-light);
+        }
+
+        .btn-neu:hover {
+            box-shadow: 
+                4px 4px 8px var(--shadow-dark),
+                -4px -4px 8px var(--shadow-light);
+        }
+
+        .btn-neu:active, .btn-neu.pressed {
+            box-shadow: 
+                inset 4px 4px 8px var(--shadow-dark),
+                inset -4px -4px 8px var(--shadow-light);
+        }
+
+        .btn-neu.accent {
+            color: var(--accent-light);
+        }
+
+        .btn-neu.success {
+            color: var(--success);
+        }
+
+        .btn-neu.danger {
+            color: var(--danger);
+        }
+
+        /* ===== FORM ===== */
+        .form-section {
+            padding: 28px;
+            margin-bottom: 32px;
+        }
+
+        .form-section h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 14px 18px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text);
+            background: var(--bg);
+            outline: none;
+            box-shadow: 
+                inset 4px 4px 8px var(--shadow-dark),
+                inset -4px -4px 8px var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            box-shadow: 
+                inset 4px 4px 8px var(--shadow-dark),
+                inset -4px -4px 8px var(--shadow-light),
+                0 0 0 2px rgba(124, 58, 237, 0.3);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .form-group select {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .form-group select option {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        /* ===== TOGGLE / SWITCHES ===== */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .toggle-switch {
+            width: 56px;
+            height: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 
+                inset 4px 4px 8px var(--shadow-dark),
+                inset -4px -4px 8px var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch .toggle-knob {
+            width: 24px;
+            height: 24px;
+            border-radius: 12px;
+            background: var(--bg);
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            box-shadow: 
+                3px 3px 6px var(--shadow-dark),
+                -3px -3px 6px var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-knob {
+            left: 29px;
+            background: var(--accent);
+            box-shadow: 
+                0 2px 8px rgba(124, 58, 237, 0.4);
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        /* ===== PROGRESS ===== */
+        .progress-section {
+            padding: 28px;
+            margin-bottom: 32px;
+        }
+
+        .progress-section h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .progress-item {
+            margin-bottom: 20px;
+        }
+        .progress-item .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        .progress-item .progress-label span:last-child {
+            color: var(--text-dim);
+        }
+        .progress-bar-track {
+            height: 12px;
+            border-radius: 6px;
+            box-shadow: 
+                inset 3px 3px 6px var(--shadow-dark),
+                inset -3px -3px 6px var(--shadow-light);
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+            transition: width 1s ease;
+        }
+        .progress-bar-fill.green {
+            background: linear-gradient(90deg, #059669, var(--success));
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        .progress-bar-fill.yellow {
+            background: linear-gradient(90deg, #d97706, var(--warning));
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        /* ===== NOTIFICATION CARDS ===== */
+        .notif-section {
+            margin-bottom: 32px;
+        }
+        .notif-section h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .notif-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .notif-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+        }
+        .notif-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .notif-dot.purple { background: var(--accent); box-shadow: 0 0 8px rgba(124,58,237,0.5); }
+        .notif-dot.green { background: var(--success); box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+        .notif-dot.red { background: var(--danger); box-shadow: 0 0 8px rgba(239,68,68,0.5); }
+        .notif-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        .notif-time {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        /* ===== MOBILE ===== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Torna al confronto
+        </a>
+        <span class="style-badge">NEUMORPHISM / SOFT UI</span>
+    </div>
+
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-circle">P</div>
+                <h2>Pws<span>Work</span></h2>
+            </div>
+            <a href="#" class="nav-item active">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Dipendenti
+            </a>
+            <a href="#" class="nav-item">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Programma
+            </a>
+            <a href="#" class="nav-item">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Ore
+            </a>
+            <a href="#" class="nav-item">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profilo
+            </a>
+            <a href="#" class="nav-item">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Impostazioni
+            </a>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Panoramica dei tuoi dipendenti — Neumorphism Style</p>
+            </div>
+
+            <!-- STATS -->
+            <div class="stats-grid">
+                <div class="stat-card neu-raised">
+                    <div class="stat-icon purple">
+                        <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Dipendenti totali</div>
+                </div>
+                <div class="stat-card neu-raised">
+                    <div class="stat-icon green">
+                        <svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="stat-value">18</div>
+                    <div class="stat-label">Presenti oggi</div>
+                </div>
+                <div class="stat-card neu-raised">
+                    <div class="stat-icon yellow">
+                        <svg viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">In ritardo</div>
+                </div>
+                <div class="stat-card neu-raised">
+                    <div class="stat-icon red">
+                        <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Assenti</div>
+                </div>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="buttons-section">
+                <h3>Componenti — Pulsanti</h3>
+                <div class="btn-row">
+                    <button class="btn-neu accent">+ Aggiungi Dipendente</button>
+                    <button class="btn-neu success">✓ Salva</button>
+                    <button class="btn-neu danger">✕ Elimina</button>
+                    <button class="btn-neu">Annulla</button>
+                    <button class="btn-neu pressed">Premuto</button>
+                </div>
+            </div>
+
+            <!-- FORM -->
+            <div class="form-section neu-raised">
+                <h3>Form — Nuovo Dipendente</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" placeholder="Mario">
+                    </div>
+                    <div class="form-group">
+                        <label>Cognome</label>
+                        <input type="text" placeholder="Rossi">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="mario@esempio.it">
+                    </div>
+                    <div class="form-group">
+                        <label>Ruolo</label>
+                        <input type="text" placeholder="Operaio">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-neu accent">Salva Dipendente</button>
+                        <button class="btn-neu">Annulla</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOGGLES -->
+            <div class="form-section neu-raised">
+                <h3>Componenti — Toggle Switch</h3>
+                <div class="toggle-row">
+                    <div class="toggle-switch active"><div class="toggle-knob"></div></div>
+                    <span class="toggle-label">Notifiche attive</span>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-switch"><div class="toggle-knob"></div></div>
+                    <span class="toggle-label">Tema scuro</span>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-switch active"><div class="toggle-knob"></div></div>
+                    <span class="toggle-label">Sincronizzazione automatica</span>
+                </div>
+            </div>
+
+            <!-- PROGRESS -->
+            <div class="progress-section neu-raised">
+                <h3>Progresso — Ore Lavorate</h3>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Gregge 1</span>
+                        <span>87%</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" style="width: 87%"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Gregge 2</span>
+                        <span>65%</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill green" style="width: 65%"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Gregge 3</span>
+                        <span>42%</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill yellow" style="width: 42%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-container neu-raised">
+                <div class="table-header">
+                    <h3>Dipendenti Recenti</h3>
+                    <button class="btn-neu accent" style="padding: 8px 16px; font-size: 0.8rem;">Vedi tutti</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dipendente</th>
+                            <th>Ruolo</th>
+                            <th>Stato</th>
+                            <th>Ore</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="employee-info"><div class="avatar a1">MR</div><span>Mario Rossi</span></div></td>
+                            <td>Operaio</td>
+                            <td><span class="status-badge status-active">Presente</span></td>
+                            <td>7.5h</td>
+                        </tr>
+                        <tr>
+                            <td><div class="employee-info"><div class="avatar a2">LV</div><span>Luca Verdi</span></div></td>
+                            <td>Caposquadra</td>
+                            <td><span class="status-badge status-active">Presente</span></td>
+                            <td>8.0h</td>
+                        </tr>
+                        <tr>
+                            <td><div class="employee-info"><div class="avatar a3">AB</div><span>Anna Bianchi</span></div></td>
+                            <td>Segretaria</td>
+                            <td><span class="status-badge status-absent">Assente</span></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="notif-section">
+                <h3>Notifiche</h3>
+                <div class="notif-list">
+                    <div class="notif-item neu-flat">
+                        <div class="notif-dot purple"></div>
+                        <span class="notif-text">Nuovo turno assegnato per lunedì</span>
+                        <span class="notif-time">2 min fa</span>
+                    </div>
+                    <div class="notif-item neu-flat">
+                        <div class="notif-dot green"></div>
+                        <span class="notif-text">Mario Rossi ha completato il turno</span>
+                        <span class="notif-time">15 min fa</span>
+                    </div>
+                    <div class="notif-item neu-flat">
+                        <div class="notif-dot red"></div>
+                        <span class="notif-text">Anna Bianchi — richiesta assenza approvata</span>
+                        <span class="notif-time">1 ora fa</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</body>
+</html>

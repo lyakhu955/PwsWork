@@ -1,0 +1,13 @@
+{
+  "appId": "com.pws.app",
+  "appName": "PWS App",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#0a0f1e"
+    }
+  }
+}

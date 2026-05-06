@@ -577,7 +577,6 @@
             </div>
             <form id="assignment-form" class="modal-form">
                 <input type="hidden" id="assignment-id">
-                <input type="hidden" id="assignment-multi-dates-data" value="[]">
 
                 <!-- Data -->
                 <div class="form-group">
@@ -585,39 +584,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         Data
                     </label>
-                    <div class="assignment-date-mode" id="assignment-date-mode">
-                        <button type="button" class="btn btn-outline btn-sm active" id="assignment-single-date-btn" onclick="Schedule.setDateMode('single')">Solo questo giorno</button>
-                        <button type="button" class="btn btn-outline btn-sm" id="assignment-multi-date-btn" onclick="Schedule.setDateMode('multi')">Più giorni</button>
-                    </div>
                     <input type="date" id="assignment-date" required>
-                    <div id="assignment-multi-date-panel" class="assignment-multi-date-panel" style="display:none;">
-                        <div class="wa-calendar-nav">
-                            <button type="button" class="btn btn-icon btn-sm" onclick="Schedule.calendarPrev()">&#8249;</button>
-                            <span id="sched-calendar-title" class="wa-calendar-title"></span>
-                            <button type="button" class="btn btn-icon btn-sm" onclick="Schedule.calendarNext()">&#8250;</button>
-                        </div>
-                        <div id="sched-calendar-grid" class="wa-calendar-grid"></div>
-                        <div class="wa-calendar-hint">Tocca i giorni per selezionarli/deselezionarli</div>
-                        <div id="assignment-multi-date-list" class="assignment-multi-date-list" style="margin-top:10px;"></div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-1a2 2 0 0 0-2 2v2"/><path d="M8 3h1a2 2 0 0 1 2 2v2"/></svg>
-                        Copia / Incolla Squadra
-                    </label>
-                    <div class="assignment-copy-panel">
-                        <button type="button" class="btn btn-outline btn-sm" id="assignment-copy-btn" onclick="Schedule.copyCurrentAssignment()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            Copia squadra
-                        </button>
-                        <button type="button" class="btn btn-outline btn-sm" id="assignment-paste-btn" onclick="Schedule.pasteAssignment()" style="display:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            Incolla squadra
-                        </button>
-                        <div id="assignment-copy-status" class="assignment-copy-status">Nessuna squadra copiata</div>
-                    </div>
                 </div>
 
                 <!-- Nome Squadra -->
@@ -728,32 +695,6 @@
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-primary" onclick="Schedule.closeDetailModal()">Chiudi</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Workplace Attachments Modal -->
-    <div id="attachments-modal" class="modal-overlay">
-        <div class="modal glass-card modal-lg">
-            <div class="modal-header">
-                <h3 id="attachments-modal-title">Allegati posto di lavoro</h3>
-                <button class="modal-close" onclick="Schedule.closeAttachmentsModal()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-            </div>
-            <div class="attachments-modal-body">
-                <div id="attachments-upload-area" class="attachments-upload-area" style="display:none;">
-                    <input type="file" id="attachments-file-input" accept="image/*,.pdf,application/pdf" multiple style="display:none;">
-                    <button type="button" class="btn btn-primary" onclick="document.getElementById('attachments-file-input').click()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        Carica immagini o PDF
-                    </button>
-                    <p class="attachments-upload-hint">Formati supportati: immagini e PDF</p>
-                </div>
-                <div id="attachments-list" class="attachments-list"></div>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="Schedule.closeAttachmentsModal()">Chiudi</button>
             </div>
         </div>
     </div>

@@ -24,75 +24,6 @@ const Storage = (() => {
         SIDEBAR_COLLAPSED: 'pws_sidebar_collapsed'
     };
 
-    function _normalizeAttachment(att) {
-        if (!att) return null;
-        return {
-            id: att.id || ('att_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)),
-            name: att.name || 'Allegato',
-            type: att.type || 'application/octet-stream',
-            kind: att.kind || (String(att.type || '').includes('pdf') ? 'pdf' : 'image'),
-            storagePath: att.storagePath || '',
-            downloadURL: att.downloadURL || '',
-            uploadedAt: att.uploadedAt || new Date().toISOString(),
-            uploadedBy: att.uploadedBy || ''
-        };
-    }
-
-    function _normalizeWorkplace(workplace) {
-        const wp = workplace || {};
-        return {
-            name: wp.name || '',
-            address: wp.address || '',
-            lat: wp.lat ?? null,
-            lng: wp.lng ?? null,
-            info: wp.info || '',
-            timeStart: wp.timeStart || null,
-            timeEnd: wp.timeEnd || null,
-            attachments: Array.isArray(wp.attachments)
-                ? wp.attachments.map(_normalizeAttachment).filter(Boolean)
-                : []
-        };
-    }
-
-    function _normalizeAssignment(assignment) {
-        const asgn = assignment || {};
-        return {
-            ...asgn,
-            workplaces: Array.isArray(asgn.workplaces) ? asgn.workplaces.map(_normalizeWorkplace) : []
-        };
-    }
-
-    function _collectAssignmentAttachmentPaths(assignments, excludeId = null) {
-        const paths = new Set();
-        (assignments || []).forEach(asgn => {
-            if (!asgn || (excludeId && asgn.id === excludeId)) return;
-            (asgn.workplaces || []).forEach(wp => {
-                (wp.attachments || []).forEach(att => {
-                    if (att?.storagePath) paths.add(att.storagePath);
-                });
-            });
-        });
-        return paths;
-    }
-
-    async function _deleteUnusedAttachmentsFromAssignment(assignment, excludeId = null) {
-        if (!assignment || typeof storage === 'undefined') return;
-        const usedElsewhere = _collectAssignmentAttachmentPaths(_assignments, excludeId);
-        const deletions = [];
-        (assignment.workplaces || []).forEach(wp => {
-            (wp.attachments || []).forEach(att => {
-                if (att?.storagePath && !usedElsewhere.has(att.storagePath)) {
-                    deletions.push(
-                        storage.ref(att.storagePath).delete().catch(err => {
-                            console.error('Error deleting attachment:', att.storagePath, err);
-                        })
-                    );
-                }
-            });
-        });
-        await Promise.all(deletions);
-    }
-
     // ==================== DATE HELPERS (Formato Italiano) ====================
     function toLocalDateStr(date) {
         const d = date || new Date();
@@ -234,7 +165,7 @@ const Storage = (() => {
         db.collection(COLLECTIONS.ASSIGNMENTS).onSnapshot((snapshot) => {
             _assignments = [];
             snapshot.forEach((doc) => {
-                _assignments.push(_normalizeAssignment({ ...doc.data(), id: doc.id }));
+                _assignments.push({ ...doc.data(), id: doc.id });
             });
             const wasLoaded = _loadedSources.assignments;
             _loadedSources.assignments = true;
@@ -352,7 +283,6 @@ const Storage = (() => {
         const id = 'asgn_' + Date.now();
         assignment.id = id;
         assignment.createdAt = new Date().toISOString();
-        assignment = _normalizeAssignment(assignment);
 
         _assignments.push({ ...assignment });
 
@@ -366,7 +296,6 @@ const Storage = (() => {
     /* Accepts a pre-built assignment object (id + createdAt already set).
        Used by AI-import to avoid Date.now() collisions in synchronous loops. */
     function _pushAssignment(assignment) {
-        assignment = _normalizeAssignment(assignment);
         _assignments.push({ ...assignment });
         db.collection(COLLECTIONS.ASSIGNMENTS).doc(assignment.id).set(assignment).catch(err => {
             console.error('Error adding assignment:', err);
@@ -374,29 +303,10 @@ const Storage = (() => {
         return assignment;
     }
 
-    function addAssignmentsForDates(template, dates) {
-        const uniqueDates = [...new Set((dates || []).filter(Boolean))].sort();
-        if (uniqueDates.length === 0) return [];
-
-        const created = [];
-        uniqueDates.forEach((dateStr, idx) => {
-            const assignment = _normalizeAssignment({
-                ...template,
-                id: 'asgn_' + Date.now() + '_' + idx,
-                date: dateStr,
-                createdAt: new Date().toISOString()
-            });
-            _pushAssignment(assignment);
-            created.push(assignment);
-        });
-
-        return created;
-    }
-
     function updateAssignment(id, data) {
         const index = _assignments.findIndex(a => a.id === id);
         if (index !== -1) {
-            _assignments[index] = _normalizeAssignment({ ..._assignments[index], ...data });
+            _assignments[index] = { ..._assignments[index], ...data };
 
             db.collection(COLLECTIONS.ASSIGNMENTS).doc(id).update(data).catch(err => {
                 console.error('Error updating assignment:', err);
@@ -407,13 +317,8 @@ const Storage = (() => {
         return null;
     }
 
-    async function deleteAssignment(id) {
-        const assignment = _assignments.find(a => a.id === id);
+    function deleteAssignment(id) {
         _assignments = _assignments.filter(a => a.id !== id);
-
-        if (assignment) {
-            await _deleteUnusedAttachmentsFromAssignment(assignment, id);
-        }
 
         db.collection(COLLECTIONS.ASSIGNMENTS).doc(id).delete().catch(err => {
             console.error('Error deleting assignment:', err);
@@ -443,8 +348,7 @@ const Storage = (() => {
     function setSidebarCollapsed(collapsed) { localStorage.setItem(LOCAL_KEYS.SIDEBAR_COLLAPSED, String(collapsed)); }
 
     // ==================== RESET ====================
-    async function resetAll() {
-        const attachmentPaths = Array.from(_collectAssignmentAttachmentPaths(_assignments));
+    function resetAll() {
         // Delete all Firestore docs in a batch
         const batch = db.batch();
 
@@ -460,12 +364,6 @@ const Storage = (() => {
         }).catch(err => {
             console.error('Error resetting Firestore data:', err);
         });
-
-        await Promise.all(attachmentPaths.map(path =>
-            storage.ref(path).delete().catch(err => {
-                console.error('Error deleting attachment during reset:', path, err);
-            })
-        ));
 
         // Clear caches
         _employees = [];
@@ -488,7 +386,7 @@ const Storage = (() => {
         addEmployee, updateEmployee, deleteEmployee,
         getAssignments, getAssignment, getAssignmentsByDate,
         getAssignmentsByEmployee, getAssignmentsByDateRange,
-        addAssignment, addAssignmentsForDates, _pushAssignment, updateAssignment, deleteAssignment,
+        addAssignment, _pushAssignment, updateAssignment, deleteAssignment,
         getCurrentUser, setCurrentUser, clearCurrentUser,
         getTheme, setTheme,
         getSidebarCollapsed, setSidebarCollapsed,
