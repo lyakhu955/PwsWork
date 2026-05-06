@@ -940,15 +940,19 @@
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                         <p>Invia un link che apre <strong>direttamente il programma di quel giorno</strong>. Chi lo riceve vedrà i lavori appena effettua il login.</p>
                     </div>
-                    <!-- Date per il link -->
-                    <div class="wa-link-date-row">
-                        <label style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;display:block;">Seleziona il giorno</label>
-                        <input type="date" id="wa-link-date" class="form-input" style="max-width:220px;">
+                    <!-- Week calendar picker -->
+                    <div class="wa-week-picker">
+                        <div class="wa-week-nav">
+                            <button type="button" class="btn btn-icon btn-sm" onclick="WhatsApp.linkWeekPrev()">&#8249;</button>
+                            <span id="wa-week-label" class="wa-week-label"></span>
+                            <button type="button" class="btn btn-icon btn-sm" onclick="WhatsApp.linkWeekNext()">&#8250;</button>
+                        </div>
+                        <div id="wa-week-days" class="wa-week-days"></div>
                     </div>
                     <!-- Link preview box -->
-                    <div style="margin-top:14px;">
+                    <div>
                         <div class="wa-preview-label">🔗 Link generato</div>
-                        <div class="wa-link-box" id="wa-link-preview">Seleziona una data...</div>
+                        <div class="wa-link-box" id="wa-link-preview">Seleziona un giorno...</div>
                     </div>
                     <!-- Actions -->
                     <div class="wa-actions" style="margin-top:14px;">

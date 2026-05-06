@@ -327,37 +327,101 @@ const WhatsApp = (() => {
         document.getElementById('wa-panel-msg').style.display = tab === 'msg' ? '' : 'none';
         document.getElementById('wa-panel-link').style.display = tab === 'link' ? '' : 'none';
 
-        // Pre-fill link date with first selected message date
+        // Init week picker on first open
         if (tab === 'link') {
-            const linkDateInput = document.getElementById('wa-link-date');
-            if (linkDateInput && !linkDateInput.value) {
-                linkDateInput.value = _selectedDates[0] || Storage.toLocalDateStr(new Date());
+            if (!_linkWeekStart) {
+                _linkWeekStart = _getMondayOf(new Date());
+                // Pre-select first selected message date if available
+                if (_selectedDates.length > 0) {
+                    _linkSelectedDate = _selectedDates[0];
+                    _linkWeekStart = _getMondayOf(new Date(_linkSelectedDate + 'T00:00:00'));
+                }
             }
+            _renderWeekPicker();
             _updateLinkPreview();
         }
     }
 
-    // ==================== LINK TAB ====================
+    // ==================== LINK TAB - WEEK PICKER ====================
+    const DAY_NAMES_SHORT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+    let _linkWeekStart = null; // Monday of displayed week (Date obj)
+    let _linkSelectedDate = null; // 'YYYY-MM-DD' string
+
+    function _getMondayOf(date) {
+        const d = new Date(date);
+        const dow = d.getDay(); // 0=Sun
+        const diff = dow === 0 ? -6 : 1 - dow; // shift to Monday
+        d.setDate(d.getDate() + diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    function _toDateStr(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function _renderWeekPicker() {
+        const labelEl = document.getElementById('wa-week-label');
+        const daysEl = document.getElementById('wa-week-days');
+        if (!labelEl || !daysEl || !_linkWeekStart) return;
+
+        const weekEnd = new Date(_linkWeekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+
+        const formatShort = (d) => `${d.getDate()} ${MONTH_NAMES[d.getMonth()].substring(0, 3)}`;
+        labelEl.textContent = `${formatShort(_linkWeekStart)} – ${formatShort(weekEnd)} ${weekEnd.getFullYear()}`;
+
+        daysEl.innerHTML = '';
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(_linkWeekStart);
+            day.setDate(day.getDate() + i);
+            const dateStr = _toDateStr(day);
+            const isSelected = dateStr === _linkSelectedDate;
+            const isToday = dateStr === _toDateStr(new Date());
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'wa-week-day' + (isSelected ? ' selected' : '') + (isToday ? ' today' : '');
+            btn.innerHTML = `<span class="wa-wd-name">${DAY_NAMES_SHORT[i]}</span><span class="wa-wd-num">${day.getDate()}</span>`;
+            btn.addEventListener('click', () => {
+                _linkSelectedDate = dateStr;
+                _renderWeekPicker();
+                _updateLinkPreview();
+            });
+            daysEl.appendChild(btn);
+        }
+    }
+
+    function linkWeekPrev() {
+        if (!_linkWeekStart) return;
+        _linkWeekStart.setDate(_linkWeekStart.getDate() - 7);
+        _renderWeekPicker();
+    }
+
+    function linkWeekNext() {
+        if (!_linkWeekStart) return;
+        _linkWeekStart.setDate(_linkWeekStart.getDate() + 7);
+        _renderWeekPicker();
+    }
+
     function _getBaseUrl() {
         return window.location.origin + window.location.pathname.replace(/\/$/, '');
     }
 
     function _updateLinkPreview() {
-        const dateInput = document.getElementById('wa-link-date');
         const previewBox = document.getElementById('wa-link-preview');
         const copyBtn = document.getElementById('wa-copy-link-btn');
         const sendBtn = document.getElementById('wa-send-link-btn');
-        if (!dateInput || !previewBox) return;
+        if (!previewBox) return;
 
-        const date = dateInput.value;
-        if (!date) {
-            previewBox.textContent = 'Seleziona una data...';
+        if (!_linkSelectedDate) {
+            previewBox.textContent = 'Seleziona un giorno...';
             if (copyBtn) copyBtn.disabled = true;
             if (sendBtn) sendBtn.disabled = true;
             return;
         }
 
-        const url = `${_getBaseUrl()}?date=${date}`;
+        const url = `${_getBaseUrl()}?date=${_linkSelectedDate}`;
         previewBox.textContent = url;
         if (copyBtn) copyBtn.disabled = false;
         if (sendBtn) sendBtn.disabled = false;
@@ -400,13 +464,11 @@ const WhatsApp = (() => {
     }
 
     function openWhatsAppLink() {
-        const previewBox = document.getElementById('wa-link-preview');
-        const url = previewBox?.textContent?.trim();
-        if (!url || url === 'Seleziona una data...') return;
-
-        const dateInput = document.getElementById('wa-link-date');
-        const date = dateInput?.value || '';
-        let text = `📅 Programma lavori del ${date ? new Date(date + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}\n🔗 ${url}`;
+        if (!_linkSelectedDate) return;
+        const url = `${_getBaseUrl()}?date=${_linkSelectedDate}`;
+        const d = new Date(_linkSelectedDate + 'T00:00:00');
+        const dateLabel = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+        const text = `📅 Programma lavori del ${dateLabel}\n🔗 ${url}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
@@ -443,6 +505,8 @@ const WhatsApp = (() => {
         openForDate,
         switchTab,
         copyLink,
-        openWhatsAppLink
+        openWhatsAppLink,
+        linkWeekPrev,
+        linkWeekNext
     };
 })();

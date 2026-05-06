@@ -982,6 +982,83 @@
     min-height: 40px;
 }
 
+/* Week picker */
+.wa-week-picker {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+
+.wa-week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.wa-week-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.wa-week-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.wa-week-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-family: inherit;
+}
+
+.wa-wd-name {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.wa-wd-num {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.wa-week-day:hover {
+    background: rgba(139, 92, 246, 0.12);
+}
+
+.wa-week-day.today .wa-wd-num {
+    color: #a78bfa;
+    font-weight: 700;
+}
+
+.wa-week-day.today .wa-wd-name {
+    color: #a78bfa;
+}
+
+.wa-week-day.selected {
+    background: #8b5cf6;
+}
+
+.wa-week-day.selected .wa-wd-name,
+.wa-week-day.selected .wa-wd-num {
+    color: #fff;
+}
 
 .wa-date-header {
     display: flex;
