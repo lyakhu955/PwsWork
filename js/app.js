@@ -133,6 +133,10 @@ const App = (() => {
 
     // ==================== PAGE MANAGEMENT ====================
     function showLogin() {
+        // Remove the anti-flash style injected at startup (if any)
+        const antiFlash = document.getElementById('instant-login-style');
+        if (antiFlash) antiFlash.remove();
+
         document.getElementById('login-page').classList.add('active');
         document.getElementById('login-page').style.display = 'flex';
         document.getElementById('app').style.display = 'none';

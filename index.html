@@ -25,7 +25,7 @@
     <!-- ==================== LOGIN PAGE ==================== -->
     <script>
         if (localStorage.getItem('pws_current_user')) {
-            document.write('<style>#login-page { display: none !important; } #app { display: flex !important; }</style>');
+            document.write('<style id="instant-login-style">#login-page { display: none !important; } #app { display: flex !important; }</style>');
         }
     </script>
     <div id="login-page" class="page login-page active">
@@ -828,13 +828,26 @@
                 </button>
             </div>
             <form id="availability-form" class="modal-form">
+                <!-- Custom Calendar -->
                 <div class="form-group">
                     <label>Data</label>
-                    <input type="date" id="avail-date" required>
+                    <div class="avail-cal-wrapper">
+                        <div class="avail-cal-nav">
+                            <button type="button" class="icon-btn" onclick="Availabilities.calPrev()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                            </button>
+                            <span id="avail-cal-title" style="font-weight: 700; font-size: 0.95rem;"></span>
+                            <button type="button" class="icon-btn" onclick="Availabilities.calNext()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
+                        </div>
+                        <div id="avail-cal-grid" class="avail-cal-grid"></div>
+                    </div>
+                    <div id="avail-date-display" style="text-align: center; font-size: 0.85rem; margin-top: 6px; color: var(--text-tertiary);">Seleziona una data dal calendario</div>
                 </div>
                 <div class="form-group">
-                    <label>Titolo o Orario (Es. Matrimonio 18:00)</label>
-                    <input type="text" id="avail-title" placeholder="Es. Lavoro in Villa - 18:00" required>
+                    <label>Titolo o Orario</label>
+                    <input type="text" id="avail-title" placeholder="Es. Matrimonio Villa Rossi - 18:00" required>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="Availabilities.closeModal()">Annulla</button>

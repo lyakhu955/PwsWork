@@ -1878,3 +1878,164 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* ==================== AVAILABILITIES PAGE ==================== */
+
+/* --- Date Accordion --- */
+.avail-date-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.avail-date-header:hover {
+    box-shadow: var(--neu-inset-sm);
+}
+
+.avail-chevron {
+    transition: transform 0.3s ease;
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+
+.avail-date-accordion.open > .avail-date-header .avail-chevron {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+.avail-date-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.avail-date-accordion.open > .avail-date-body {
+    max-height: 5000px;
+}
+
+.avail-date-body-inner {
+    padding: 0 20px 20px;
+}
+
+/* --- Job Accordion --- */
+.avail-job-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.avail-job-header:hover {
+    box-shadow: var(--neu-inset-sm);
+}
+
+.avail-job-accordion.open > .avail-job-header .avail-chevron {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+.avail-job-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.avail-job-accordion.open > .avail-job-body {
+    max-height: 2000px;
+}
+
+.avail-job-body-inner {
+    padding: 0 16px 16px;
+    border-top: 1px dashed var(--border-color-strong);
+    padding-top: 14px;
+}
+
+/* --- Custom Calendar (Modal) --- */
+.avail-cal-wrapper {
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    box-shadow: var(--neu-inset-sm);
+}
+
+.avail-cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.avail-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+
+.avail-cal-dow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    padding: 4px 0;
+}
+
+.avail-cal-day {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: var(--text-primary);
+}
+
+.avail-cal-day:hover {
+    background: var(--accent-primary-light);
+}
+
+.avail-cal-day.empty {
+    pointer-events: none;
+}
+
+.avail-cal-day.today {
+    border: 2px solid var(--accent-primary);
+    font-weight: 700;
+}
+
+.avail-cal-day.selected {
+    background: var(--accent-gradient);
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+}
+
+.avail-cal-day.weekend {
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
+.avail-cal-day.weekend.selected {
+    color: white;
+}
+
+@media (max-width: 480px) {
+    .avail-date-body-inner {
+        padding: 0 12px 14px;
+    }
+    .avail-job-body-inner {
+        padding: 0 10px 12px;
+        padding-top: 12px;
+    }
+}
