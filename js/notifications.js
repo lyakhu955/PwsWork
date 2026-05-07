@@ -69,22 +69,38 @@ const Notifica = (() => {
 
             const messaging = firebase.messaging();
 
+            // Wait for service worker to be fully ready
+            const swReg = await navigator.serviceWorker.ready;
+
+            // Ensure the SW is active (not just installing)
+            if (!swReg.active) {
+                console.log('⏳ Waiting for service worker to activate...');
+                await new Promise(resolve => {
+                    swReg.installing?.addEventListener('statechange', function handler(e) {
+                        if (e.target.state === 'activated') {
+                            e.target.removeEventListener('statechange', handler);
+                            resolve();
+                        }
+                    });
+                    // Timeout fallback
+                    setTimeout(resolve, 3000);
+                });
+            }
+
             // Get FCM token
             const token = await messaging.getToken({
                 vapidKey: _getVapidKey(),
-                serviceWorkerRegistration: await navigator.serviceWorker.ready
+                serviceWorkerRegistration: swReg
             });
 
             if (token) {
                 _fcmToken = token;
                 console.log('🔔 FCM Token obtained');
-                // Save token to Firestore
                 await _saveTokenToFirestore(token);
             }
 
-            // Handle token refresh
+            // Handle foreground messages
             messaging.onMessage((payload) => {
-                // App is in foreground — show in-app notification
                 console.log('📩 FCM foreground message:', payload);
                 const notif = payload.notification || {};
                 const data = payload.data || {};
@@ -96,6 +112,13 @@ const Notifica = (() => {
 
         } catch (err) {
             console.error('FCM registration error:', err);
+            // Retry once after a delay
+            if (!_fcmToken) {
+                setTimeout(() => {
+                    console.log('🔄 Retrying FCM registration...');
+                    _registerFCM();
+                }, 5000);
+            }
         }
     }
 
