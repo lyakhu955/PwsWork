@@ -18,6 +18,26 @@ const Notifica = (() => {
         if ('Notification' in window) {
             _permission = Notification.permission;
         }
+
+        // Listen for messages from service worker (notification click)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'NOTIFICATION_CLICK') {
+                    const navData = event.data.data || {};
+                    if (navData.page && typeof App !== 'undefined') {
+                        App.navigateTo(navData.page);
+                        // If it's a schedule notification with a date, open that day
+                        if (navData.page === 'schedule' && navData.date) {
+                            setTimeout(() => {
+                                if (typeof Schedule !== 'undefined' && Schedule.openDetailModalByDate) {
+                                    Schedule.openDetailModalByDate(navData.date, true);
+                                }
+                            }, 400);
+                        }
+                    }
+                }
+            });
+        }
     }
 
     // ==================== REQUEST PERMISSION ====================
@@ -40,7 +60,8 @@ const Notifica = (() => {
     }
 
     // ==================== SEND NOTIFICATION ====================
-    function send(title, body, tag) {
+    // navData = { page: 'schedule'|'availabilities', date: '2026-05-10' }
+    function send(title, body, tag, navData) {
         if (!_enabled) return;
 
         // Play sound regardless of permission (in-app)
@@ -48,18 +69,16 @@ const Notifica = (() => {
 
         // Show native notification
         if (_permission === 'granted') {
-            _showNative(title, body, tag);
+            _showNative(title, body, tag, navData);
         } else if (_permission === 'default') {
-            // Try requesting permission, then show
             requestPermission().then(granted => {
-                if (granted) _showNative(title, body, tag);
+                if (granted) _showNative(title, body, tag, navData);
             });
         }
     }
 
-    function _showNative(title, body, tag) {
+    function _showNative(title, body, tag, navData) {
         try {
-            // Use service worker for background notifications
             if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.ready.then(reg => {
                     reg.showNotification(title, {
@@ -69,16 +88,21 @@ const Notifica = (() => {
                         tag: tag || 'pws-notif-' + Date.now(),
                         vibrate: [200, 100, 200],
                         renotify: true,
-                        data: { url: './' }
+                        data: navData || {}
                     });
                 });
             } else {
-                // Fallback to basic Notification
-                new Notification(title, {
+                const n = new Notification(title, {
                     body: body,
                     icon: './icons/icon-192.png',
                     tag: tag || 'pws-notif-' + Date.now()
                 });
+                n.onclick = () => {
+                    window.focus();
+                    if (navData && navData.page && typeof App !== 'undefined') {
+                        App.navigateTo(navData.page);
+                    }
+                };
             }
         } catch (e) {
             console.warn('Notification error:', e);

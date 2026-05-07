@@ -253,7 +253,8 @@ const Storage = (() => {
                     Notifica.send(
                         '📋 Nuovo Programma',
                         `${item.workplace || 'Lavoro'} — ${dateLabel}`,
-                        'assignment-' + item.id
+                        'assignment-' + item.id,
+                        { page: 'schedule', date: item.date }
                     );
                 }
                 _onDataChange();
@@ -284,7 +285,8 @@ const Storage = (() => {
                     Notifica.send(
                         '🗓️ Nuova Disponibilità',
                         `${item.title} — ${dateLabel}`,
-                        'avail-' + item.id
+                        'avail-' + item.id,
+                        { page: 'availabilities' }
                     );
                 }
                 _onDataChange();

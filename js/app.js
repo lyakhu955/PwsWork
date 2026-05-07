@@ -177,15 +177,20 @@ const App = (() => {
         // ======= DEEP LINK: ?date=YYYY-MM-DD =======
         const urlParams = new URLSearchParams(window.location.search);
         const deepDate = urlParams.get('date');
+        const deepPage = urlParams.get('page');
+
         if (deepDate && /^\d{4}-\d{2}-\d{2}$/.test(deepDate)) {
             // Navigate to schedule and open that day's detail modal
             navigateTo('schedule');
             setTimeout(() => {
                 Schedule.openDetailModalByDate(deepDate, true);
-                // Clean URL without reloading
                 const cleanUrl = window.location.pathname;
                 window.history.replaceState({}, '', cleanUrl);
             }, 400);
+        } else if (deepPage) {
+            navigateTo(deepPage);
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, '', cleanUrl);
         }
     }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pwswork-v55';
+const CACHE_NAME = 'pwswork-v56';
 
 const APP_SHELL = [
   './',
@@ -70,20 +70,30 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Handle notification click — open the app
+// Handle notification click — open the app and navigate to correct page
 self.addEventListener('notificationclick', (event) => {
+  const navData = event.notification.data || {};
   event.notification.close();
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Focus existing window if open
+      // If app is already open, focus it and send navigation data
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus();
+          client.focus();
+          client.postMessage({ type: 'NOTIFICATION_CLICK', data: navData });
+          return;
         }
       }
-      // Otherwise open new window
+      // Otherwise open new window with page param
       if (clients.openWindow) {
-        return clients.openWindow('./');
+        let url = './';
+        if (navData.page === 'schedule' && navData.date) {
+          url = './?date=' + navData.date;
+        } else if (navData.page) {
+          url = './?page=' + navData.page;
+        }
+        return clients.openWindow(url);
       }
     })
   );
