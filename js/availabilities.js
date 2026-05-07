@@ -183,10 +183,21 @@ const Availabilities = (() => {
     // ==================== MODAL (CUSTOM CALENDAR) ====================
     function openModal(presetDate) {
         _selectedDate = presetDate || null;
+        _calViewYear = null;
+        _calViewMonth = null;
         const modal = document.getElementById('availability-modal');
         const form = document.getElementById('availability-form');
         if (!modal || !form) return;
         form.reset();
+
+        // Show calendar section
+        const calSection = document.getElementById('avail-cal-section');
+        if (calSection) calSection.style.display = '';
+
+        // Update modal title
+        const modalTitle = modal.querySelector('.modal-header h3');
+        if (modalTitle) modalTitle.textContent = 'Nuova Richiesta Disponibilità';
+
         _renderCalendar();
         _updateDateDisplay();
         modal.classList.add('active');
@@ -198,8 +209,16 @@ const Availabilities = (() => {
         const form = document.getElementById('availability-form');
         if (!modal || !form) return;
         form.reset();
-        _renderCalendar();
-        _updateDateDisplay();
+
+        // Hide calendar section — date is already chosen
+        const calSection = document.getElementById('avail-cal-section');
+        if (calSection) calSection.style.display = 'none';
+
+        // Update modal title to show the date
+        const modalTitle = modal.querySelector('.modal-header h3');
+        const dateLabel = Storage.formatDateLong(dateStr);
+        if (modalTitle) modalTitle.textContent = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
+
         modal.classList.add('active');
     }
 
