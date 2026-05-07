@@ -355,10 +355,33 @@ const App = (() => {
         if (window.Notifica) Notifica.updateSettingsUI();
     }
 
+    function isIOS() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isStandalone() {
+        return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
     function updateInstallButtonState() {
         const installBtn = document.getElementById('pwa-install-btn');
         const installStatus = document.getElementById('pwa-install-status');
         if (!installBtn || !installStatus) return;
+
+        if (isStandalone()) {
+            installBtn.style.display = 'none';
+            installStatus.textContent = 'PwsWork è già installata su questo dispositivo.';
+            return;
+        }
+
+        installBtn.style.display = 'inline-flex';
+
+        if (isIOS()) {
+            installBtn.disabled = false;
+            installBtn.textContent = 'Istruzioni Installazione iOS';
+            installStatus.textContent = 'Installa l\'app per abilitare le notifiche Push (richiesto su iPhone/iPad).';
+            return;
+        }
 
         const pwa = window.PWAInstall;
         if (!pwa) {
@@ -369,8 +392,7 @@ const App = (() => {
 
         const state = pwa.getState();
         if (state === 'installed') {
-            installBtn.disabled = true;
-            installBtn.textContent = 'App già installata';
+            installBtn.style.display = 'none';
             installStatus.textContent = 'PwsWork è già installata su questo dispositivo.';
             return;
         }
@@ -392,6 +414,19 @@ const App = (() => {
         if (installBtn && !installBtn.dataset.bound) {
             installBtn.dataset.bound = 'true';
             installBtn.addEventListener('click', async () => {
+                if (isIOS()) {
+                    showConfirm(
+                        'Installazione su iOS',
+                        `Per installare l'app su iPhone/iPad:<br><br>
+                        1. Tocca l'icona <b>Condividi</b> (il quadrato con la freccia in alto) nella barra inferiore di Safari.<br><br>
+                        2. Scorri verso il basso e tocca <b>"Aggiungi alla schermata Home"</b>.<br><br>
+                        3. Tocca <b>Aggiungi</b> in alto a destra.<br><br>
+                        <i>Nota: l'app deve essere installata per ricevere le notifiche.</i>`,
+                        () => {} // OK button
+                    );
+                    return;
+                }
+
                 const pwa = window.PWAInstall;
                 if (!pwa) {
                     showToast('Installazione', 'Installazione non supportata su questo browser', 'warning');
