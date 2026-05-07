@@ -35,7 +35,7 @@ messaging.onBackgroundMessage((payload) => {
 });
 
 // ==================== PWA CACHE ====================
-const CACHE_NAME = 'pwswork-v57';
+const CACHE_NAME = 'pwswork-v58';
 
 const APP_SHELL = [
   './',
