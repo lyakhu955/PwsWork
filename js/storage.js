@@ -235,6 +235,7 @@ const Storage = (() => {
 
         // --- Assignments listener ---
         db.collection(COLLECTIONS.ASSIGNMENTS).onSnapshot((snapshot) => {
+            const oldIds = new Set(_assignments.map(a => a.id));
             _assignments = [];
             snapshot.forEach((doc) => {
                 _assignments.push(_normalizeAssignment({ ...doc.data(), id: doc.id }));
@@ -242,7 +243,21 @@ const Storage = (() => {
             const wasLoaded = _loadedSources.assignments;
             _loadedSources.assignments = true;
             _checkAllLoaded();
-            if (wasLoaded) _onDataChange();
+
+            if (wasLoaded) {
+                // Detect new assignments added by someone else
+                const newItems = _assignments.filter(a => !oldIds.has(a.id));
+                if (newItems.length > 0 && typeof Notifica !== 'undefined') {
+                    const item = newItems[0];
+                    const dateLabel = formatDateLong(item.date);
+                    Notifica.send(
+                        '📋 Nuovo Programma',
+                        `${item.workplace || 'Lavoro'} — ${dateLabel}`,
+                        'assignment-' + item.id
+                    );
+                }
+                _onDataChange();
+            }
         }, (error) => {
             console.error('Firestore assignments listener error:', error);
             _loadedSources.assignments = true;
@@ -251,6 +266,7 @@ const Storage = (() => {
 
         // --- Availabilities listener ---
         db.collection(COLLECTIONS.AVAILABILITIES).onSnapshot((snapshot) => {
+            const oldIds = new Set(_availabilities.map(a => a.id));
             _availabilities = [];
             snapshot.forEach((doc) => {
                 _availabilities.push({ ...doc.data(), id: doc.id });
@@ -258,7 +274,21 @@ const Storage = (() => {
             const wasLoaded = _loadedSources.availabilities;
             _loadedSources.availabilities = true;
             _checkAllLoaded();
-            if (wasLoaded) _onDataChange();
+
+            if (wasLoaded) {
+                // Detect new availability requests
+                const newItems = _availabilities.filter(a => !oldIds.has(a.id));
+                if (newItems.length > 0 && typeof Notifica !== 'undefined') {
+                    const item = newItems[0];
+                    const dateLabel = formatDateLong(item.date);
+                    Notifica.send(
+                        '🗓️ Nuova Disponibilità',
+                        `${item.title} — ${dateLabel}`,
+                        'avail-' + item.id
+                    );
+                }
+                _onDataChange();
+            }
         }, (error) => {
             console.error('Firestore availabilities listener error:', error);
             _loadedSources.availabilities = true;

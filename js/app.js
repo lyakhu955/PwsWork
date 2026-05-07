@@ -161,6 +161,8 @@ const App = (() => {
         Profile.init();
         Absences.init();
         Availabilities.init();
+        Notifica.init();
+        Notifica.requestPermission();
         initSwipeGestures();
 
         // Navigate to dashboard

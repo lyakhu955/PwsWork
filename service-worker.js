@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pwswork-v54';
+const CACHE_NAME = 'pwswork-v55';
 
 const APP_SHELL = [
   './',
@@ -20,13 +20,15 @@ const APP_SHELL = [
   './js/hours.js',
   './js/whatsapp.js',
   './js/ai-import.js',
+  './js/availabilities.js',
+  './js/notifications.js',
   './js/app.js',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Force the new service worker to take over immediately
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
@@ -36,11 +38,11 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
       keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-    )).then(() => self.clients.claim()) // Take control of all open pages immediately
+    )).then(() => self.clients.claim())
   );
 });
 
-// Network-First Strategy (Aggiornamento in tempo reale)
+// Network-First Strategy
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -51,7 +53,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(request)
       .then((networkResponse) => {
-        // Se la rete risponde correttamente, aggiorniamo la cache con l'ultima versione
         const responseClone = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseClone);
@@ -59,7 +60,6 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(() => {
-        // Se siamo offline o la rete fallisce, peschiamo dalla cache
         return caches.match(request).then((cached) => {
           if (cached) return cached;
           if (request.mode === 'navigate') {
@@ -67,5 +67,24 @@ self.addEventListener('fetch', (event) => {
           }
         });
       })
+  );
+});
+
+// Handle notification click — open the app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Focus existing window if open
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open new window
+      if (clients.openWindow) {
+        return clients.openWindow('./');
+      }
+    })
   );
 });
