@@ -1961,7 +1961,7 @@
 .avail-cal-wrapper {
     background: var(--bg-primary);
     border-radius: var(--radius-md);
-    padding: 10px;
+    padding: 8px 10px;
     box-shadow: var(--neu-inset-sm);
 }
 
@@ -1969,18 +1969,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .avail-cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+    gap: 1px;
     text-align: center;
 }
 
 .avail-cal-dow {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 700;
     color: var(--text-tertiary);
     text-transform: uppercase;
@@ -1988,8 +1988,6 @@
 }
 
 .avail-cal-day {
-    width: 100%;
-    aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1999,6 +1997,7 @@
     cursor: pointer;
     transition: all 0.15s ease;
     color: var(--text-primary);
+    padding: 6px 0;
 }
 
 .avail-cal-day:hover {
