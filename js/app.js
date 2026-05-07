@@ -156,6 +156,7 @@ const App = (() => {
         Schedule.init();
         Profile.init();
         Absences.init();
+        Availabilities.init();
         initSwipeGestures();
 
         // Navigate to dashboard
@@ -206,6 +207,7 @@ const App = (() => {
             employees: 'Dipendenti',
             schedule: 'Programma',
             absences: 'Assenze',
+            availabilities: 'Disponibilità',
             hours: 'Ore Dipendenti',
             profile: 'Profilo',
             settings: 'Impostazioni'
@@ -219,6 +221,7 @@ const App = (() => {
             case 'employees': Employees.render(); break;
             case 'schedule': Schedule.render(); break;
             case 'absences': Absences.render(); break;
+            case 'availabilities': Availabilities.render(); break;
             case 'hours': Hours.render(); break;
             case 'profile': Profile.render(); break;
             case 'settings': renderSettings(); break;
@@ -507,6 +510,7 @@ const App = (() => {
             case 'employees': Employees.render(); break;
             case 'schedule': Schedule.render(); break;
             case 'absences': Absences.render(); break;
+            case 'availabilities': Availabilities.render(); break;
             case 'hours': Hours.render(); break;
             case 'profile': Profile.render(); break;
         }

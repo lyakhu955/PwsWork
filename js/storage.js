@@ -8,13 +8,15 @@ const Storage = (() => {
     // ==================== IN-MEMORY CACHE ====================
     let _employees = [];
     let _assignments = [];
+    let _availabilities = [];
     let _dataReady = false;
     let _readyCallbacks = [];
 
     // Firestore collections
     const COLLECTIONS = {
         EMPLOYEES: 'employees',
-        ASSIGNMENTS: 'assignments'
+        ASSIGNMENTS: 'assignments',
+        AVAILABILITIES: 'availabilities'
     };
 
     // Local-only keys (stay in localStorage — per-browser)
@@ -188,11 +190,11 @@ const Storage = (() => {
 
     // ==================== REAL-TIME LISTENERS ====================
     let _listenersStarted = false;
-    let _loadedSources = { employees: false, assignments: false };
+    let _loadedSources = { employees: false, assignments: false, availabilities: false };
     let _firstLoad = true;
 
     function _checkAllLoaded() {
-        if (_loadedSources.employees && _loadedSources.assignments) {
+        if (_loadedSources.employees && _loadedSources.assignments && _loadedSources.availabilities) {
             _markReady();
         }
     }
@@ -244,6 +246,22 @@ const Storage = (() => {
         }, (error) => {
             console.error('Firestore assignments listener error:', error);
             _loadedSources.assignments = true;
+            _checkAllLoaded();
+        });
+
+        // --- Availabilities listener ---
+        db.collection(COLLECTIONS.AVAILABILITIES).onSnapshot((snapshot) => {
+            _availabilities = [];
+            snapshot.forEach((doc) => {
+                _availabilities.push({ ...doc.data(), id: doc.id });
+            });
+            const wasLoaded = _loadedSources.availabilities;
+            _loadedSources.availabilities = true;
+            _checkAllLoaded();
+            if (wasLoaded) _onDataChange();
+        }, (error) => {
+            console.error('Firestore availabilities listener error:', error);
+            _loadedSources.availabilities = true;
             _checkAllLoaded();
         });
 
@@ -423,6 +441,47 @@ const Storage = (() => {
         });
     }
 
+    // ==================== AVAILABILITIES ====================
+    function getAvailabilities() {
+        return [..._availabilities];
+    }
+
+    function addAvailability(availability) {
+        const id = 'avail_' + Date.now();
+        availability.id = id;
+        availability.createdAt = new Date().toISOString();
+        if (!availability.responses) availability.responses = {};
+
+        _availabilities.push({ ...availability });
+
+        db.collection(COLLECTIONS.AVAILABILITIES).doc(id).set(availability).catch(err => {
+            console.error('Error adding availability:', err);
+        });
+
+        return availability;
+    }
+
+    function updateAvailability(id, data) {
+        const index = _availabilities.findIndex(a => a.id === id);
+        if (index !== -1) {
+            _availabilities[index] = { ..._availabilities[index], ...data };
+
+            db.collection(COLLECTIONS.AVAILABILITIES).doc(id).update(data).catch(err => {
+                console.error('Error updating availability:', err);
+            });
+
+            return _availabilities[index];
+        }
+        return null;
+    }
+
+    function deleteAvailability(id) {
+        _availabilities = _availabilities.filter(a => a.id !== id);
+        db.collection(COLLECTIONS.AVAILABILITIES).doc(id).delete().catch(err => {
+            console.error('Error deleting availability:', err);
+        });
+    }
+
     // ==================== CURRENT USER (local only) ====================
     function getCurrentUser() {
         try { return JSON.parse(localStorage.getItem(LOCAL_KEYS.CURRENT_USER)); }
@@ -457,6 +516,9 @@ const Storage = (() => {
         _assignments.forEach(a => {
             batch.delete(db.collection(COLLECTIONS.ASSIGNMENTS).doc(a.id));
         });
+        _availabilities.forEach(a => {
+            batch.delete(db.collection(COLLECTIONS.AVAILABILITIES).doc(a.id));
+        });
 
         batch.commit().then(() => {
             console.log('✅ All Firestore data reset');
@@ -473,6 +535,7 @@ const Storage = (() => {
         // Clear caches
         _employees = [];
         _assignments = [];
+        _availabilities = [];
 
         // Clear local storage
         Object.values(LOCAL_KEYS).forEach(key => localStorage.removeItem(key));
@@ -492,6 +555,7 @@ const Storage = (() => {
         getAssignments, getAssignment, getAssignmentsByDate,
         getAssignmentsByEmployee, getAssignmentsByDateRange,
         addAssignment, addAssignmentsForDates, _pushAssignment, updateAssignment, deleteAssignment,
+        getAvailabilities, addAvailability, updateAvailability, deleteAvailability,
         getCurrentUser, setCurrentUser, clearCurrentUser,
         getTheme, setTheme,
         getSidebarCollapsed, setSidebarCollapsed,
