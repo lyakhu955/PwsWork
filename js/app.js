@@ -536,7 +536,7 @@ const App = (() => {
         const messageEl = document.getElementById('confirm-message');
 
         if (titleEl) titleEl.textContent = title;
-        if (messageEl) messageEl.textContent = message;
+        if (messageEl) messageEl.innerHTML = message;
         confirmCallback = callback;
 
         dialog.classList.add('active');
