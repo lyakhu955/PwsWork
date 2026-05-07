@@ -98,7 +98,7 @@ const Availabilities = (() => {
                     Object.keys(responses).forEach(empId => {
                         const emp = Storage.getEmployee(empId);
                         if (emp) {
-                            const name = \`\${emp.firstName} \${emp.lastName}\`.trim() || emp.username;
+                            const name = `${emp.firstName} ${emp.lastName}`.trim() || emp.username;
                             if (responses[empId] === 'present') {
                                 presentNames.push(name);
                             } else if (responses[empId] === 'absent') {
