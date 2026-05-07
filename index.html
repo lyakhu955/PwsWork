@@ -23,6 +23,11 @@
 <body>
 
     <!-- ==================== LOGIN PAGE ==================== -->
+    <script>
+        if (localStorage.getItem('pws_current_user')) {
+            document.write('<style>#login-page { display: none !important; } #app { display: flex !important; }</style>');
+        }
+    </script>
     <div id="login-page" class="page login-page active">
         <div class="login-bg">
             <div class="floating-shapes">

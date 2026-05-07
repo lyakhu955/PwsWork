@@ -67,13 +67,18 @@ const App = (() => {
             }
         });
 
-        // Wait for Firestore data to be ready, then check session
+        // Check session IMMEDIATELY (sync)
+        const hasSession = Auth.init();
+        if (hasSession) {
+            showApp();
+        } else {
+            showLogin();
+        }
+
+        // Wait for Firestore data to be ready, then refresh if needed
         Storage.onReady(() => {
-            const hasSession = Auth.init();
-            if (hasSession) {
-                showApp();
-            } else {
-                showLogin();
+            if (Auth.isLoggedIn()) {
+                refreshCurrentPage();
             }
         });
     }
