@@ -515,6 +515,19 @@
 
                         <div class="settings-section glass-card">
                             <h4>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                Notifiche Push
+                            </h4>
+                            <p class="settings-description">Ricevi un avviso sul telefono quando vengono aggiunti nuovi turni o richieste di disponibilità.</p>
+                            <button id="enable-notifications-btn" class="btn btn-primary" onclick="Notifica.requestPermissionFromUser()" style="margin-top:10px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                Abilita Notifiche
+                            </button>
+                            <p id="notifications-status-text" style="font-size: 0.85rem; color: var(--text-tertiary); margin-top: 10px;"></p>
+                        </div>
+
+                        <div class="settings-section glass-card">
+                            <h4>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                 Amministratori
                             </h4>

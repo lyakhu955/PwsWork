@@ -352,6 +352,7 @@ const App = (() => {
     // ==================== SETTINGS ====================
     function renderSettings() {
         updateInstallButtonState();
+        if (window.Notifica) Notifica.updateSettingsUI();
     }
 
     function updateInstallButtonState() {
