@@ -100,8 +100,7 @@ const Notifica = (() => {
     }
 
     function _getVapidKey() {
-        // This will be set after generating VAPID keys
-        return localStorage.getItem('pws_vapid_key') || '';
+        return 'BLEi_VqOwIlN6yiQL_INh-0APS8rHga6NOwKt3RGQO7p0ImXt4vfvsyzFl8Yi_gPHeEw_ml5kCLGyy5M73xolCM';
     }
 
     async function _saveTokenToFirestore(token) {
